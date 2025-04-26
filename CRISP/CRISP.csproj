@@ -5,7 +5,32 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    
+    <!-- NuGet Package Properties -->
+    <PackageId>CRISP</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Brock Claussen</Authors>
+    <Company>Narcoleptic Fox</Company>
+    <Description>A lightweight, modern framework for building scalable and maintainable .NET applications using CQRS and service-oriented architecture principles.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/username/CRISP</PackageProjectUrl>
+    <PackageTags>cqrs;dotnet;architecture;source-generators;dependency-injection</PackageTags>
+    <RepositoryUrl>https://github.com/username/CRISP</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn> <!-- Disable warnings for missing XML comments -->
+    <PackageIcon>icon.png</PackageIcon>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+  
+  <!-- Package files -->
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\LICENSE.txt" Pack="true" PackagePath="\" />
+    <None Include="..\assets\icon.png" Pack="true" PackagePath="\" Condition="Exists('..\assets\icon.png')" />
+  </ItemGroup>
 
   <!-- Conditionally include System.Threading.Tasks.Extensions for .NET Standard 2.0 -->
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
@@ -20,5 +45,6 @@
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.4" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 </Project>
