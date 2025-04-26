@@ -16,20 +16,17 @@
     <PackageProjectUrl>https://github.com/username/CRISP</PackageProjectUrl>
     <PackageTags>cqrs;dotnet;architecture;source-generators;dependency-injection</PackageTags>
     <RepositoryUrl>https://github.com/username/CRISP</RepositoryUrl>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591;CS1574;</NoWarn> <!-- Disable warnings for missing XML comments -->
-    <PackageIcon>icon.png</PackageIcon>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageIcon>..\assets\icon.png</PackageIcon>
+    <PackageReadmeFile>..\README.md</PackageReadmeFile>
   </PropertyGroup>
   
-  <!-- Package files -->
   <ItemGroup>
-    <None Include="..\README.md" Pack="true" PackagePath="\" />
-    <None Include="..\LICENSE.txt" Pack="true" PackagePath="\" />
-    <None Include="..\assets\icon.png" Pack="true" PackagePath="\" Condition="Exists('..\assets\icon.png')" />
+    <InternalsVisibleTo Include="CRISP.InjectionGenerator" />
   </ItemGroup>
 
   <!-- Conditionally include System.Threading.Tasks.Extensions for .NET Standard 2.0 -->

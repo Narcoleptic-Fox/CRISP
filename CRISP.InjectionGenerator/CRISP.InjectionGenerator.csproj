@@ -18,21 +18,14 @@
     <PackageProjectUrl>https://github.com/Dieshen/CRISP</PackageProjectUrl>
     <PackageTags>cqrs;dotnet;architecture;source-generators;dependency-injection;roslyn;analyzer</PackageTags>
     <RepositoryUrl>https://github.com/Dieshen/CRISP</RepositoryUrl>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageIcon>icon.png</PackageIcon>
     <DevelopmentDependency>true</DevelopmentDependency>
     <IncludeBuildOutput>false</IncludeBuildOutput>
+    <PackageIcon>..\assets\icon.png</PackageIcon>
+    <PackageReadmeFile>..\README.md</PackageReadmeFile>
   </PropertyGroup>
   
-  <!-- Package files -->
   <ItemGroup>
-    <None Include="..\README.md" Pack="true" PackagePath="\" />
-    <None Include="..\LICENSE.txt" Pack="true" PackagePath="\" />
-    <None Include="..\assets\icon.png" Pack="true" PackagePath="\" Condition="Exists('..\assets\icon.png')" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <InternalsVisibleTo Include="CRISP.SourceGenerator.Tests" />
+    <InternalsVisibleTo Include="CRISP.InjectionGenerator.Tests" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,15 +45,4 @@
   <ItemGroup>
     <ProjectReference Include="..\CRISP\CRISP.csproj" PrivateAssets="all"/>
   </ItemGroup>
-
-  <!-- Make sure the source generator dependency is not copied to the output or added as a reference to the consuming project --><!--
-  <PropertyGroup>
-    <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
-  </PropertyGroup>
-  
-  <Target Name="GetDependencyTargetPaths">
-    <ItemGroup>
-      <TargetPathWithTargetPlatformMoniker Include="$(OutputPath)\CRISP.dll" IncludeRuntimeDependency="false" />
-    </ItemGroup>
-  </Target>-->
 </Project>
