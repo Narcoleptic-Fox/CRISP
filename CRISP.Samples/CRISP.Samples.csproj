@@ -14,8 +14,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CRISP\CRISP.csproj" />
-    <ProjectReference Include="..\CRISP.InjectionGenerator\CRISP.InjectionGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\CRISP.InjectionGenerator\CRISP.InjectionGenerator.csproj" 
+                      OutputItemType="Analyzer" 
+                      ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\CRISP\CRISP.csproj">
+      <SetTargetFramework>TargetFramework=net9.0</SetTargetFramework>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

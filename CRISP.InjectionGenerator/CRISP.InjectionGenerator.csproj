@@ -32,9 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>CRISP.SourceGenerator.Tests</_Parameter1>
-    </AssemblyAttribute>
+    <InternalsVisibleTo Include="CRISP.SourceGenerator.Tests" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,10 +50,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CRISP\CRISP.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\CRISP\CRISP.csproj" PrivateAssets="all"/>
   </ItemGroup>
 
-  <!-- Make sure the source generator dependency is not copied to the output or added as a reference to the consuming project -->
+  <!-- Make sure the source generator dependency is not copied to the output or added as a reference to the consuming project --><!--
   <PropertyGroup>
     <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
   </PropertyGroup>
@@ -64,5 +62,5 @@
     <ItemGroup>
       <TargetPathWithTargetPlatformMoniker Include="$(OutputPath)\CRISP.dll" IncludeRuntimeDependency="false" />
     </ItemGroup>
-  </Target>
+  </Target>-->
 </Project>

@@ -17,8 +17,8 @@
     <PackageTags>cqrs;dotnet;architecture;source-generators;dependency-injection</PackageTags>
     <RepositoryUrl>https://github.com/username/CRISP</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS1591</NoWarn> <!-- Disable warnings for missing XML comments -->
+    <!-- <GenerateDocumentationFile>true</GenerateDocumentationFile> -->
+    <NoWarn>$(NoWarn);CS1591;CS1574;</NoWarn> <!-- Disable warnings for missing XML comments -->
     <PackageIcon>icon.png</PackageIcon>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
