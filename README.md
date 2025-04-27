@@ -11,7 +11,7 @@
 [![Build Status](https://img.shields.io/github/actions/workflow/status/Dieshen/CRISP/build.yml?branch=main&style=flat-square)](https://github.com/Dieshen/CRISP/actions)
 [![NuGet](https://img.shields.io/nuget/v/CRISP.Core.svg?style=flat-square)](https://www.nuget.org/packages/CRISP.Core/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/CRISP.Core.svg?style=flat-square)](https://www.nuget.org/packages/CRISP.Core/)
-[![License](https://img.shields.io/github/license/Dieshen/CRISP?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/github/license/Dieshen/CRISP?style=flat-square)](LICENSE.txt)
 [![Target Frameworks](https://img.shields.io/badge/targets-net9.0%20|%20netstandard2.1-blue?style=flat-square)](https://github.com/Dieshen/CRISP/)
 [![Test Coverage](https://img.shields.io/codecov/c/github/Dieshen/CRISP/main?style=flat-square)](https://codecov.io/gh/Dieshen/CRISP)
 
@@ -407,7 +407,7 @@ public class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TR
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License
 
 ## Acknowledgments
 
