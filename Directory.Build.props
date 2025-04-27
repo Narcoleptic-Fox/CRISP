@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <Authors>Brock Claussen</Authors>
+    <Company>Narcoleptic Fox</Company>
+    <Product>CRISP Framework</Product>
+    <Copyright>Copyright © CRISP $([System.DateTime]::Now.ToString('yyyy'))</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Dieshen/CRISP</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Dieshen/CRISP</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+</Project>
