@@ -1,13 +1,13 @@
-name: CI
+name: Build
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths-ignore:
       - '**/*.md'
       - 'docs/**'
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
     paths-ignore:
       - '**/*.md'
       - 'docs/**'
