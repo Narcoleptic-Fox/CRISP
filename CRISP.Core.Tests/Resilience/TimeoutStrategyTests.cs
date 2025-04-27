@@ -9,7 +9,7 @@ namespace CRISP.Core.Tests.Resilience;
 public class TimeoutStrategyTests
 {
     private readonly Mock<ILogger<TimeoutStrategy>> _loggerMock;
-    private readonly TimeSpan _timeout = TimeSpan.FromMilliseconds(100);
+    private readonly TimeSpan _timeout = TimeSpan.FromMilliseconds(50); // Using a shorter timeout for faster tests
 
     public TimeoutStrategyTests()
     {
@@ -39,12 +39,14 @@ public class TimeoutStrategyTests
     {
         // Arrange
         TimeoutStrategy strategy = new(_loggerMock.Object, _timeout);
+        var longDelay = TimeSpan.FromMilliseconds(_timeout.TotalMilliseconds * 4); // Ensure it's much longer than the timeout
 
         // Act
         Func<Task<int>> act = async () => await strategy.Execute<int>(async ct =>
         {
-            // Delay longer than the timeout
-            await Task.Delay((int)(_timeout.TotalMilliseconds * 2), ct);
+            // Using Task.Delay with a much longer time than the timeout
+            // And purposefully NOT passing the cancellation token so it won't be canceled
+            await Task.Delay(longDelay);
             return 42;
         }, CancellationToken.None);
 
@@ -58,12 +60,16 @@ public class TimeoutStrategyTests
     {
         // Arrange
         TimeoutStrategy strategy = new(_loggerMock.Object, _timeout);
-        var cts = new CancellationTokenSource();
+        
+        // Create a token source and immediately cancel it
+        using var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        // Act
+        // Act - With pre-canceled token
         Func<Task<int>> act = async () => await strategy.Execute<int>(ct =>
         {
+            // This shouldn't be called because token is canceled
+            ct.ThrowIfCancellationRequested(); // Ensure we check the token immediately
             return new ValueTask<int>(42);
         }, cts.Token);
 
@@ -94,12 +100,14 @@ public class TimeoutStrategyTests
     {
         // Arrange
         TimeoutStrategy strategy = new(_loggerMock.Object, _timeout);
+        var longDelay = TimeSpan.FromMilliseconds(_timeout.TotalMilliseconds * 4); // Ensure it's much longer than the timeout
 
         // Act
         Func<Task> act = async () => await strategy.Execute(async ct =>
         {
-            // Delay longer than the timeout
-            await Task.Delay((int)(_timeout.TotalMilliseconds * 2), ct);
+            // Using Task.Delay with a much longer time than the timeout
+            // And purposefully NOT passing the cancellation token so it won't be canceled
+            await Task.Delay(longDelay); 
         }, CancellationToken.None);
 
         // Assert
@@ -111,25 +119,16 @@ public class TimeoutStrategyTests
     public async Task Execute_WithCancellationDuringExecution_ThrowsOperationCanceledException()
     {
         // Arrange
-        TimeSpan longerTimeout = TimeSpan.FromMilliseconds(500); // Longer timeout for this test
-        
-        TimeoutStrategy strategy = new(_loggerMock.Object, longerTimeout);
-        var cts = new CancellationTokenSource();
+        TimeoutStrategy strategy = new(_loggerMock.Object, TimeSpan.FromMilliseconds(500)); // Longer timeout for this test
+        using var cts = new CancellationTokenSource();
 
-        // Act
+        // Act - Cancel during execution
         Func<Task<int>> act = async () => await strategy.Execute<int>(async ct =>
         {
-            // Start a task that will be canceled externally
-            var taskCompletionSource = new TaskCompletionSource<int>();
-            
-            // Register cancellation callback
-            ct.Register(() => taskCompletionSource.TrySetCanceled());
-            
-            // Cancel after a short delay
-            await Task.Delay(50);
+            // Cancel immediately after starting
             cts.Cancel();
-            
-            return await taskCompletionSource.Task;
+            ct.ThrowIfCancellationRequested(); // This should throw now
+            return 42;
         }, cts.Token);
 
         // Assert

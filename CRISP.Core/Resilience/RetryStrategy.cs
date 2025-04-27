@@ -38,9 +38,13 @@ public class RetryStrategy : IResilienceStrategy
     /// <inheritdoc />
     public async ValueTask<T> Execute<T>(Func<CancellationToken, ValueTask<T>> operation, CancellationToken cancellationToken = default)
     {
+        // Check for cancellation first
+        cancellationToken.ThrowIfCancellationRequested();
+        
         int attempts = 0;
         TimeSpan delay = _initialDelay;
         Exception? lastException = null;
+        bool shouldRetry = true;
 
         while (attempts <= _maxRetryAttempts)
         {
@@ -54,29 +58,56 @@ public class RetryStrategy : IResilienceStrategy
 
                 return await operation(cancellationToken);
             }
-            catch (Exception ex) when (ShouldRetry(ex) && attempts < _maxRetryAttempts)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Propagate cancellation exceptions
+                throw;
+            }
+            catch (Exception ex)
             {
                 lastException = ex;
                 attempts++;
+                shouldRetry = attempts <= _maxRetryAttempts && ShouldRetry(ex);
 
-                _logger.LogWarning(ex, "Operation failed. Retrying in {Delay}ms. Attempt {AttemptNumber} of {MaxAttempts}",
-                    delay.TotalMilliseconds, attempts, _maxRetryAttempts);
+                if (shouldRetry)
+                {
+                    _logger.LogWarning(ex, "Operation failed. Retrying in {Delay}ms. Attempt {AttemptNumber} of {MaxAttempts}",
+                        delay.TotalMilliseconds, attempts, _maxRetryAttempts);
 
-                await Task.Delay(delay, cancellationToken);
-                delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * _backoffFactor);
+                    try
+                    {
+                        await Task.Delay(delay, cancellationToken);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Cancellation during delay, propagate it
+                        throw;
+                    }
+                    
+                    delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * _backoffFactor);
+                }
+                else
+                {
+                    // Max retries reached or exception shouldn't be retried
+                    break;
+                }
             }
         }
 
-        // If we get here, all retry attempts failed
-        throw new RetryFailedException($"Operation failed after {_maxRetryAttempts} retry attempts", lastException!);
+        // If we get here, all retry attempts failed or exception wasn't retryable
+        throw new RetryFailedException($"Operation failed after {attempts - 1} retry attempts", lastException!);
     }
 
     /// <inheritdoc />
     public async ValueTask Execute(Func<CancellationToken, ValueTask> operation, CancellationToken cancellationToken = default)
     {
+        // Check for cancellation first
+        cancellationToken.ThrowIfCancellationRequested();
+        
         int attempts = 0;
         TimeSpan delay = _initialDelay;
         Exception? lastException = null;
+        bool shouldRetry = true;
 
         while (attempts <= _maxRetryAttempts)
         {
@@ -91,21 +122,44 @@ public class RetryStrategy : IResilienceStrategy
                 await operation(cancellationToken);
                 return;
             }
-            catch (Exception ex) when (ShouldRetry(ex) && attempts < _maxRetryAttempts)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Propagate cancellation exceptions
+                throw;
+            }
+            catch (Exception ex)
             {
                 lastException = ex;
                 attempts++;
+                shouldRetry = attempts <= _maxRetryAttempts && ShouldRetry(ex);
 
-                _logger.LogWarning(ex, "Operation failed. Retrying in {Delay}ms. Attempt {AttemptNumber} of {MaxAttempts}",
-                    delay.TotalMilliseconds, attempts, _maxRetryAttempts);
+                if (shouldRetry)
+                {
+                    _logger.LogWarning(ex, "Operation failed. Retrying in {Delay}ms. Attempt {AttemptNumber} of {MaxAttempts}",
+                        delay.TotalMilliseconds, attempts, _maxRetryAttempts);
 
-                await Task.Delay(delay, cancellationToken);
-                delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * _backoffFactor);
+                    try
+                    {
+                        await Task.Delay(delay, cancellationToken);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Cancellation during delay, propagate it
+                        throw;
+                    }
+                    
+                    delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * _backoffFactor);
+                }
+                else
+                {
+                    // Max retries reached or exception shouldn't be retried
+                    break;
+                }
             }
         }
 
-        // If we get here, all retry attempts failed
-        throw new RetryFailedException($"Operation failed after {_maxRetryAttempts} retry attempts", lastException!);
+        // If we get here, all retry attempts failed or exception wasn't retryable
+        throw new RetryFailedException($"Operation failed after {attempts - 1} retry attempts", lastException!);
     }
 
     private bool ShouldRetry(Exception exception)
@@ -113,14 +167,25 @@ public class RetryStrategy : IResilienceStrategy
         return _retryPredicate?.Invoke(exception) ?? IsTransientException(exception);
     }
 
-    private static bool IsTransientException(Exception exception)
+    /// <summary>
+    /// Determines if an exception is considered transient and should be retried.
+    /// </summary>
+    /// <param name="exception">The exception to check.</param>
+    /// <returns>True if the exception is considered transient; otherwise, false.</returns>
+    public static bool IsTransientException(Exception exception)
     {
+        if (exception == null)
+            return false;
+            
         // Common transient exceptions, add more as needed
         return exception is TimeoutException ||
                exception is System.Net.Http.HttpRequestException ||
                exception is System.IO.IOException ||
-               exception.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase) ||
-               exception.Message.Contains("temporarily unavailable", StringComparison.OrdinalIgnoreCase);
+               (exception.Message != null && (
+                   exception.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase) ||
+                   exception.Message.Contains("timed out", StringComparison.OrdinalIgnoreCase) ||
+                   exception.Message.Contains("temporarily unavailable", StringComparison.OrdinalIgnoreCase)
+               ));
     }
 }
 
