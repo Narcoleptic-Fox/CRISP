@@ -8,7 +8,7 @@
 
 # CRISP: Core Reusable Infrastructure for Structured Programming
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/Dieshen/CRISP/build.yml?branch=main&style=flat-square)](https://github.com/Dieshen/CRISP/actions)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/Dieshen/CRISP/build.yml?branch=master&style=flat-square)](https://github.com/Dieshen/CRISP/actions)
 [![NuGet](https://img.shields.io/nuget/v/CRISP.Core.svg?style=flat-square)](https://www.nuget.org/packages/CRISP.Core/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/CRISP.Core.svg?style=flat-square)](https://www.nuget.org/packages/CRISP.Core/)
 [![License](https://img.shields.io/github/license/Dieshen/CRISP?style=flat-square&label=license)](LICENSE.txt)
