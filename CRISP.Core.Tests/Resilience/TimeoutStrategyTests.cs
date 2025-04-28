@@ -128,6 +128,7 @@ public class TimeoutStrategyTests
             // Cancel immediately after starting
             cts.Cancel();
             ct.ThrowIfCancellationRequested(); // This should throw now
+            await Task.Yield(); // Add await to prevent CS1998 warning
             return 42;
         }, cts.Token);
 

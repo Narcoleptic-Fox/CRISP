@@ -1,5 +1,4 @@
 using CRISP.Core.Events;
-using CRISP.Core.Interfaces;
 using CRISP.Core.Options;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,20 +25,20 @@ public class EventDispatcherTests : IDisposable
         };
 
         // Set up service provider with event handlers
-        var services = new ServiceCollection();
-        
+        ServiceCollection services = new();
+
         // Add mock logger factory
-        var loggerFactory = new Mock<ILoggerFactory>();
+        Mock<ILoggerFactory> loggerFactory = new();
         loggerFactory
             .Setup(x => x.CreateLogger(It.IsAny<string>()))
             .Returns(Mock.Of<ILogger>());
         services.AddSingleton(loggerFactory.Object);
-        
+
         // Register event handlers
         services.AddTransient<IEventHandler<TestEvent>, TestEventHandler>();
         services.AddTransient<IEventHandler<TestEvent>, AnotherTestEventHandler>();
         _serviceProvider = services.BuildServiceProvider();
-        
+
         // Important: Clear static state at the beginning of each test
         TestEventHandler.ProcessedEvents.Clear();
         AnotherTestEventHandler.ProcessedEvents.Clear();
@@ -48,7 +47,7 @@ public class EventDispatcherTests : IDisposable
         TestEventHandler.OnEventProcessed = null;
         AnotherTestEventHandler.ProcessingDelayMs = 0;
     }
-    
+
     // Clean up after tests
     public void Dispose()
     {
@@ -59,7 +58,7 @@ public class EventDispatcherTests : IDisposable
         TestEventHandler.ProcessingDelayMs = 0;
         TestEventHandler.OnEventProcessed = null;
         AnotherTestEventHandler.ProcessingDelayMs = 0;
-        
+
         _serviceProvider.Dispose();
     }
 
@@ -67,13 +66,13 @@ public class EventDispatcherTests : IDisposable
     public async Task Dispatch_SingleEvent_ProcessesEventCorrectly()
     {
         // Arrange
-        var testEvent = new TestEvent { Value = "Test Value" };
-        
-        var dispatcher = new EventDispatcher(_serviceProvider, _loggerMock.Object, _eventOptions);
-            
+        TestEvent testEvent = new() { Value = "Test Value" };
+
+        EventDispatcher dispatcher = new(_serviceProvider, _loggerMock.Object, _eventOptions);
+
         // Act
         await dispatcher.Dispatch(testEvent, CancellationToken.None);
-        
+
         // Assert
         TestEventHandler.ProcessedEvents.Should().HaveCount(1);
         TestEventHandler.ProcessedEvents[0].Value.Should().Be("Test Value");
@@ -85,22 +84,22 @@ public class EventDispatcherTests : IDisposable
     public async Task DispatchAll_MultipleEvents_ProcessesAllEventsCorrectly()
     {
         // Arrange
-        var testEvents = new List<TestEvent>
+        List<TestEvent> testEvents = new()
         {
             new() { Value = "Event 1" },
             new() { Value = "Event 2" },
             new() { Value = "Event 3" }
         };
-        
-        var dispatcher = new EventDispatcher(_serviceProvider, _loggerMock.Object, _eventOptions);
-            
+
+        EventDispatcher dispatcher = new(_serviceProvider, _loggerMock.Object, _eventOptions);
+
         // Act
         await dispatcher.DispatchAll(testEvents, CancellationToken.None);
-        
+
         // Assert
         TestEventHandler.ProcessedEvents.Should().HaveCount(3);
         AnotherTestEventHandler.ProcessedEvents.Should().HaveCount(3);
-        
+
         TestEventHandler.ProcessedEvents.Select(e => e.Value)
             .Should().BeEquivalentTo(new[] { "Event 1", "Event 2", "Event 3" });
     }
@@ -109,31 +108,31 @@ public class EventDispatcherTests : IDisposable
     public async Task Dispatch_WithParallelProcessing_ProcessesEventsInParallel()
     {
         // Arrange
-        var parallelOptions = new EventOptions
+        EventOptions parallelOptions = new()
         {
             ProcessEventsInParallel = true,
             ThrowOnHandlerFailure = false,
             MaxDegreeOfParallelism = 4
         };
-        
-        var testEvents = new List<TestEvent>
+
+        List<TestEvent> testEvents = new()
         {
             new() { Value = "Event 1" },
             new() { Value = "Event 2" },
             new() { Value = "Event 3" }
         };
-        
+
         // Add a delay to better observe parallel execution
         TestEventHandler.ProcessingDelayMs = 100;
-        
-        var dispatcher = new EventDispatcher(_serviceProvider, _loggerMock.Object, parallelOptions);
-            
+
+        EventDispatcher dispatcher = new(_serviceProvider, _loggerMock.Object, parallelOptions);
+
         // Act
-        var stopwatch = new System.Diagnostics.Stopwatch();
+        System.Diagnostics.Stopwatch stopwatch = new();
         stopwatch.Start();
         await dispatcher.DispatchAll(testEvents, CancellationToken.None);
         stopwatch.Stop();
-        
+
         // Assert
         TestEventHandler.ProcessedEvents.Should().HaveCount(3);
         AnotherTestEventHandler.ProcessedEvents.Should().HaveCount(3);
@@ -144,13 +143,13 @@ public class EventDispatcherTests : IDisposable
     {
         // Arrange
         TestEventHandler.ThrowException = true;
-        var testEvent = new TestEvent { Value = "Test Value" };
-        
-        var dispatcher = new EventDispatcher(_serviceProvider, _loggerMock.Object, _eventOptions);
-            
+        TestEvent testEvent = new() { Value = "Test Value" };
+
+        EventDispatcher dispatcher = new(_serviceProvider, _loggerMock.Object, _eventOptions);
+
         // Act
         Func<Task> act = async () => await dispatcher.Dispatch(testEvent, CancellationToken.None);
-        
+
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Handler failed");
     }
@@ -159,25 +158,26 @@ public class EventDispatcherTests : IDisposable
     public async Task Dispatch_HandlerThrowsException_AndThrowOnHandlerFailureFalse_LogsErrorAndContinues()
     {
         // Arrange
-        var options = new EventOptions
+        EventOptions options = new()
         {
             ProcessEventsInParallel = false,
             ThrowOnHandlerFailure = false
         };
-        
+
         TestEventHandler.ThrowException = true;
-        var testEvent = new TestEvent { Value = "Event 1" };
-        
-        var dispatcher = new EventDispatcher(_serviceProvider, _loggerMock.Object, options);
-            
+        TestEvent testEvent = new() { Value = "Event 1" };
+
+        EventDispatcher dispatcher = new(_serviceProvider, _loggerMock.Object, options);
+
         // Act - Should not throw
         await dispatcher.Dispatch(testEvent, CancellationToken.None);
-        
+
         // Assert - Second handler still processed the event
         // Important: We expect exactly one processed event in the AnotherTestEventHandler
         AnotherTestEventHandler.ProcessedEvents.Count.Should().Be(1);
-        
+
         // Verify an error was logged - use more flexible verification
+#pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
         _loggerMock.Verify(
             logger => logger.Log(
                 It.Is<LogLevel>(l => l == LogLevel.Error),
@@ -188,38 +188,40 @@ public class EventDispatcherTests : IDisposable
             ),
             Times.AtLeastOnce
         );
+#pragma warning restore CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
     }
 
     [Fact]
     public async Task Dispatch_WithCancellation_StopsProcessing()
     {
         // Arrange
-        var testEvents = new List<TestEvent>
+        List<TestEvent> testEvents = new()
         {
             new() { Value = "Event 1" },
             new() { Value = "Event 2" },
             new() { Value = "Event 3" }
         };
-        
+
         // Add a delay to make cancellation more reliable
         TestEventHandler.ProcessingDelayMs = 100;
-        
+
         // Create a cancellation token that will be cancelled after the first event
-        var cts = new CancellationTokenSource();
+        CancellationTokenSource cts = new();
         int eventCount = 0;
-        TestEventHandler.OnEventProcessed = _ => {
+        TestEventHandler.OnEventProcessed = _ =>
+        {
             eventCount++;
             if (eventCount == 1)
             {
                 cts.Cancel();
             }
         };
-        
-        var dispatcher = new EventDispatcher(_serviceProvider, _loggerMock.Object, _eventOptions);
-            
+
+        EventDispatcher dispatcher = new(_serviceProvider, _loggerMock.Object, _eventOptions);
+
         // Act
         Func<Task> act = async () => await dispatcher.DispatchAll(testEvents, cts.Token);
-        
+
         // Assert
         await act.Should().ThrowAsync<OperationCanceledException>();
     }
@@ -232,7 +234,7 @@ public class EventDispatcherTests : IDisposable
 
     public class TestEventHandler : IEventHandler<TestEvent>
     {
-        public static List<TestEvent> ProcessedEvents { get; } = new();
+        public static List<TestEvent> ProcessedEvents { get; } = [];
         public static int ProcessingDelayMs { get; set; } = 0;
         public static Action<TestEvent>? OnEventProcessed { get; set; }
         public static bool ThrowException { get; set; } = false;
@@ -243,24 +245,24 @@ public class EventDispatcherTests : IDisposable
             {
                 throw new InvalidOperationException("Handler failed");
             }
-            
+
             if (ProcessingDelayMs > 0)
             {
                 await Task.Delay(ProcessingDelayMs, cancellationToken);
             }
-            
+
             lock (ProcessedEvents)
             {
                 ProcessedEvents.Add(@event);
             }
-            
+
             OnEventProcessed?.Invoke(@event);
         }
     }
 
     public class AnotherTestEventHandler : IEventHandler<TestEvent>
     {
-        public static List<TestEvent> ProcessedEvents { get; } = new();
+        public static List<TestEvent> ProcessedEvents { get; } = [];
         public static int ProcessingDelayMs { get; set; } = 0;
 
         public async ValueTask Handle(TestEvent @event, CancellationToken cancellationToken)
@@ -269,7 +271,7 @@ public class EventDispatcherTests : IDisposable
             {
                 await Task.Delay(ProcessingDelayMs, cancellationToken);
             }
-            
+
             lock (ProcessedEvents)
             {
                 ProcessedEvents.Add(@event);

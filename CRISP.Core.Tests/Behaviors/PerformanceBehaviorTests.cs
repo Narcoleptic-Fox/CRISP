@@ -115,6 +115,7 @@ public class PerformanceBehaviorTests
             .Should().ThrowAsync<TaskCanceledException>();
     }
 
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
     private void VerifyLoggerCalled(LogLevel level, string messageContains, int times) => _loggerMock.Verify(
             x => x.Log(
                 It.Is<LogLevel>(l => l == level),
@@ -123,6 +124,7 @@ public class PerformanceBehaviorTests
                 It.IsAny<Exception>(),
                 It.Is<Func<It.IsAnyType, Exception?, string>>((v, t) => true)),
             Times.Exactly(times));
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 }
 
 // Test request class used for testing behaviors

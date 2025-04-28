@@ -31,7 +31,7 @@ public class MediatorTests
     public void Constructor_WithNullServiceProvider_ThrowsArgumentNullException()
     {
         // Arrange & Act
-        Func<Mediator> act = () => new Mediator(null, _loggerMock.Object, _options);
+        Func<Mediator> act = () => new Mediator(null!, _loggerMock.Object, _options);
 
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("serviceProvider");
@@ -41,7 +41,7 @@ public class MediatorTests
     public void Constructor_WithNullLogger_ThrowsArgumentNullException()
     {
         // Arrange & Act
-        Func<Mediator> act = () => new Mediator(_serviceProviderMock.Object, null, _options);
+        Func<Mediator> act = () => new Mediator(_serviceProviderMock.Object, null!, _options);
 
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("logger");
@@ -51,7 +51,7 @@ public class MediatorTests
     public void Constructor_WithNullOptions_ThrowsArgumentNullException()
     {
         // Arrange & Act
-        Func<Mediator> act = () => new Mediator(_serviceProviderMock.Object, _loggerMock.Object, null);
+        Func<Mediator> act = () => new Mediator(_serviceProviderMock.Object, _loggerMock.Object, null!);
 
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("options");

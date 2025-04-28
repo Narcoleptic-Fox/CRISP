@@ -29,14 +29,14 @@ public class BaseHandlerTests
         logger.Verify(x => x.Log(
             LogLevel.Information,
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Handling request")),
+            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Handling request")),
             null,
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
         logger.Verify(x => x.Log(
             LogLevel.Information,
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Successfully handled")),
+            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Successfully handled")),
             null,
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
@@ -56,7 +56,7 @@ public class BaseHandlerTests
         // Assert
         response.Should().NotBeNull();
         response.IsSuccess.Should().BeFalse();
-        response.Message.Should().Contain("Test exception");
+        response.Message.Should().NotBeNull().And.Contain("Test exception");
         logger.Verify(x => x.Log(
             LogLevel.Error,
             It.IsAny<EventId>(),
@@ -86,18 +86,18 @@ public class BaseHandlerTests
         response.IsSuccess.Should().BeTrue();
         response.Message.Should().NotBeNull();
         response.Data.Should().NotBeNull();
-        response.Data.Message.Should().Be("Test data");
+        response.Data!.Message.Should().Be("Test data");
         logger.Verify(x => x.Log(
             LogLevel.Information,
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Handling request")),
+            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Handling request")),
             null,
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
         logger.Verify(x => x.Log(
             LogLevel.Information,
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Successfully handled")),
+            It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Successfully handled")),
             null,
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
@@ -117,7 +117,7 @@ public class BaseHandlerTests
         // Assert
         response.Should().NotBeNull();
         response.IsSuccess.Should().BeFalse();
-        response.Message.Should().Contain("Test exception");
+        response.Message.Should().NotBeNull().And.Contain("Test exception");
         response.Data.Should().BeNull();
         logger.Verify(x => x.Log(
             LogLevel.Error,

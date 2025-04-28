@@ -82,6 +82,8 @@ public class LoggingBehaviorTests
         VerifyLoggerCalled(LogLevel.Error, "[ERROR] Request TestRequest", 1);
     }
 
+#pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
     private void VerifyLoggerCalled(LogLevel level, string messageSubstring, int times) => _loggerMock.Verify(
             x => x.Log(
                 It.Is<LogLevel>(l => l == level),
@@ -92,6 +94,8 @@ public class LoggingBehaviorTests
             ),
             Times.Exactly(times)
         );
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+#pragma warning restore CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
 
     public class TestRequest : IRequest<string> { }
 }

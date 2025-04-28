@@ -197,6 +197,8 @@ public class ValidationBehaviorTests
         result.Should().Be(expectedResult);
 
         // Verify logging was called
+#pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
         _loggerMock.Verify(
             x => x.Log(
                 It.Is<LogLevel>(l => l == LogLevel.Warning),
@@ -207,11 +209,13 @@ public class ValidationBehaviorTests
             ),
             Times.Once
         );
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+#pragma warning restore CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
     }
 
     public class TestRequest : IRequest<string>
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = "";
         public int Age { get; set; }
     }
 }

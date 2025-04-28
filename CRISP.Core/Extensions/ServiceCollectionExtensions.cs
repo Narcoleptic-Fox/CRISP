@@ -33,24 +33,24 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IMediator, Mediator>();
 
         // Register the event dispatcher
-        services.AddScoped<IEventDispatcher>(sp => 
+        services.AddScoped<IEventDispatcher>(sp =>
         {
-            var eventOptions = sp.GetRequiredService<EventOptions>();
-            
+            EventOptions eventOptions = sp.GetRequiredService<EventOptions>();
+
             // Use channel-based dispatcher if configured
             if (eventOptions.UseChannels)
             {
                 return new ChannelEventDispatcher(
-                    sp, 
-                    sp.GetRequiredService<ILogger<ChannelEventDispatcher>>(), 
-                    eventOptions, 
+                    sp,
+                    sp.GetRequiredService<ILogger<ChannelEventDispatcher>>(),
+                    eventOptions,
                     sp.GetRequiredService<ChannelEventOptions>());
             }
-            
+
             // Otherwise use the standard dispatcher
             return new EventDispatcher(
-                sp, 
-                sp.GetRequiredService<ILogger<EventDispatcher>>(), 
+                sp,
+                sp.GetRequiredService<ILogger<EventDispatcher>>(),
                 eventOptions);
         });
 
@@ -188,7 +188,7 @@ public static class ServiceCollectionExtensions
     /// Registers all event handlers in the specified assemblies.
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
-    /// <param="assemblies">The assemblies to scan for event handlers.</param>
+    /// <param name="assemblies">The assemblies to scan for event handlers.</param>
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddEventHandlers(
         this IServiceCollection services,
@@ -346,7 +346,7 @@ public class CrispOptionsBuilder
         _services.ReplaceSingleton(options);
         return this;
     }
-    
+
     /// <summary>
     /// Configures channel-based event processing options.
     /// </summary>
@@ -359,7 +359,7 @@ public class CrispOptionsBuilder
         _services.ReplaceSingleton(options);
         return this;
     }
-    
+
     /// <summary>
     /// Enables channel-based event processing with optional configuration.
     /// </summary>
@@ -370,7 +370,7 @@ public class CrispOptionsBuilder
         // Configure event options to use channels
         EventOptions eventOptions = new() { UseChannels = true };
         _services.ReplaceSingleton(eventOptions);
-        
+
         // Configure channel options if provided
         if (configureChannel != null)
         {
@@ -378,7 +378,7 @@ public class CrispOptionsBuilder
             configureChannel(channelOptions);
             _services.ReplaceSingleton(channelOptions);
         }
-        
+
         return this;
     }
 
