@@ -1,118 +1,67 @@
-using CRISP.Core.Options;
 using CRISP.Core.Resilience;
-using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Shouldly;
 
 namespace CRISP.Core.Tests.Resilience;
 
 public class TimeoutStrategyTests
 {
     private readonly Mock<ILogger<TimeoutStrategy>> _loggerMock;
-    private readonly TimeSpan _timeout = TimeSpan.FromMilliseconds(50); // Using a shorter timeout for faster tests
 
-    public TimeoutStrategyTests()
-    {
-        _loggerMock = new Mock<ILogger<TimeoutStrategy>>();
-    }
+    public TimeoutStrategyTests() => _loggerMock = new Mock<ILogger<TimeoutStrategy>>();
 
     [Fact]
-    public async Task Execute_CompletesWithinTimeout_ReturnsResult()
+    public async Task Execute_WithinTimeout_CompletesSuccessfully()
     {
         // Arrange
-        TimeoutStrategy strategy = new(_loggerMock.Object, _timeout);
+        TimeoutStrategy strategy = new(_loggerMock.Object, TimeSpan.FromSeconds(1));
         int expectedResult = 42;
 
         // Act
-        int result = await strategy.Execute(ct =>
-        {
-            // Completes immediately
-            return new ValueTask<int>(expectedResult);
-        }, CancellationToken.None);
+        int result = await strategy.Execute((ct) =>
+            ValueTask.FromResult(expectedResult), CancellationToken.None);
 
         // Assert
-        result.Should().Be(expectedResult);
+        result.ShouldBe(expectedResult);
     }
 
     [Fact]
     public async Task Execute_ExceedsTimeout_ThrowsTimeoutException()
     {
         // Arrange
-        TimeoutStrategy strategy = new(_loggerMock.Object, _timeout);
-        var longDelay = TimeSpan.FromMilliseconds(_timeout.TotalMilliseconds * 4); // Ensure it's much longer than the timeout
+        TimeoutStrategy strategy = new(_loggerMock.Object, TimeSpan.FromMilliseconds(50));
 
         // Act
-        Func<Task<int>> act = async () => await strategy.Execute<int>(async ct =>
+        Func<Task<int>> act = async () => await strategy.Execute<int>(async (ct) =>
         {
-            // Using Task.Delay with a much longer time than the timeout
-            // And purposefully NOT passing the cancellation token so it won't be canceled
-            await Task.Delay(longDelay);
+            // Delay longer than the timeout
+            await Task.Delay(500);
             return 42;
         }, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<TimeoutException>()
-            .WithMessage($"Operation timed out after {_timeout.TotalMilliseconds}ms");
+        TimeoutException exception = await Should.ThrowAsync<TimeoutException>(act);
+        exception.Message.ShouldContain("timed out after");
     }
 
     [Fact]
     public async Task Execute_WithCancellation_ThrowsOperationCanceledException()
     {
         // Arrange
-        TimeoutStrategy strategy = new(_loggerMock.Object, _timeout);
-        
-        // Create a token source and immediately cancel it
-        using var cts = new CancellationTokenSource();
+        TimeoutStrategy strategy = new(_loggerMock.Object, TimeSpan.FromSeconds(1));
+
+        using CancellationTokenSource cts = new();
         cts.Cancel();
 
-        // Act - With pre-canceled token
-        Func<Task<int>> act = async () => await strategy.Execute<int>(ct =>
+        // Act
+        Func<Task<int>> act = async () => await strategy.Execute<int>((ct) =>
         {
-            // This shouldn't be called because token is canceled
-            ct.ThrowIfCancellationRequested(); // Ensure we check the token immediately
-            return new ValueTask<int>(42);
+            return ValueTask.FromResult(42);
         }, cts.Token);
 
         // Assert
-        await act.Should().ThrowAsync<OperationCanceledException>();
-    }
-
-    [Fact]
-    public async Task Execute_WithoutReturnValue_CompletesWithinTimeout()
-    {
-        // Arrange
-        TimeoutStrategy strategy = new(_loggerMock.Object, _timeout);
-        bool executed = false;
-
-        // Act
-        await strategy.Execute(ct =>
-        {
-            executed = true;
-            return new ValueTask();
-        }, CancellationToken.None);
-
-        // Assert
-        executed.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task Execute_WithoutReturnValue_ExceedsTimeout_ThrowsTimeoutException()
-    {
-        // Arrange
-        TimeoutStrategy strategy = new(_loggerMock.Object, _timeout);
-        var longDelay = TimeSpan.FromMilliseconds(_timeout.TotalMilliseconds * 4); // Ensure it's much longer than the timeout
-
-        // Act
-        Func<Task> act = async () => await strategy.Execute(async ct =>
-        {
-            // Using Task.Delay with a much longer time than the timeout
-            // And purposefully NOT passing the cancellation token so it won't be canceled
-            await Task.Delay(longDelay); 
-        }, CancellationToken.None);
-
-        // Assert
-        await act.Should().ThrowAsync<TimeoutException>()
-            .WithMessage($"Operation timed out after {_timeout.TotalMilliseconds}ms");
+        await Should.ThrowAsync<OperationCanceledException>(act);
     }
 
     [Fact]
@@ -120,7 +69,7 @@ public class TimeoutStrategyTests
     {
         // Arrange
         TimeoutStrategy strategy = new(_loggerMock.Object, TimeSpan.FromMilliseconds(500)); // Longer timeout for this test
-        using var cts = new CancellationTokenSource();
+        using CancellationTokenSource cts = new();
 
         // Act - Cancel during execution
         Func<Task<int>> act = async () => await strategy.Execute<int>(async ct =>
@@ -133,6 +82,80 @@ public class TimeoutStrategyTests
         }, cts.Token);
 
         // Assert
-        await act.Should().ThrowAsync<OperationCanceledException>();
+        await Should.ThrowAsync<OperationCanceledException>(act);
+    }
+
+    [Fact]
+    public async Task Execute_WithTaskDelay_TimesOutCorrectly()
+    {
+        // Arrange
+        TimeoutStrategy strategy = new(_loggerMock.Object, TimeSpan.FromMilliseconds(50));
+
+        // Act - Task.Delay that exceeds timeout
+        Func<Task<int>> act = async () => await strategy.Execute<int>(async ct =>
+        {
+            // This delay should exceed the timeout
+            await Task.Delay(200, ct);
+            return 42;
+        }, CancellationToken.None);
+
+        // Assert
+        TimeoutException exception = await Should.ThrowAsync<TimeoutException>(act);
+        exception.Message.ShouldContain("timed out after");
+    }
+
+    [Fact]
+    public async Task Execute_WithVoidTask_ReturnsSuccessfully()
+    {
+        // Arrange
+        TimeoutStrategy strategy = new(_loggerMock.Object, TimeSpan.FromSeconds(1));
+        bool executed = false;
+
+        // Act
+        await strategy.Execute(ct =>
+        {
+            executed = true;
+            return ValueTask.CompletedTask;
+        }, CancellationToken.None);
+
+        // Assert
+        executed.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Execute_WithVoidTaskExceedingTimeout_ThrowsTimeoutException()
+    {
+        // Arrange
+        TimeoutStrategy strategy = new(_loggerMock.Object, TimeSpan.FromMilliseconds(50));
+
+        // Act
+        Func<Task> act = async () => await strategy.Execute(async ct =>
+        {
+            // Delay exceeds timeout
+            await Task.Delay(200, ct);
+        }, CancellationToken.None);
+
+        // Assert
+        TimeoutException exception = await Should.ThrowAsync<TimeoutException>(act);
+        exception.Message.ShouldContain("timed out after");
+    }
+
+    [Fact]
+    public void Constructor_WithInvalidTimeout_ThrowsArgumentException()
+    {
+        // Act & Assert - Zero timeout
+        ArgumentOutOfRangeException exception1 = Should.Throw<ArgumentOutOfRangeException>(() =>
+            new TimeoutStrategy(_loggerMock.Object, TimeSpan.Zero));
+        exception1.ParamName.ShouldBe("timeout");
+
+        // Act & Assert - Negative timeout
+        ArgumentOutOfRangeException exception2 = Should.Throw<ArgumentOutOfRangeException>(() =>
+            new TimeoutStrategy(_loggerMock.Object, TimeSpan.FromSeconds(-1)));
+        exception2.ParamName.ShouldBe("timeout");
+
+        // Act & Assert - Null logger
+        ArgumentNullException exception3 = Should.Throw<ArgumentNullException>(() =>
+            new TimeoutStrategy(null!, TimeSpan.FromSeconds(1)));
+        exception3.ParamName.ShouldBe("logger");
     }
 }

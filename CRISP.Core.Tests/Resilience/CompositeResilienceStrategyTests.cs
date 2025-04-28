@@ -1,8 +1,8 @@
 using CRISP.Core.Options;
 using CRISP.Core.Resilience;
-using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Shouldly;
 
 namespace CRISP.Core.Tests.Resilience;
 
@@ -47,8 +47,8 @@ public class CompositeResilienceStrategyTests
         }, CancellationToken.None);
 
         // Assert
-        result.Should().Be(expectedResult);
-        callCount.Should().Be(1);
+        result.ShouldBe(expectedResult);
+        callCount.ShouldBe(1);
     }
 
     [Fact]
@@ -80,8 +80,8 @@ public class CompositeResilienceStrategyTests
         }, CancellationToken.None);
 
         // Assert
-        result.Should().Be(expectedResult);
-        callCount.Should().Be(2); // Initial + 1 retry
+        result.ShouldBe(expectedResult);
+        callCount.ShouldBe(2); // Initial + 1 retry
     }
 
     [Fact]
@@ -106,7 +106,7 @@ public class CompositeResilienceStrategyTests
         }, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<TimeoutException>();
+        await Should.ThrowAsync<TimeoutException>(act);
     }
 
     [Fact]
@@ -145,8 +145,8 @@ public class CompositeResilienceStrategyTests
         }, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<CircuitBreakerOpenException>();
-        callCount.Should().Be(0); // Call shouldn't be made when circuit is open
+        await Should.ThrowAsync<CircuitBreakerOpenException>(act);
+        callCount.ShouldBe(0); // Call shouldn't be made when circuit is open
     }
 
     [Fact]
@@ -193,13 +193,13 @@ public class CompositeResilienceStrategyTests
         // Note: Due to retries, the number of calls will be higher than just failureThreshold
         // Each failed call will be retried _maxRetryAttempts times
         int expectedCallCount = failureThreshold * (1 + _maxRetryAttempts);
-        callCounts.Count.Should().Be(expectedCallCount);
+        callCounts.Count.ShouldBe(expectedCallCount);
         
         // Reset counter
         callCounts.Clear();
         
         // Verify the circuit is now open
-        circuitBreaker.State.Should().Be(CircuitState.Open);
+        circuitBreaker.State.ShouldBe(CircuitState.Open);
 
         // Act - try again with circuit now open
         Func<Task<int>> act = async () => await compositeStrategy2.Execute<int>(ct =>
@@ -209,9 +209,193 @@ public class CompositeResilienceStrategyTests
         }, CancellationToken.None);
 
         // Assert - should throw CircuitBreakerOpenException 
-        await act.Should().ThrowAsync<CircuitBreakerOpenException>();
+        await Should.ThrowAsync<CircuitBreakerOpenException>(act);
         
         // And operation should not have been called
-        callCounts.Count.Should().Be(0);
+        callCounts.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Execute_WithMultipleStrategies_AppliesStrategiesInOrder()
+    {
+        // Arrange
+        var mockStrategy1 = new Mock<IResilienceStrategy>();
+        var mockStrategy2 = new Mock<IResilienceStrategy>();
+
+        // Set up the first mock strategy to do something when Execute is called
+        mockStrategy1.Setup(s => s.Execute<int>(It.IsAny<Func<CancellationToken, ValueTask<int>>>(), 
+                It.IsAny<CancellationToken>()))
+            .Returns<Func<CancellationToken, Task<int>>, CancellationToken>(
+                async (operation, ct) => await operation(ct) * 2); // Multiply result by 2
+
+        // Set up the second mock strategy to do something when Execute is called
+        mockStrategy2.Setup(s => s.Execute<int>(It.IsAny<Func<CancellationToken, ValueTask<int>>>(), 
+                It.IsAny<CancellationToken>()))
+            .Returns<Func<CancellationToken, Task<int>>, CancellationToken>(
+                async (operation, ct) => await operation(ct) + 1); // Add 1 to result
+
+        // Create the composite strategy with our mocks
+        var strategy = new CompositeResilienceStrategy(new[] { mockStrategy1.Object, mockStrategy2.Object });
+
+        // Act
+        int result = await strategy.Execute<int>(ct => ValueTask.FromResult(10), CancellationToken.None);
+
+        // Assert
+        // If strategies are applied in the correct order, 10 should first be passed to mockStrategy1
+        // which multiplies by 2 (20), and then the result should be passed to mockStrategy2 which adds 1 (21)
+        result.ShouldBe(21);
+        
+        // Verify that both strategies were called
+        mockStrategy1.Verify(s => s.Execute<int>(It.IsAny<Func<CancellationToken, ValueTask<int>>>(), 
+                It.IsAny<CancellationToken>()), 
+            Times.Once);
+        mockStrategy2.Verify(s => s.Execute<int>(It.IsAny<Func<CancellationToken, ValueTask<int>>>(),
+                It.IsAny<CancellationToken>()), 
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Execute_WithoutReturnValue_AppliesStrategiesInOrder()
+    {
+        // Arrange
+        var mockStrategy1 = new Mock<IResilienceStrategy>();
+        var mockStrategy2 = new Mock<IResilienceStrategy>();
+        bool executed = false;
+        
+        // Set up the first mock strategy to delegate to the operation
+        mockStrategy1.Setup(s => s.Execute(It.IsAny<Func<CancellationToken, ValueTask>>(), 
+                It.IsAny<CancellationToken>()))
+            .Returns<Func<CancellationToken, Task>, CancellationToken>(
+                async (operation, ct) => await operation(ct));
+
+        // Set up the second mock strategy to delegate to the operation
+        mockStrategy2.Setup(s => s.Execute(It.IsAny<Func<CancellationToken, ValueTask>>(), 
+                It.IsAny<CancellationToken>()))
+            .Returns<Func<CancellationToken, Task>, CancellationToken>(
+                async (operation, ct) => await operation(ct));
+
+        // Create the composite strategy with our mocks
+        var strategy = new CompositeResilienceStrategy(new[] { mockStrategy1.Object, mockStrategy2.Object });
+
+        // Act
+        await strategy.Execute(ct => 
+        {
+            executed = true;
+            return ValueTask.CompletedTask;
+        }, CancellationToken.None);
+
+        // Assert
+        executed.ShouldBeTrue();
+        
+        // Verify that both strategies were called
+        mockStrategy1.Verify(s => s.Execute(It.IsAny<Func<CancellationToken, ValueTask>>(), 
+                It.IsAny<CancellationToken>()), 
+            Times.Once);
+        mockStrategy2.Verify(s => s.Execute(It.IsAny<Func<CancellationToken, ValueTask>>(), 
+                It.IsAny<CancellationToken>()), 
+            Times.Once);
+    }
+
+    [Fact]
+    public void Constructor_WithNoStrategies_ThrowsArgumentException()
+    {
+        // Act & Assert
+        var exception = Should.Throw<ArgumentException>(() => new CompositeResilienceStrategy(Array.Empty<IResilienceStrategy>()));
+        exception.Message.ShouldContain("At least one resilience strategy must be provided");
+    }
+
+    [Fact]
+    public void Constructor_WithNullStrategies_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        var exception = Should.Throw<ArgumentNullException>(() => new CompositeResilienceStrategy(null!));
+        exception.ParamName.ShouldBe("strategies");
+    }
+
+    [Fact]
+    public async Task Execute_RealisticComposition_AppliesAllStrategies()
+    {
+        // Arrange - Create real retry, circuit breaker and timeout strategies
+        var retryStrategy = new RetryStrategy(_retryLoggerMock.Object, 1, TimeSpan.FromMilliseconds(1));
+        var circuitBreaker = new CircuitBreakerStrategy(_circuitBreakerLoggerMock.Object, 3, TimeSpan.FromSeconds(1));
+        var timeoutStrategy = new TimeoutStrategy(_timeoutLoggerMock.Object, TimeSpan.FromSeconds(1));
+
+        // Create a composite of all three strategies
+        var compositeStrategy = new CompositeResilienceStrategy(new IResilienceStrategy[] 
+        { 
+            timeoutStrategy, // Timeout should be the outermost strategy to ensure operations don't hang
+            circuitBreaker, // Circuit breaker is next to prevent calls if circuit is open
+            retryStrategy // Retry is innermost to retry the actual operation
+        });
+
+        // Act - Execute an operation that will complete quickly
+        int result = await compositeStrategy.Execute<int>(_ => ValueTask.FromResult(42), CancellationToken.None);
+
+        // Assert
+        result.ShouldBe(42);
+    }
+
+    [Fact]
+    public async Task Execute_WithExceptionInOperation_PropagatesException()
+    {
+        // Arrange
+        var retryStrategy = new RetryStrategy(_retryLoggerMock.Object, 1, TimeSpan.FromMilliseconds(1),
+            retryPredicate:  // Retry only on TimeoutException 
+                ex => ex is TimeoutException); 
+            
+        var circuitBreaker = new CircuitBreakerStrategy(_circuitBreakerLoggerMock.Object, 3, TimeSpan.FromSeconds(1));
+        
+        var compositeStrategy = new CompositeResilienceStrategy(new IResilienceStrategy[] 
+        { 
+            circuitBreaker,
+            retryStrategy 
+        });
+
+        // Act - This should throw immediately since the retry predicate doesn't match
+        Func<Task<int>> act = async () => await compositeStrategy.Execute<int>(_ => 
+            throw new InvalidOperationException("Test exception"), CancellationToken.None);
+
+        // Assert
+        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        exception.Message.ShouldBe("Test exception");
+    }
+
+    [Fact]
+    public async Task Execute_WithTimeoutExceedingLimit_ThrowsTimeoutException()
+    {
+        // Arrange - Create a timeout strategy with a very short timeout
+        var timeoutStrategy = new TimeoutStrategy(_timeoutLoggerMock.Object, TimeSpan.FromMilliseconds(10));
+        
+        var compositeStrategy = new CompositeResilienceStrategy(new[] { timeoutStrategy });
+
+        // Act - Execute an operation that takes longer than the timeout
+        Func<Task<int>> act = async () => await compositeStrategy.Execute<int>(async _ => 
+        {
+            await Task.Delay(100); // Much longer than the timeout
+            return 42;
+        }, CancellationToken.None);
+
+        // Assert
+        var exception = await Should.ThrowAsync<TimeoutException>(act);
+        exception.Message.ShouldContain("timed out after");
+    }
+
+    [Fact]
+    public async Task Execute_WithCancellationToken_PropagatesCancellation()
+    {
+        // Arrange
+        var retryStrategy = new RetryStrategy(_retryLoggerMock.Object, 2, TimeSpan.FromMilliseconds(1));
+        var compositeStrategy = new CompositeResilienceStrategy(new[] { retryStrategy });
+        
+        // Create a cancellation token that's already canceled
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        // Act
+        Func<Task<int>> act = async () => await compositeStrategy.Execute<int>(_ => 
+            ValueTask.FromResult(42), cts.Token);
+
+        // Assert
+        await Should.ThrowAsync<OperationCanceledException>(act);
     }
 }

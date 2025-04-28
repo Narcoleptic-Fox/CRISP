@@ -1,7 +1,7 @@
 using CRISP.Core.Resilience;
-using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Shouldly;
 
 namespace CRISP.Core.Tests.Resilience;
 
@@ -32,8 +32,8 @@ public class RetryStrategyTests
         }, CancellationToken.None);
 
         // Assert
-        result.Should().Be(expectedResult);
-        callCount.Should().Be(1);
+        result.ShouldBe(expectedResult);
+        callCount.ShouldBe(1);
     }
 
     [Fact]
@@ -54,8 +54,8 @@ public class RetryStrategyTests
         }, CancellationToken.None);
 
         // Assert
-        result.Should().Be(expectedResult);
-        callCount.Should().Be(3);
+        result.ShouldBe(expectedResult);
+        callCount.ShouldBe(3);
     }
 
     [Fact]
@@ -76,9 +76,9 @@ public class RetryStrategyTests
         }, CancellationToken.None).AsTask();
 
         // Assert
-        FluentAssertions.Specialized.ExceptionAssertions<RetryFailedException> exeption = await act.Should().ThrowAsync<RetryFailedException>();
-        exeption.WithInnerException<InvalidOperationException>();
-        callCount.Should().Be(_maxRetryAttempts + 1); // Initial attempt + retries
+        RetryFailedException exception = await Should.ThrowAsync<RetryFailedException>(act);
+        exception.InnerException.ShouldBeOfType<InvalidOperationException>();
+        callCount.ShouldBe(_maxRetryAttempts + 1); // Initial attempt + retries
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class RetryStrategyTests
         }, cts.Token);
 
         // Assert
-        await act.Should().ThrowAsync<OperationCanceledException>();
+        await Should.ThrowAsync<OperationCanceledException>(act);
     }
 
     [Fact]
@@ -128,8 +128,8 @@ public class RetryStrategyTests
         }, cts.Token);
 
         // Assert
-        await act.Should().ThrowAsync<OperationCanceledException>();
-        callCount.Should().Be(1);
+        await Should.ThrowAsync<OperationCanceledException>(act);
+        callCount.ShouldBe(1);
     }
 
     [Fact]
@@ -150,7 +150,7 @@ public class RetryStrategyTests
         }, CancellationToken.None);
 
         // Assert
-        callCount.Should().Be(3);
+        callCount.ShouldBe(3);
     }
 
     [Fact]
@@ -163,7 +163,7 @@ public class RetryStrategyTests
         bool isTransient = RetryStrategy.IsTransientException(exception);
 
         // Assert
-        isTransient.Should().BeTrue();
+        isTransient.ShouldBeTrue();
     }
 
     [Fact]
@@ -176,7 +176,7 @@ public class RetryStrategyTests
         bool isTransient = RetryStrategy.IsTransientException(exception);
 
         // Assert
-        isTransient.Should().BeTrue();
+        isTransient.ShouldBeTrue();
     }
 
     [Fact]
@@ -189,7 +189,7 @@ public class RetryStrategyTests
         bool isTransient = RetryStrategy.IsTransientException(exception);
 
         // Assert
-        isTransient.Should().BeTrue();
+        isTransient.ShouldBeTrue();
     }
 
     [Fact]
@@ -202,7 +202,7 @@ public class RetryStrategyTests
         bool isTransient = RetryStrategy.IsTransientException(exception);
 
         // Assert
-        isTransient.Should().BeTrue();
+        isTransient.ShouldBeTrue();
     }
 
     [Fact]
@@ -215,7 +215,7 @@ public class RetryStrategyTests
         bool isTransient = RetryStrategy.IsTransientException(exception);
 
         // Assert
-        isTransient.Should().BeTrue();
+        isTransient.ShouldBeTrue();
     }
 
     [Fact]
@@ -228,7 +228,7 @@ public class RetryStrategyTests
         bool isTransient = RetryStrategy.IsTransientException(exception);
 
         // Assert
-        isTransient.Should().BeFalse();
+        isTransient.ShouldBeFalse();
     }
 
     [Fact]
@@ -238,19 +238,19 @@ public class RetryStrategyTests
         ILogger<RetryStrategy> logger = _loggerMock.Object;
 
         // Act & Assert - Invalid maxRetryAttempts
-        Action act1 = () => new RetryStrategy(logger, maxRetryAttempts: 0);
-        act1.Should().Throw<ArgumentOutOfRangeException>()
-            .And.ParamName.Should().Be("maxRetryAttempts");
+        ArgumentOutOfRangeException exception1 = Should.Throw<ArgumentOutOfRangeException>(() =>
+            new RetryStrategy(logger, maxRetryAttempts: 0));
+        exception1.ParamName.ShouldBe("maxRetryAttempts");
 
         // Act & Assert - Invalid backoffFactor
-        Action act2 = () => new RetryStrategy(logger, backoffFactor: 0.5);
-        act2.Should().Throw<ArgumentOutOfRangeException>()
-            .And.ParamName.Should().Be("backoffFactor");
+        ArgumentOutOfRangeException exception2 = Should.Throw<ArgumentOutOfRangeException>(() =>
+            new RetryStrategy(logger, backoffFactor: 0.5));
+        exception2.ParamName.ShouldBe("backoffFactor");
 
         // Act & Assert - Null logger
-        Action act3 = () => new RetryStrategy(null!);
-        act3.Should().Throw<ArgumentNullException>()
-            .And.ParamName.Should().Be("logger");
+        ArgumentNullException exception3 = Should.Throw<ArgumentNullException>(() =>
+            new RetryStrategy(null!));
+        exception3.ParamName.ShouldBe("logger");
     }
 
     [Fact]
@@ -271,8 +271,8 @@ public class RetryStrategyTests
         }, CancellationToken.None).AsTask();
 
         // Assert
-        await act.Should().ThrowAsync<RetryFailedException>();
-        callCount.Should().Be(1); // Should not retry
+        await Should.ThrowAsync<RetryFailedException>(act);
+        callCount.ShouldBe(1); // Should not retry
     }
 
     [Fact]
@@ -301,8 +301,8 @@ public class RetryStrategyTests
         }, cts.Token).AsTask();
 
         // Assert
-        await action.Should().ThrowAsync<OperationCanceledException>();
-        callCount.Should().Be(1);
+        await Should.ThrowAsync<OperationCanceledException>(action);
+        callCount.ShouldBe(1);
     }
 
     [Fact]
@@ -320,8 +320,8 @@ public class RetryStrategyTests
         }, CancellationToken.None).AsTask();
 
         // Assert
-        await act.Should().ThrowAsync<RetryFailedException>();
-        callCount.Should().Be(2); // Initial attempt + 1 retry
+        await Should.ThrowAsync<RetryFailedException>(act);
+        callCount.ShouldBe(2); // Initial attempt + 1 retry
     }
 
     [Fact]
@@ -346,6 +346,6 @@ public class RetryStrategyTests
         }, CancellationToken.None);
 
         // Assert - Should have retried and then succeeded
-        callCount.Should().Be(_maxRetryAttempts); // Initial + retries that eventually succeed
+        callCount.ShouldBe(_maxRetryAttempts); // Initial + retries that eventually succeed
     }
 }

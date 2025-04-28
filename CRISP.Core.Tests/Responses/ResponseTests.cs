@@ -1,5 +1,5 @@
 using CRISP.Core.Responses;
-using FluentAssertions;
+using Shouldly;
 
 namespace CRISP.Core.Tests.Responses;
 
@@ -9,163 +9,308 @@ public class ResponseTests
     public void Response_Generic_Success_SetsPropertiesCorrectly()
     {
         // Arrange
-        var data = "Test Data";
-        var message = "Custom success message";
+        string data = "Test Data";
+        string message = "Custom success message";
 
         // Act
-        var response = Response<string>.Success(data, message);
+        Response<string> response = Response<string>.Success(data, message);
 
         // Assert
-        response.Should().NotBeNull();
-        response.IsSuccess.Should().BeTrue();
-        response.Message.Should().Be(message);
-        response.Data.Should().Be(data);
-        response.Errors.Should().BeNull();
+        response.ShouldNotBeNull();
+        response.IsSuccess.ShouldBeTrue();
+        response.Message.ShouldBe(message);
+        response.Data.ShouldBe(data);
+        response.Errors.ShouldBeNull();
     }
 
     [Fact]
     public void Response_Generic_Success_UsesDefaultMessage_WhenNotProvided()
     {
         // Arrange
-        var data = 42;
+        int data = 42;
 
         // Act
-        var response = Response<int>.Success(data);
+        Response<int> response = Response<int>.Success(data);
 
         // Assert
-        response.Should().NotBeNull();
-        response.IsSuccess.Should().BeTrue();
-        response.Message.Should().Be("Operation completed successfully");
-        response.Data.Should().Be(data);
-        response.Errors.Should().BeNull();
+        response.ShouldNotBeNull();
+        response.IsSuccess.ShouldBeTrue();
+        response.Message.ShouldBe("Operation completed successfully");
+        response.Data.ShouldBe(data);
+        response.Errors.ShouldBeNull();
     }
 
     [Fact]
     public void Response_Generic_Failure_SetsPropertiesCorrectly()
     {
         // Arrange
-        var message = "Operation failed";
-        var errors = new[] { "Error 1", "Error 2" };
+        string message = "Operation failed";
+        string[] errors = new[] { "Error 1", "Error 2" };
 
         // Act
-        var response = Response<string>.Failure(message, errors);
+        Response<string> response = Response<string>.Failure(message, errors);
 
         // Assert
-        response.Should().NotBeNull();
-        response.IsSuccess.Should().BeFalse();
-        response.Message.Should().Be(message);
-        response.Data.Should().BeNull();
-        response.Errors.Should().BeEquivalentTo(errors);
+        response.ShouldNotBeNull();
+        response.IsSuccess.ShouldBeFalse();
+        response.Message.ShouldBe(message);
+        response.Data.ShouldBeNull();
+        response.Errors.ShouldBe(errors);
     }
 
     [Fact]
     public void Response_Generic_Failure_WithoutErrors_SetsPropertiesCorrectly()
     {
         // Arrange
-        var message = "Operation failed";
+        string message = "Operation failed";
 
         // Act
-        var response = Response<string>.Failure(message);
+        Response<string> response = Response<string>.Failure(message);
 
         // Assert
-        response.Should().NotBeNull();
-        response.IsSuccess.Should().BeFalse();
-        response.Message.Should().Be(message);
-        response.Data.Should().BeNull();
-        response.Errors.Should().BeNull();
+        response.ShouldNotBeNull();
+        response.IsSuccess.ShouldBeFalse();
+        response.Message.ShouldBe(message);
+        response.Data.ShouldBeNull();
+        response.Errors.ShouldBeNull();
     }
 
     [Fact]
     public void Response_Non_Generic_Success_SetsPropertiesCorrectly()
     {
         // Arrange
-        var message = "Custom success message";
+        string message = "Custom success message";
 
         // Act
-        var response = Response.Success(message);
+        Response response = Response.Success(message);
 
         // Assert
-        response.Should().NotBeNull();
-        response.IsSuccess.Should().BeTrue();
-        response.Message.Should().Be(message);
-        response.Data.Should().BeNull();
-        response.Errors.Should().BeNull();
+        response.ShouldNotBeNull();
+        response.IsSuccess.ShouldBeTrue();
+        response.Message.ShouldBe(message);
+        response.Data.ShouldBeNull();
+        response.Errors.ShouldBeNull();
     }
 
     [Fact]
     public void Response_Non_Generic_Success_UsesDefaultMessage_WhenNotProvided()
     {
         // Act
-        var response = Response.Success();
+        Response response = Response.Success();
 
         // Assert
-        response.Should().NotBeNull();
-        response.IsSuccess.Should().BeTrue();
-        response.Message.Should().Be("Operation completed successfully");
-        response.Data.Should().BeNull();
-        response.Errors.Should().BeNull();
+        response.ShouldNotBeNull();
+        response.IsSuccess.ShouldBeTrue();
+        response.Message.ShouldBe("Operation completed successfully");
+        response.Data.ShouldBeNull();
+        response.Errors.ShouldBeNull();
     }
 
     [Fact]
     public void Response_Non_Generic_Failure_SetsPropertiesCorrectly()
     {
         // Arrange
-        var message = "Operation failed";
-        var errors = new[] { "Error 1", "Error 2" };
+        string message = "Operation failed";
+        string[] errors = new[] { "Error 1", "Error 2" };
 
         // Act
-        var response = Response.Failure(message, errors);
+        Response response = Response.Failure(message, errors);
 
         // Assert
-        response.Should().NotBeNull();
-        response.IsSuccess.Should().BeFalse();
-        response.Message.Should().Be(message);
-        response.Data.Should().BeNull();
-        response.Errors.Should().BeEquivalentTo(errors);
+        response.ShouldNotBeNull();
+        response.IsSuccess.ShouldBeFalse();
+        response.Message.ShouldBe(message);
+        response.Data.ShouldBeNull();
+        response.Errors.ShouldBe(errors);
     }
 
     [Fact]
     public void Response_Non_Generic_Failure_WithoutErrors_SetsPropertiesCorrectly()
     {
         // Arrange
-        var message = "Operation failed";
+        string message = "Operation failed";
 
         // Act
-        var response = Response.Failure(message);
+        Response response = Response.Failure(message);
 
         // Assert
-        response.Should().NotBeNull();
-        response.IsSuccess.Should().BeFalse();
-        response.Message.Should().Be(message);
-        response.Data.Should().BeNull();
-        response.Errors.Should().BeNull();
+        response.ShouldNotBeNull();
+        response.IsSuccess.ShouldBeFalse();
+        response.Message.ShouldBe(message);
+        response.Data.ShouldBeNull();
+        response.Errors.ShouldBeNull();
     }
 
     [Fact]
     public void Response_Generic_Constructor_InitializesDefaultValues()
     {
         // Act
-        var response = new Response<int>();
+        Response<int> response = new();
 
         // Assert
-        response.Should().NotBeNull();
-        response.IsSuccess.Should().BeFalse(); // Default value for bool is false
-        response.Message.Should().Be(string.Empty);
-        response.Data.Should().Be(default);
-        response.Errors.Should().BeNull();
+        response.ShouldNotBeNull();
+        response.IsSuccess.ShouldBeFalse(); // Default value for bool is false
+        response.Message.ShouldBe(string.Empty);
+        response.Data.ShouldBe(default);
+        response.Errors.ShouldBeNull();
     }
 
     [Fact]
     public void Response_Non_Generic_Constructor_InitializesDefaultValues()
     {
         // Act
-        var response = new Response();
+        Response response = new();
 
         // Assert
-        response.Should().NotBeNull();
-        response.IsSuccess.Should().BeFalse(); // Default value for bool is false
-        response.Message.Should().Be(string.Empty);
-        response.Data.Should().BeNull();
-        response.Errors.Should().BeNull();
+        response.ShouldNotBeNull();
+        response.IsSuccess.ShouldBeFalse(); // Default value for bool is false
+        response.Message.ShouldBe(string.Empty);
+        response.Data.ShouldBeNull();
+        response.Errors.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Success_WithoutData_CreatesSuccessResponseWithoutData()
+    {
+        // Act
+        Response response = Response.Success();
+
+        // Assert
+        response.ShouldSatisfyAllConditions(
+            () => response.IsSuccess.ShouldBeTrue(),
+            () => response.Errors.ShouldBeEmpty()
+        );
+    }
+
+    [Fact]
+    public void Success_WithData_CreatesSuccessResponseWithData()
+    {
+        // Arrange
+        string data = "test data";
+
+        // Act
+        Response<string> response = Response<string>.Success(data);
+
+        // Assert
+        response.ShouldSatisfyAllConditions(
+            () => response.IsSuccess.ShouldBeTrue(),
+            () => response.Data.ShouldBe(data),
+            () => response.Errors.ShouldBeEmpty()
+        );
+    }
+
+    [Fact]
+    public void Failure_WithMessageOnly_CreatesFailureWithSingleError()
+    {
+        // Arrange
+        string errorMessage = "Error message";
+
+        // Act
+        Response response = Response.Failure(errorMessage);
+
+        // Assert
+        response.ShouldSatisfyAllConditions(
+            () => response.IsSuccess.ShouldBeFalse(),
+            () => response.Errors!.Count().ShouldBe(1),
+            () => response.Errors!.ElementAt(0).ShouldBe(errorMessage)
+        );
+    }
+
+    [Fact]
+    public void Failure_WithMessagesEnumerable_CreatesFailureWithMultipleErrors()
+    {
+        // Arrange
+        List<string> errorMessages = new()
+        { "Error 1", "Error 2", "Error 3" };
+
+        // Act
+        Response response = Response.Failure("Failed", errorMessages);
+
+        // Assert
+        response.ShouldSatisfyAllConditions(
+            () => response.IsSuccess.ShouldBeFalse(),
+            () => response.Errors!.Count().ShouldBe(errorMessages.Count)
+        );
+
+        // Check all error messages are included
+        for (int i = 0; i < errorMessages.Count; i++)
+        {
+            response.Errors!.ElementAt(i).ShouldBe(errorMessages[i]);
+        }
+    }
+
+    [Fact]
+    public void Failure_WithDataAndMessageOnly_CreatesFailureWithDataAndSingleError()
+    {
+        // Arrange
+        string data = "test data";
+        string errorMessage = "Error message";
+
+        // Act
+        Response<string> response = Response<string>.Failure(data, [errorMessage]);
+
+        // Assert
+        response.ShouldSatisfyAllConditions(
+            () => response.IsSuccess.ShouldBeFalse(),
+            () => response.Data.ShouldBe(data),
+            () => response.Errors!.Count().ShouldBe(1),
+            () => response.Errors!.ElementAt(0).ShouldBe(errorMessage)
+        );
+    }
+
+    [Fact]
+    public void Failure_WithDataAndMessagesEnumerable_CreatesFailureWithDataAndMultipleErrors()
+    {
+        // Arrange
+        string data = "test data";
+        List<string> errorMessages = new()
+        { "Error 1", "Error 2", "Error 3" };
+
+        // Act
+        Response<string> response = Response<string>.Failure(data, errorMessages);
+
+        // Assert
+        response.ShouldSatisfyAllConditions(
+            () => response.IsSuccess.ShouldBeFalse(),
+            () => response.Data.ShouldBe(data),
+            () => response.Errors!.Count().ShouldBe(errorMessages.Count)
+        );
+
+        // Check all error messages are included
+        for (int i = 0; i < errorMessages.Count; i++)
+        {
+            response.Errors!.ElementAt(i).ShouldBe(errorMessages[i]);
+        }
+    }
+
+    [Fact]
+    public void WithoutData_ToString_ReturnsExpectedFormat()
+    {
+        // Arrange
+        List<string> errorMessages = new()
+        { "Error 1", "Error 2" };
+        Response response = Response.Failure("Failed", errorMessages);
+
+        // Act
+        string? result = response.ToString();
+
+        // Assert
+        result.ShouldBe("Response { IsSuccess = False, Errors = [Error 1, Error 2] }");
+    }
+
+    [Fact]
+    public void WithData_ToString_ReturnsExpectedFormat()
+    {
+        // Arrange
+        string data = "test data";
+        List<string> errorMessages = new()
+        { "Error 1", "Error 2" };
+        Response<string> response = Response<string>.Failure(data, errorMessages);
+
+        // Act
+        string? result = response.ToString();
+
+        // Assert
+        result.ShouldBe("Response<String> { IsSuccess = False, Data = test data, Errors = [Error 1, Error 2] }");
     }
 }

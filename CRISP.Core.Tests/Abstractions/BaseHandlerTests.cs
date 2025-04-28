@@ -1,9 +1,9 @@
 using CRISP.Core.Abstractions;
 using CRISP.Core.Interfaces;
 using CRISP.Core.Responses;
-using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Shouldly;
 
 namespace CRISP.Core.Tests.Abstractions;
 
@@ -23,9 +23,9 @@ public class BaseHandlerTests
         var response = await handler.Handle(request, CancellationToken.None);
 
         // Assert
-        response.Should().NotBeNull();
-        response.IsSuccess.Should().BeTrue();
-        response.Message.Should().NotBeNull();
+        response.ShouldNotBeNull();
+        response.IsSuccess.ShouldBeTrue();
+        response.Message.ShouldNotBeNull();
         logger.Verify(x => x.Log(
             LogLevel.Information,
             It.IsAny<EventId>(),
@@ -54,9 +54,10 @@ public class BaseHandlerTests
         var response = await handler.Handle(request, CancellationToken.None);
 
         // Assert
-        response.Should().NotBeNull();
-        response.IsSuccess.Should().BeFalse();
-        response.Message.Should().NotBeNull().And.Contain("Test exception");
+        response.ShouldNotBeNull();
+        response.IsSuccess.ShouldBeFalse();
+        response.Message.ShouldNotBeNull();
+        response.Message.ShouldContain("Test exception");
         logger.Verify(x => x.Log(
             LogLevel.Error,
             It.IsAny<EventId>(),
@@ -82,11 +83,11 @@ public class BaseHandlerTests
         var response = await handler.Handle(request, CancellationToken.None);
 
         // Assert
-        response.Should().NotBeNull();
-        response.IsSuccess.Should().BeTrue();
-        response.Message.Should().NotBeNull();
-        response.Data.Should().NotBeNull();
-        response.Data!.Message.Should().Be("Test data");
+        response.ShouldNotBeNull();
+        response.IsSuccess.ShouldBeTrue();
+        response.Message.ShouldNotBeNull();
+        response.Data.ShouldNotBeNull();
+        response.Data!.Message.ShouldBe("Test data");
         logger.Verify(x => x.Log(
             LogLevel.Information,
             It.IsAny<EventId>(),
@@ -115,10 +116,11 @@ public class BaseHandlerTests
         var response = await handler.Handle(request, CancellationToken.None);
 
         // Assert
-        response.Should().NotBeNull();
-        response.IsSuccess.Should().BeFalse();
-        response.Message.Should().NotBeNull().And.Contain("Test exception");
-        response.Data.Should().BeNull();
+        response.ShouldNotBeNull();
+        response.IsSuccess.ShouldBeFalse();
+        response.Message.ShouldNotBeNull();
+        response.Message.ShouldContain("Test exception");
+        response.Data.ShouldBeNull();
         logger.Verify(x => x.Log(
             LogLevel.Error,
             It.IsAny<EventId>(),

@@ -6,8 +6,8 @@
     <Product>CRISP Framework</Product>
     <Copyright>Copyright © CRISP $([System.DateTime]::Now.ToString('yyyy'))</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/Dieshen/CRISP</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/Dieshen/CRISP</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Narcoleptic-Fox/CRISP</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Narcoleptic-Fox/CRISP</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 </Project>

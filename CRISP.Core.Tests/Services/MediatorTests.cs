@@ -1,10 +1,10 @@
 using CRISP.Core.Interfaces;
 using CRISP.Core.Options;
 using CRISP.Core.Services;
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Shouldly;
 
 namespace CRISP.Core.Tests.Services;
 
@@ -31,30 +31,24 @@ public class MediatorTests
     public void Constructor_WithNullServiceProvider_ThrowsArgumentNullException()
     {
         // Arrange & Act
-        Func<Mediator> act = () => new Mediator(null!, _loggerMock.Object, _options);
-
-        // Assert
-        act.Should().Throw<ArgumentNullException>().WithParameterName("serviceProvider");
+        Should.Throw<ArgumentNullException>(() => new Mediator(null!, _loggerMock.Object, _options))
+            .ParamName.ShouldBe("serviceProvider");
     }
 
     [Fact]
     public void Constructor_WithNullLogger_ThrowsArgumentNullException()
     {
         // Arrange & Act
-        Func<Mediator> act = () => new Mediator(_serviceProviderMock.Object, null!, _options);
-
-        // Assert
-        act.Should().Throw<ArgumentNullException>().WithParameterName("logger");
+        Should.Throw<ArgumentNullException>(() => new Mediator(_serviceProviderMock.Object, null!, _options))
+            .ParamName.ShouldBe("logger");
     }
 
     [Fact]
     public void Constructor_WithNullOptions_ThrowsArgumentNullException()
     {
         // Arrange & Act
-        Func<Mediator> act = () => new Mediator(_serviceProviderMock.Object, _loggerMock.Object, null!);
-
-        // Assert
-        act.Should().Throw<ArgumentNullException>().WithParameterName("options");
+        Should.Throw<ArgumentNullException>(() => new Mediator(_serviceProviderMock.Object, _loggerMock.Object, null!))
+            .ParamName.ShouldBe("options");
     }
 
     [Fact]
@@ -84,7 +78,7 @@ public class MediatorTests
         string response = await mediator.Send(request);
 
         // Assert
-        response.Should().Be(expectedResponse);
+        response.ShouldBe(expectedResponse);
         handlerMock.Verify(h => h.Handle(request, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -130,12 +124,11 @@ public class MediatorTests
 
         Mediator mediator = new(_serviceProviderMock.Object, _loggerMock.Object, _options);
 
-        // Act
-        Func<Task> act = () => mediator.Send(request).AsTask();
-
-        // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage($"No handler registered for {request.GetType().Name}");
+        // Act & Assert
+        var exception = await Should.ThrowAsync<InvalidOperationException>(async () => 
+            await mediator.Send(request));
+            
+        exception.Message.ShouldBe($"No handler registered for {request.GetType().Name}");
     }
 
     [Fact]
@@ -157,12 +150,11 @@ public class MediatorTests
 
         Mediator mediator = new(_serviceProviderMock.Object, _loggerMock.Object, _options);
 
-        // Act
-        Func<Task> act = () => mediator.Send(request).AsTask();
-
-        // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage($"Multiple handlers registered for {request.GetType().Name}. Consider setting AllowMultipleHandlers to true if this is intended.");
+        // Act & Assert
+        var exception = await Should.ThrowAsync<InvalidOperationException>(async () => 
+            await mediator.Send(request));
+            
+        exception.Message.ShouldBe($"Multiple handlers registered for {request.GetType().Name}. Consider setting AllowMultipleHandlers to true if this is intended.");
     }
 
     [Fact]
@@ -206,7 +198,7 @@ public class MediatorTests
         string response = await mediator.Send(request);
 
         // Assert
-        response.Should().Be(expectedResponse);
+        response.ShouldBe(expectedResponse);
         handler1Mock.Verify(h => h.Handle(request, It.IsAny<CancellationToken>()), Times.Once);
         handler2Mock.Verify(h => h.Handle(request, It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -242,12 +234,11 @@ public class MediatorTests
 
         Mediator mediator = new(_serviceProviderMock.Object, _loggerMock.Object, options);
 
-        // Act
-        Func<Task> act = () => mediator.Send(request).AsTask();
-
-        // Assert
-        await act.Should().ThrowAsync<TimeoutException>()
-            .WithMessage($"Request {request.GetType().Name} timed out after {options.DefaultTimeoutSeconds} seconds");
+        // Act & Assert
+        var exception = await Should.ThrowAsync<TimeoutException>(async () => 
+            await mediator.Send(request));
+            
+        exception.Message.ShouldBe($"Request {request.GetType().Name} timed out after {options.DefaultTimeoutSeconds} seconds");
     }
 
     public class TestRequest : IRequest<string> { }

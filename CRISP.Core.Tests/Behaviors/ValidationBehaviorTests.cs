@@ -1,9 +1,9 @@
 using CRISP.Core.Behaviors;
 using CRISP.Core.Interfaces;
 using CRISP.Core.Options;
-using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Shouldly;
 
 namespace CRISP.Core.Tests.Behaviors;
 
@@ -49,7 +49,7 @@ public class ValidationBehaviorTests
         string result = await behavior.Handle(request, next, CancellationToken.None);
 
         // Assert
-        result.Should().Be(expectedResult);
+        result.ShouldBe(expectedResult);
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public class ValidationBehaviorTests
         string result = await behavior.Handle(request, next, CancellationToken.None);
 
         // Assert
-        result.Should().Be(expectedResult);
+        result.ShouldBe(expectedResult);
         validator.Verify(v => v.Validate(request), Times.Once);
     }
 
@@ -114,12 +114,13 @@ public class ValidationBehaviorTests
         TestRequest request = new();
         RequestHandlerDelegate<string> next = (CancellationToken cancellationToken) => new ValueTask<string>("Should not reach this");
 
-        // Act
-        Func<Task> act = async () => await behavior.Handle(request, next, CancellationToken.None);
+        // Act & Assert
+        ValidationException exception = await Should.ThrowAsync<ValidationException>(async () =>
+            await behavior.Handle(request, next, CancellationToken.None));
 
-        // Assert
-        await act.Should().ThrowAsync<ValidationException>()
-            .Where(ex => ex.Message.Contains("Name is required") && ex.Message.Contains("Age must be positive"));
+        // Verify exception contains both error messages
+        exception.Message.ShouldContain("Name is required");
+        exception.Message.ShouldContain("Age must be positive");
     }
 
     [Fact]
@@ -142,12 +143,11 @@ public class ValidationBehaviorTests
         TestRequest request = new();
         RequestHandlerDelegate<string> next = (CancellationToken cancellationToken) => new ValueTask<string>("Should not reach this");
 
-        // Act
-        Func<Task> act = async () => await behavior.Handle(request, next, CancellationToken.None);
+        // Act & Assert
+        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await behavior.Handle(request, next, CancellationToken.None));
 
-        // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage($"No validators registered for {typeof(TestRequest).Name}");
+        exception.Message.ShouldBe($"No validators registered for {typeof(TestRequest).Name}");
     }
 
     [Fact]
@@ -194,23 +194,19 @@ public class ValidationBehaviorTests
         string result = await behavior.Handle(request, next, CancellationToken.None);
 
         // Assert
-        result.Should().Be(expectedResult);
+        result.ShouldBe(expectedResult);
 
         // Verify logging was called
-#pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
         _loggerMock.Verify(
             x => x.Log(
                 It.Is<LogLevel>(l => l == LogLevel.Warning),
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Validation failed for request")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Validation failed for request")),
                 It.IsAny<Exception>(),
-                It.Is<Func<It.IsAnyType, Exception, string>>((v, t) => true)
+                It.Is<Func<It.IsAnyType, Exception?, string>>(f => true)
             ),
             Times.Once
         );
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-#pragma warning restore CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
     }
 
     public class TestRequest : IRequest<string>
