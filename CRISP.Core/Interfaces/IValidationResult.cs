@@ -1,5 +1,3 @@
-using CRISP.Core.Behaviors;
-
 namespace CRISP.Core.Interfaces;
 
 /// <summary>
@@ -11,7 +9,7 @@ public interface IValidationResult
     /// Gets a value indicating whether the validation was successful.
     /// </summary>
     bool IsValid { get; }
-    
+
     /// <summary>
     /// Gets the validation errors, if any.
     /// </summary>

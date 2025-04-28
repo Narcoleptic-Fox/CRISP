@@ -3,7 +3,6 @@ using CRISP.Core.Interfaces;
 using CRISP.Core.Options;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Shouldly;
 
 namespace CRISP.Core.Tests.Behaviors;
 

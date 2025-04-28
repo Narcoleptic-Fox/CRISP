@@ -4,7 +4,6 @@ using CRISP.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Shouldly;
 
 namespace CRISP.Core.Tests.Services;
 
@@ -28,28 +27,22 @@ public class MediatorTests
     }
 
     [Fact]
-    public void Constructor_WithNullServiceProvider_ThrowsArgumentNullException()
-    {
+    public void Constructor_WithNullServiceProvider_ThrowsArgumentNullException() =>
         // Arrange & Act
         Should.Throw<ArgumentNullException>(() => new Mediator(null!, _loggerMock.Object, _options))
             .ParamName.ShouldBe("serviceProvider");
-    }
 
     [Fact]
-    public void Constructor_WithNullLogger_ThrowsArgumentNullException()
-    {
+    public void Constructor_WithNullLogger_ThrowsArgumentNullException() =>
         // Arrange & Act
         Should.Throw<ArgumentNullException>(() => new Mediator(_serviceProviderMock.Object, null!, _options))
             .ParamName.ShouldBe("logger");
-    }
 
     [Fact]
-    public void Constructor_WithNullOptions_ThrowsArgumentNullException()
-    {
+    public void Constructor_WithNullOptions_ThrowsArgumentNullException() =>
         // Arrange & Act
         Should.Throw<ArgumentNullException>(() => new Mediator(_serviceProviderMock.Object, _loggerMock.Object, null!))
             .ParamName.ShouldBe("options");
-    }
 
     [Fact]
     public async Task Send_WithRequest_InvokesHandlerAndReturnsResponse()
@@ -125,9 +118,9 @@ public class MediatorTests
         Mediator mediator = new(_serviceProviderMock.Object, _loggerMock.Object, _options);
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<InvalidOperationException>(async () => 
+        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
             await mediator.Send(request));
-            
+
         exception.Message.ShouldBe($"No handler registered for {request.GetType().Name}");
     }
 
@@ -151,9 +144,9 @@ public class MediatorTests
         Mediator mediator = new(_serviceProviderMock.Object, _loggerMock.Object, _options);
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<InvalidOperationException>(async () => 
+        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
             await mediator.Send(request));
-            
+
         exception.Message.ShouldBe($"Multiple handlers registered for {request.GetType().Name}. Consider setting AllowMultipleHandlers to true if this is intended.");
     }
 
@@ -235,9 +228,9 @@ public class MediatorTests
         Mediator mediator = new(_serviceProviderMock.Object, _loggerMock.Object, options);
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<TimeoutException>(async () => 
+        TimeoutException exception = await Should.ThrowAsync<TimeoutException>(async () =>
             await mediator.Send(request));
-            
+
         exception.Message.ShouldBe($"Request {request.GetType().Name} timed out after {options.DefaultTimeoutSeconds} seconds");
     }
 

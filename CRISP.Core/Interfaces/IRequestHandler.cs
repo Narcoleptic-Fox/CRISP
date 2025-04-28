@@ -4,7 +4,7 @@ namespace CRISP.Core.Interfaces;
 /// Defines a handler for a request without a return value.
 /// </summary>
 /// <typeparam name="TRequest">The type of request being handled.</typeparam>
-public interface IRequestHandler<in TRequest> 
+public interface IRequestHandler<in TRequest>
     where TRequest : IRequest
 {
     /// <summary>
@@ -21,14 +21,14 @@ public interface IRequestHandler<in TRequest>
 /// </summary>
 /// <typeparam name="TRequest">The type of request being handled.</typeparam>
 /// <typeparam name="TResponse">The type of response returned by the handler.</typeparam>
-public interface IRequestHandler<in TRequest, TResponse> 
+public interface IRequestHandler<in TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
     /// <summary>
     /// Handles a request and returns a response.
     /// </summary>
     /// <param name="request">The request to handle.</param>
-/// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
-/// <returns>A value task representing the operation with the response.</returns>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+    /// <returns>A value task representing the operation with the response.</returns>
     ValueTask<TResponse> Handle(TRequest request, CancellationToken cancellationToken = default);
 }

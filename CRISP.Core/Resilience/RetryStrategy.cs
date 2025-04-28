@@ -40,7 +40,7 @@ public class RetryStrategy : IResilienceStrategy
     {
         // Check for cancellation first
         cancellationToken.ThrowIfCancellationRequested();
-        
+
         int attempts = 0;
         TimeSpan delay = _initialDelay;
         Exception? lastException = null;
@@ -52,7 +52,7 @@ public class RetryStrategy : IResilienceStrategy
             {
                 if (attempts > 0)
                 {
-                    _logger.LogDebug("Retry attempt {AttemptNumber} of {MaxAttempts}", 
+                    _logger.LogDebug("Retry attempt {AttemptNumber} of {MaxAttempts}",
                         attempts, _maxRetryAttempts);
                 }
 
@@ -83,7 +83,7 @@ public class RetryStrategy : IResilienceStrategy
                         // Cancellation during delay, propagate it
                         throw;
                     }
-                    
+
                     delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * _backoffFactor);
                 }
                 else
@@ -103,7 +103,7 @@ public class RetryStrategy : IResilienceStrategy
     {
         // Check for cancellation first
         cancellationToken.ThrowIfCancellationRequested();
-        
+
         int attempts = 0;
         TimeSpan delay = _initialDelay;
         Exception? lastException = null;
@@ -115,7 +115,7 @@ public class RetryStrategy : IResilienceStrategy
             {
                 if (attempts > 0)
                 {
-                    _logger.LogDebug("Retry attempt {AttemptNumber} of {MaxAttempts}", 
+                    _logger.LogDebug("Retry attempt {AttemptNumber} of {MaxAttempts}",
                         attempts, _maxRetryAttempts);
                 }
 
@@ -147,7 +147,7 @@ public class RetryStrategy : IResilienceStrategy
                         // Cancellation during delay, propagate it
                         throw;
                     }
-                    
+
                     delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * _backoffFactor);
                 }
                 else
@@ -162,10 +162,7 @@ public class RetryStrategy : IResilienceStrategy
         throw new RetryFailedException($"Operation failed after {attempts - 1} retry attempts", lastException!);
     }
 
-    private bool ShouldRetry(Exception exception)
-    {
-        return _retryPredicate?.Invoke(exception) ?? IsTransientException(exception);
-    }
+    private bool ShouldRetry(Exception exception) => _retryPredicate?.Invoke(exception) ?? IsTransientException(exception);
 
     /// <summary>
     /// Determines if an exception is considered transient and should be retried.
@@ -176,7 +173,7 @@ public class RetryStrategy : IResilienceStrategy
     {
         if (exception == null)
             return false;
-            
+
         // Common transient exceptions, add more as needed
         return exception is TimeoutException ||
                exception is System.Net.Http.HttpRequestException ||

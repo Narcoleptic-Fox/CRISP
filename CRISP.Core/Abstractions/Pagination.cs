@@ -9,7 +9,7 @@ public class PaginatedResult<T>
     /// <summary>
     /// Gets or sets the items for the current page.
     /// </summary>
-    public IReadOnlyList<T> Items { get; set; } = new List<T>();
+    public IReadOnlyList<T> Items { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the total number of items across all pages.
@@ -50,17 +50,14 @@ public class PaginatedResult<T>
     /// <param name="pageSize">The number of items per page.</param>
     /// <returns>A new <see cref="PaginatedResult{T}"/> instance.</returns>
     public static PaginatedResult<T> Create(
-        IEnumerable<T> items, 
-        int totalCount, 
-        int pageNumber, 
-        int pageSize)
-    {
-        return new PaginatedResult<T>
+        IEnumerable<T> items,
+        int totalCount,
+        int pageNumber,
+        int pageSize) => new()
         {
             Items = items.ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
             PageSize = pageSize
         };
-    }
 }

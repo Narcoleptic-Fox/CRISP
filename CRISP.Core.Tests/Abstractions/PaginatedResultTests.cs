@@ -1,5 +1,4 @@
 using CRISP.Core.Abstractions;
-using FluentAssertions;
 
 namespace CRISP.Core.Tests.Abstractions;
 
@@ -9,82 +8,82 @@ public class PaginatedResultTests
     public void Constructor_SetsPropertiesCorrectly()
     {
         // Act
-        var result = new PaginatedResult<string>
+        PaginatedResult<string> result = new()
         {
-            Items = new List<string> { "Item1", "Item2" },
+            Items = ["Item1", "Item2"],
             TotalCount = 10,
             PageNumber = 2,
             PageSize = 2
         };
 
         // Assert
-        result.Items.Should().HaveCount(2);
-        result.Items.Should().Contain("Item1");
-        result.Items.Should().Contain("Item2");
-        result.TotalCount.Should().Be(10);
-        result.PageNumber.Should().Be(2);
-        result.PageSize.Should().Be(2);
+        result.Items.Count().ShouldBe(2);
+        result.Items.ShouldContain("Item1");
+        result.Items.ShouldContain("Item2");
+        result.TotalCount.ShouldBe(10);
+        result.PageNumber.ShouldBe(2);
+        result.PageSize.ShouldBe(2);
     }
 
     [Fact]
     public void TotalPages_CalculatesCorrectly()
     {
         // Arrange
-        var result = new PaginatedResult<string>
+        PaginatedResult<string> result = new()
         {
             TotalCount = 10,
             PageSize = 3
         };
 
         // Act & Assert
-        result.TotalPages.Should().Be(4); // Ceiling of 10/3 = 4
+        result.TotalPages.ShouldBe(4); // Ceiling of 10/3 = 4
     }
 
     [Fact]
     public void TotalPages_WithExactDivision_CalculatesCorrectly()
     {
         // Arrange
-        var result = new PaginatedResult<string>
+        PaginatedResult<string> result = new()
         {
             TotalCount = 10,
             PageSize = 5
         };
 
         // Act & Assert
-        result.TotalPages.Should().Be(2); // 10/5 = 2
+        result.TotalPages.ShouldBe(2); // 10/5 = 2
     }
 
     [Fact]
     public void HasPreviousPage_WhenOnFirstPage_ReturnsFalse()
     {
         // Arrange
-        var result = new PaginatedResult<string>
+        PaginatedResult<string> result = new()
         {
             PageNumber = 1
         };
 
         // Act & Assert
-        result.HasPreviousPage.Should().BeFalse();
+        result.HasPreviousPage.ShouldBeFalse();
     }
 
     [Fact]
     public void HasPreviousPage_WhenNotOnFirstPage_ReturnsTrue()
     {
         // Arrange
-        var result = new PaginatedResult<string>
+        PaginatedResult<string> result = new()
         {
             PageNumber = 2
         };
 
         // Act & Assert
-        result.HasPreviousPage.Should().BeTrue();
+        result.HasPreviousPage.ShouldBeTrue();
     }
 
     [Fact]
     public void HasNextPage_WhenOnLastPage_ReturnsFalse()
     {
         // Arrange
-        var result = new PaginatedResult<string>
+        PaginatedResult<string> result = new()
         {
             PageNumber = 5,
             PageSize = 2,
@@ -92,14 +91,14 @@ public class PaginatedResultTests
         };
 
         // Act & Assert
-        result.HasNextPage.Should().BeFalse();
+        result.HasNextPage.ShouldBeFalse();
     }
 
     [Fact]
     public void HasNextPage_WhenNotOnLastPage_ReturnsTrue()
     {
         // Arrange
-        var result = new PaginatedResult<string>
+        PaginatedResult<string> result = new()
         {
             PageNumber = 2,
             PageSize = 2,
@@ -107,59 +106,59 @@ public class PaginatedResultTests
         };
 
         // Act & Assert
-        result.HasNextPage.Should().BeTrue();
+        result.HasNextPage.ShouldBeTrue();
     }
 
     [Fact]
     public void Create_ReturnsNewInstanceWithCorrectProperties()
     {
         // Arrange
-        var items = new List<string> { "Item1", "Item2" };
+        List<string> items = ["Item1", "Item2"];
         const int totalCount = 10;
         const int pageNumber = 2;
         const int pageSize = 2;
 
         // Act
-        var result = PaginatedResult<string>.Create(items, totalCount, pageNumber, pageSize);
+        PaginatedResult<string> result = PaginatedResult<string>.Create(items, totalCount, pageNumber, pageSize);
 
         // Assert
-        result.Should().NotBeNull();
-        result.Items.Should().BeEquivalentTo(items);
-        result.TotalCount.Should().Be(totalCount);
-        result.PageNumber.Should().Be(pageNumber);
-        result.PageSize.Should().Be(pageSize);
+        result.ShouldNotBeNull();
+        result.Items.ShouldBeEquivalentTo(items);
+        result.TotalCount.ShouldBe(totalCount);
+        result.PageNumber.ShouldBe(pageNumber);
+        result.PageSize.ShouldBe(pageSize);
     }
-    
+
     [Fact]
     public void DefaultConstructor_SetsDefaultProperties()
     {
         // Act
-        var result = new PaginatedResult<string>();
-        
+        PaginatedResult<string> result = new();
+
         // Assert
-        result.Items.Should().NotBeNull();
-        result.Items.Should().BeEmpty();
-        result.TotalCount.Should().Be(0);
-        result.PageNumber.Should().Be(0);
-        result.PageSize.Should().Be(0);
-        result.TotalPages.Should().Be(0);
-        result.HasPreviousPage.Should().BeFalse();
-        result.HasNextPage.Should().BeFalse();
+        result.Items.ShouldNotBeNull();
+        result.Items.ShouldBeEmpty();
+        result.TotalCount.ShouldBe(0);
+        result.PageNumber.ShouldBe(0);
+        result.PageSize.ShouldBe(0);
+        result.TotalPages.ShouldBe(0);
+        result.HasPreviousPage.ShouldBeFalse();
+        result.HasNextPage.ShouldBeFalse();
     }
-    
+
     [Theory]
     [InlineData(0, 5, 0)]  // Edge case: zero total count
     [InlineData(10, 0, int.MaxValue)] // Edge case: zero page size - division by zero results in Int32.MaxValue
     public void TotalPages_WithEdgeCases_HandlesCorrectly(int totalCount, int pageSize, int expectedPages)
     {
         // Arrange
-        var result = new PaginatedResult<string>
+        PaginatedResult<string> result = new()
         {
             TotalCount = totalCount,
             PageSize = pageSize
         };
-        
+
         // Act & Assert
-        result.TotalPages.Should().Be(expectedPages);
+        result.TotalPages.ShouldBe(expectedPages);
     }
 }

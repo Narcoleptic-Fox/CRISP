@@ -46,7 +46,7 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
         if (validators.Any())
         {
             // Perform validation
-            List<ValidationError> errors = new();
+            List<ValidationError> errors = [];
 
             foreach (IValidator<TRequest>? validator in validators)
             {

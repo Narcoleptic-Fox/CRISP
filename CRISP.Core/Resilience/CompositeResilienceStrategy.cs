@@ -14,7 +14,7 @@ public class CompositeResilienceStrategy : IResilienceStrategy
     public CompositeResilienceStrategy(IEnumerable<IResilienceStrategy> strategies)
     {
         _strategies = strategies?.ToList() ?? throw new ArgumentNullException(nameof(strategies));
-        
+
         if (!_strategies.Any())
         {
             throw new ArgumentException("At least one resilience strategy must be provided.", nameof(strategies));
@@ -35,16 +35,16 @@ public class CompositeResilienceStrategy : IResilienceStrategy
     {
         // Create a nested chain of strategy executions
         Func<CancellationToken, ValueTask<T>> compositeOperation = operation;
-        
+
         // Apply each strategy in reverse order to create the execution chain
-        foreach (var strategy in _strategies.Reverse())
+        foreach (IResilienceStrategy? strategy in _strategies.Reverse())
         {
-            var currentStrategy = strategy;
-            var currentOperation = compositeOperation;
-            
+            IResilienceStrategy currentStrategy = strategy;
+            Func<CancellationToken, ValueTask<T>> currentOperation = compositeOperation;
+
             compositeOperation = async (ct) => await currentStrategy.Execute(currentOperation, ct);
         }
-        
+
         // Execute the composite operation
         return await compositeOperation(cancellationToken);
     }
@@ -54,16 +54,16 @@ public class CompositeResilienceStrategy : IResilienceStrategy
     {
         // Create a nested chain of strategy executions
         Func<CancellationToken, ValueTask> compositeOperation = operation;
-        
+
         // Apply each strategy in reverse order to create the execution chain
-        foreach (var strategy in _strategies.Reverse())
+        foreach (IResilienceStrategy? strategy in _strategies.Reverse())
         {
-            var currentStrategy = strategy;
-            var currentOperation = compositeOperation;
-            
+            IResilienceStrategy currentStrategy = strategy;
+            Func<CancellationToken, ValueTask> currentOperation = compositeOperation;
+
             compositeOperation = async (ct) => await currentStrategy.Execute(currentOperation, ct);
         }
-        
+
         // Execute the composite operation
         await compositeOperation(cancellationToken);
     }

@@ -1,7 +1,6 @@
 using CRISP.Core.Resilience;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Shouldly;
 
 namespace CRISP.Core.Tests.Resilience;
 
@@ -177,7 +176,7 @@ public class CircuitBreakerStrategyTests
         // Act - Throw exceptions to ensure they count toward the failure threshold
         for (int i = 0; i < _failureThreshold; i++)
         {
-            try 
+            try
             {
                 await strategy.Execute<int>(_ =>
                 {

@@ -2,7 +2,6 @@ using CRISP.Core.Behaviors;
 using CRISP.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Shouldly;
 
 namespace CRISP.Core.Tests.Behaviors;
 
@@ -47,7 +46,7 @@ public class LoggingBehaviorTests
         Func<Task> act = () => behavior.Handle(request, next, CancellationToken.None).AsTask();
 
         // Assert
-        var exception = await Should.ThrowAsync<InvalidOperationException>(act);
+        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(act);
         exception.Message.ShouldBe("Test exception");
 
         // Verify that start log was called

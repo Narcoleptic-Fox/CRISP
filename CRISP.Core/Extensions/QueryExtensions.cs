@@ -1,6 +1,6 @@
 using CRISP.Core.Abstractions;
 
-namespace CRISP.Core.Extensions;
+namespace CRISP;
 
 /// <summary>
 /// Extension methods for query operations in the CRISP architecture.
@@ -39,8 +39,8 @@ public static class QueryExtensions
     /// <param name="pageSize">The page size.</param>
     /// <returns>A paginated result.</returns>
     public static PaginatedResult<T> ToPaginatedResult<T>(
-        this IQueryable<T> query, 
-        int pageNumber, 
+        this IQueryable<T> query,
+        int pageNumber,
         int pageSize)
     {
         if (pageNumber <= 0)
@@ -53,8 +53,8 @@ public static class QueryExtensions
             pageSize = 10;
         }
 
-        var totalCount = query.Count();
-        var items = query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+        int totalCount = query.Count();
+        List<T> items = query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
 
         return new PaginatedResult<T>
         {
@@ -72,10 +72,7 @@ public static class QueryExtensions
     /// <param name="query">The queryable collection.</param>
     /// <param name="filter">The filter parameters.</param>
     /// <returns>A queryable collection with pagination applied.</returns>
-    public static IQueryable<T> ApplyFilter<T>(this IQueryable<T> query, FilterBase filter)
-    {
-        return query.ApplyPaging(filter.PageNumber, filter.PageSize);
-    }
+    public static IQueryable<T> ApplyFilter<T>(this IQueryable<T> query, FilterBase filter) => query.ApplyPaging(filter.PageNumber, filter.PageSize);
 
     /// <summary>
     /// Creates a paginated result from a queryable collection using filter parameters.
@@ -85,9 +82,6 @@ public static class QueryExtensions
     /// <param name="filter">The filter parameters.</param>
     /// <returns>A paginated result.</returns>
     public static PaginatedResult<T> ToPaginatedResult<T>(
-        this IQueryable<T> query, 
-        FilterBase filter)
-    {
-        return query.ToPaginatedResult(filter.PageNumber, filter.PageSize);
-    }
+        this IQueryable<T> query,
+        FilterBase filter) => query.ToPaginatedResult(filter.PageNumber, filter.PageSize);
 }

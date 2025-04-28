@@ -13,7 +13,7 @@ public interface IMediator
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <returns>ValueTask containing the response from the request.</returns>
     ValueTask<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Sends a request to its corresponding handler without expecting a response.
     /// </summary>

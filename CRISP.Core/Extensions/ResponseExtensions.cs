@@ -1,6 +1,6 @@
 using CRISP.Core.Responses;
 
-namespace CRISP.Core.Extensions;
+namespace CRISP;
 
 /// <summary>
 /// Extension methods for working with CRISP responses.
@@ -19,7 +19,7 @@ public static class ResponseExtensions
     {
         if (!response.IsSuccess)
         {
-            var message = errorMessage ?? response.Message;
+            string message = errorMessage ?? response.Message;
             if (response.Errors != null && response.Errors.Any())
             {
                 message = $"{message}: {string.Join(", ", response.Errors)}";
@@ -40,7 +40,7 @@ public static class ResponseExtensions
     {
         if (!response.IsSuccess)
         {
-            var message = errorMessage ?? response.Message;
+            string message = errorMessage ?? response.Message;
             if (response.Errors != null && response.Errors.Any())
             {
                 message = $"{message}: {string.Join(", ", response.Errors)}";
@@ -59,23 +59,17 @@ public static class ResponseExtensions
     /// <returns>A new response with mapped data.</returns>
     public static Response<TDestination> Map<TSource, TDestination>(
         this Response<TSource> response,
-        Func<TSource, TDestination> mapper)
-    {
-        if (!response.IsSuccess)
-        {
-            return new Response<TDestination>
+        Func<TSource, TDestination> mapper) => !response.IsSuccess
+            ? new Response<TDestination>
             {
                 IsSuccess = false,
                 Message = response.Message,
                 Errors = response.Errors
+            }
+            : new Response<TDestination>
+            {
+                IsSuccess = true,
+                Message = response.Message,
+                Data = response.Data != null ? mapper(response.Data) : default
             };
-        }
-
-        return new Response<TDestination>
-        {
-            IsSuccess = true,
-            Message = response.Message,
-            Data = response.Data != null ? mapper(response.Data) : default
-        };
-    }
 }

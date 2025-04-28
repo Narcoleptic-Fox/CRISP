@@ -1,5 +1,4 @@
 using CRISP.Core.Responses;
-using Shouldly;
 
 namespace CRISP.Core.Tests.Responses;
 
@@ -220,8 +219,7 @@ public class ResponseTests
     public void Failure_WithMessagesEnumerable_CreatesFailureWithMultipleErrors()
     {
         // Arrange
-        List<string> errorMessages = new()
-        { "Error 1", "Error 2", "Error 3" };
+        List<string> errorMessages = ["Error 1", "Error 2", "Error 3"];
 
         // Act
         Response response = Response.Failure("Failed", errorMessages);
@@ -263,8 +261,7 @@ public class ResponseTests
     {
         // Arrange
         string data = "test data";
-        List<string> errorMessages = new()
-        { "Error 1", "Error 2", "Error 3" };
+        List<string> errorMessages = ["Error 1", "Error 2", "Error 3"];
 
         // Act
         Response<string> response = Response<string>.Failure(data, errorMessages);
@@ -287,8 +284,7 @@ public class ResponseTests
     public void WithoutData_ToString_ReturnsExpectedFormat()
     {
         // Arrange
-        List<string> errorMessages = new()
-        { "Error 1", "Error 2" };
+        List<string> errorMessages = ["Error 1", "Error 2"];
         Response response = Response.Failure("Failed", errorMessages);
 
         // Act
@@ -303,8 +299,7 @@ public class ResponseTests
     {
         // Arrange
         string data = "test data";
-        List<string> errorMessages = new()
-        { "Error 1", "Error 2" };
+        List<string> errorMessages = ["Error 1", "Error 2"];
         Response<string> response = Response<string>.Failure(data, errorMessages);
 
         // Act

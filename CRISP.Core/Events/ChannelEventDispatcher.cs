@@ -21,7 +21,7 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
     private readonly SemaphoreSlim _initLock = new(1, 1);
     private bool _initialized;
     private bool _disposed;
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ChannelEventDispatcher"/> class.
     /// </summary>
@@ -39,48 +39,48 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _eventOptions = eventOptions ?? throw new ArgumentNullException(nameof(eventOptions));
         _channelOptions = channelOptions ?? throw new ArgumentNullException(nameof(channelOptions));
-        
-        _channel = _channelOptions.ChannelCapacity > 0 
-            ? Channel.CreateBounded<IDomainEvent>(new BoundedChannelOptions(_channelOptions.ChannelCapacity) 
+
+        _channel = _channelOptions.ChannelCapacity > 0
+            ? Channel.CreateBounded<IDomainEvent>(new BoundedChannelOptions(_channelOptions.ChannelCapacity)
             {
                 FullMode = BoundedChannelFullMode.Wait,
                 SingleWriter = false,
                 SingleReader = false,
                 AllowSynchronousContinuations = true
             })
-            : Channel.CreateUnbounded<IDomainEvent>(new UnboundedChannelOptions 
+            : Channel.CreateUnbounded<IDomainEvent>(new UnboundedChannelOptions
             {
                 SingleWriter = false,
                 SingleReader = false,
                 AllowSynchronousContinuations = true
             });
-        
+
         _consumerCts = new CancellationTokenSource();
         _consumers = new List<Task>(_channelOptions.ConsumerCount);
         _initialized = false;
     }
-    
+
     /// <summary>
     /// Initialize the event consumers.
     /// </summary>
     private async Task EnsureInitializedAsync()
     {
         if (_initialized) return;
-        
+
         await _initLock.WaitAsync();
         try
         {
             if (_initialized) return;
-            
+
             for (int i = 0; i < _channelOptions.ConsumerCount; i++)
             {
                 int consumerId = i + 1;
-                var consumerTask = ConsumeEventsAsync(consumerId, _consumerCts.Token);
+                Task consumerTask = ConsumeEventsAsync(consumerId, _consumerCts.Token);
                 _consumers.Add(consumerTask);
             }
-            
+
             _initialized = true;
-            
+
             if (_eventOptions.EnableDetailedLogging)
             {
                 _logger.LogInformation(
@@ -94,7 +94,7 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
             _initLock.Release();
         }
     }
-    
+
     /// <summary>
     /// Consumer task that processes events from the channel.
     /// </summary>
@@ -106,12 +106,12 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
         {
             _logger.LogDebug("Event consumer {ConsumerId} started", consumerId);
         }
-        
+
         try
         {
             while (!cancellationToken.IsCancellationRequested && await _channel.Reader.WaitToReadAsync(cancellationToken))
             {
-                while (_channel.Reader.TryRead(out var @event))
+                while (_channel.Reader.TryRead(out IDomainEvent? @event))
                 {
                     try
                     {
@@ -136,14 +136,14 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception in event consumer {ConsumerId}", consumerId);
-            
+
             if (_eventOptions.ThrowOnHandlerFailure)
             {
                 throw;
             }
         }
     }
-    
+
     /// <summary>
     /// Process a single domain event by finding and invoking its handlers.
     /// </summary>
@@ -152,20 +152,20 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
     private async Task ProcessEventAsync(IDomainEvent @event, CancellationToken cancellationToken)
     {
         Type eventType = @event.GetType();
-        
+
         if (_eventOptions.EnableDetailedLogging)
         {
             _logger.LogDebug("Processing domain event {EventType} - {EventId}", eventType.Name, @event.EventId);
         }
-        
+
         // Create a scope to resolve handlers
-        using var scope = _serviceProvider.CreateScope();
-        
+        using IServiceScope scope = _serviceProvider.CreateScope();
+
         Type handlerType = typeof(IEventHandler<>).MakeGenericType(eventType);
-        
+
         // Get all handlers for this event type
-        var handlers = scope.ServiceProvider.GetServices(handlerType).Where(h => h != null).ToList();
-        
+        List<object?> handlers = scope.ServiceProvider.GetServices(handlerType).Where(h => h != null).ToList();
+
         if (!handlers.Any())
         {
             if (_eventOptions.EnableDetailedLogging)
@@ -174,19 +174,19 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
             }
             return;
         }
-        
+
         // Invoke all handlers
         if (_eventOptions.ProcessEventsInParallel)
         {
-            var tasks = handlers
+            IEnumerable<Task> tasks = handlers
                 .Where(h => h != null)
                 .Select(handler => InvokeHandlerAsync(handler!, @event, eventType, cancellationToken));
-            
+
             await Task.WhenAll(tasks);
         }
         else
         {
-            foreach (var handler in handlers)
+            foreach (object? handler in handlers)
             {
                 if (handler != null)
                 {
@@ -195,7 +195,7 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
             }
         }
     }
-    
+
     /// <summary>
     /// Invoke a single event handler.
     /// </summary>
@@ -204,25 +204,25 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
         try
         {
             // Get the Handle method
-            var method = handler.GetType().GetInterfaceMap(
+            System.Reflection.MethodInfo method = handler.GetType().GetInterfaceMap(
                 typeof(IEventHandler<>).MakeGenericType(eventType)).TargetMethods.First();
-            
+
             if (method == null)
             {
                 throw new InvalidOperationException($"Handler for {eventType.Name} does not implement Handle method.");
             }
-            
+
             // Invoke the Handle method
-            var result = method.Invoke(handler, new object[] { @event, cancellationToken });
-            
+            object? result = method.Invoke(handler, new object[] { @event, cancellationToken });
+
             if (result == null)
             {
                 throw new InvalidOperationException($"Handler for {eventType.Name} returned null.");
             }
-            
+
             // Await the ValueTask
-            await ((ValueTask)result);
-            
+            await (ValueTask)result;
+
             if (_eventOptions.EnableDetailedLogging)
             {
                 _logger.LogDebug("Handler {HandlerType} processed event {EventType}",
@@ -233,7 +233,7 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
         {
             _logger.LogError(ex, "Error handling domain event {EventType} by handler {HandlerType}",
                 eventType.Name, handler.GetType().Name);
-            
+
             // Throw exception if configured to do so
             if (_eventOptions.ThrowOnHandlerFailure)
             {
@@ -249,25 +249,25 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
         {
             throw new ObjectDisposedException(nameof(ChannelEventDispatcher));
         }
-        
+
         if (@event == null)
         {
             throw new ArgumentNullException(nameof(@event));
         }
-        
+
         await EnsureInitializedAsync();
-        
+
         if (_eventOptions.EnableDetailedLogging)
         {
             _logger.LogDebug("Enqueuing domain event {EventType} - {EventId}", @event.GetType().Name, @event.EventId);
         }
-        
+
         if (_channelOptions.FullChannelWaitTimeMs > 0)
         {
             // Use a timeout when the channel is full
-            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(_channelOptions.FullChannelWaitTimeMs));
-            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken);
-            
+            using CancellationTokenSource timeoutCts = new(TimeSpan.FromMilliseconds(_channelOptions.FullChannelWaitTimeMs));
+            using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken);
+
             try
             {
                 await _channel.Writer.WriteAsync(@event, linkedCts.Token);
@@ -293,20 +293,20 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
         {
             throw new ObjectDisposedException(nameof(ChannelEventDispatcher));
         }
-        
+
         if (events == null) return;
-        
-        var eventsList = events.ToList();
+
+        List<IDomainEvent> eventsList = events.ToList();
         if (!eventsList.Any()) return;
-        
+
         await EnsureInitializedAsync();
-        
+
         // Process events in batches if needed
         if (eventsList.Count > _eventOptions.MaxBatchSize)
         {
             for (int i = 0; i < eventsList.Count; i += _eventOptions.MaxBatchSize)
             {
-                var batch = eventsList.Skip(i).Take(_eventOptions.MaxBatchSize);
+                IEnumerable<IDomainEvent> batch = eventsList.Skip(i).Take(_eventOptions.MaxBatchSize);
                 await DispatchBatchAsync(batch, cancellationToken);
             }
         }
@@ -315,18 +315,18 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
             await DispatchBatchAsync(eventsList, cancellationToken);
         }
     }
-    
+
     /// <summary>
     /// Dispatch a batch of events to the channel.
     /// </summary>
     private async ValueTask DispatchBatchAsync(IEnumerable<IDomainEvent> events, CancellationToken cancellationToken)
     {
-        foreach (var @event in events)
+        foreach (IDomainEvent @event in events)
         {
             await Dispatch(@event, cancellationToken);
         }
     }
-    
+
     /// <summary>
     /// Dispose of resources.
     /// </summary>
@@ -335,7 +335,7 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
-    
+
     /// <summary>
     /// Dispose of resources asynchronously.
     /// </summary>
@@ -352,14 +352,14 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
     protected virtual void Dispose(bool disposing)
     {
         if (_disposed) return;
-        
+
         if (disposing)
         {
             ShutdownConsumers();
             _consumerCts.Dispose();
             _initLock.Dispose();
         }
-        
+
         _disposed = true;
     }
 
@@ -369,27 +369,27 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
     protected virtual async ValueTask DisposeAsyncCore()
     {
         if (_disposed) return;
-        
+
         await ShutdownConsumersAsync();
         _consumerCts.Dispose();
         _initLock.Dispose();
-        
+
         _disposed = true;
     }
-    
+
     /// <summary>
     /// Shutdown event consumers.
     /// </summary>
     private void ShutdownConsumers()
     {
         if (!_initialized) return;
-        
+
         // Signal cancellation
         _consumerCts.Cancel();
-        
+
         // Complete the channel
         _channel.Writer.Complete();
-        
+
         if (_channelOptions.WaitForChannelDrainOnDispose)
         {
             try
@@ -403,20 +403,20 @@ public class ChannelEventDispatcher : IEventDispatcher, IDisposable, IAsyncDispo
             }
         }
     }
-    
+
     /// <summary>
     /// Shutdown event consumers asynchronously.
     /// </summary>
     private async Task ShutdownConsumersAsync()
     {
         if (!_initialized) return;
-        
+
         // Signal cancellation
         _consumerCts.Cancel();
-        
+
         // Complete the channel
         _channel.Writer.Complete();
-        
+
         if (_channelOptions.WaitForChannelDrainOnDispose)
         {
             try

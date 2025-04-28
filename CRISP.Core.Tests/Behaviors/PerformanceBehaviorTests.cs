@@ -1,6 +1,5 @@
 using CRISP.Core.Behaviors;
 using CRISP.Core.Interfaces;
-using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -27,7 +26,7 @@ public class PerformanceBehaviorTests
         string response = await behavior.Handle(request, next, CancellationToken.None);
 
         // Assert
-        response.Should().Be(expectedResponse);
+        response.ShouldBe(expectedResponse);
 
         // Verify that debug log was called with the correct message format
         VerifyLoggerCalled(LogLevel.Debug, "Request performance: TestRequest", 1);
@@ -53,7 +52,7 @@ public class PerformanceBehaviorTests
         string response = await behavior.Handle(request, next, CancellationToken.None);
 
         // Assert
-        response.Should().Be(expectedResponse);
+        response.ShouldBe(expectedResponse);
 
         // Verify that warning log was called with the correct message format
         VerifyLoggerCalled(LogLevel.Warning, "Long running request: TestRequest", 1);
@@ -72,7 +71,8 @@ public class PerformanceBehaviorTests
         Func<Task> act = () => behavior.Handle(request, next, CancellationToken.None).AsTask();
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Test exception");
+        InvalidOperationException exception = await act.ShouldThrowAsync<InvalidOperationException>();
+        exception.Message.ShouldBe("Test exception");
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public class PerformanceBehaviorTests
         string response = await behavior.Handle(request, next, CancellationToken.None);
 
         // Assert
-        response.Should().Be(expectedResponse);
+        response.ShouldBe(expectedResponse);
 
         // Verify that debug log was called (because it's under threshold)
         VerifyLoggerCalled(LogLevel.Debug, "Request performance: TestRequest", 1);
@@ -111,8 +111,8 @@ public class PerformanceBehaviorTests
         RequestHandlerDelegate<string> next = ValueTask.FromCanceled<string>;
 
         // Act & Assert
-        await behavior.Invoking(b => b.Handle(request, next, cts.Token).AsTask())
-            .Should().ThrowAsync<TaskCanceledException>();
+        await behavior.Handle(request, next, cts.Token).AsTask()
+            .ShouldThrowAsync<TaskCanceledException>();
     }
 
 #pragma warning disable CS8602 // Dereference of a possibly null reference.

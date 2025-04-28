@@ -12,12 +12,12 @@ public interface IDomainEvent
     /// Gets the unique identifier for this event instance.
     /// </summary>
     Guid EventId { get; }
-    
+
     /// <summary>
     /// Gets the timestamp when the event occurred.
     /// </summary>
     DateTime OccurredOn { get; }
-    
+
     /// <summary>
     /// Gets the type name of the event for serialization/deserialization.
     /// </summary>

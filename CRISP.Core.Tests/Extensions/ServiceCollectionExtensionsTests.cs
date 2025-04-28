@@ -1,18 +1,12 @@
 using CRISP.Core.Behaviors;
 using CRISP.Core.Events;
-using CRISP.Core.Extensions;
 using CRISP.Core.Interfaces;
 using CRISP.Core.Modules;
 using CRISP.Core.Options;
 using CRISP.Core.Resilience;
-using CRISP.Core.Services;
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
-using System.Reflection;
 
 namespace CRISP.Core.Tests.Extensions;
 
@@ -22,176 +16,181 @@ public class ServiceCollectionExtensionsTests
     public void AddCrispCore_RegistersRequiredServices()
     {
         // Arrange
-        var services = new ServiceCollection();
-        
+        ServiceCollection services = new();
+
         // Add required logger registration
         services.AddSingleton<ILoggerFactory>(new NullLoggerFactory());
         services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
-        
+
         // Act
         services.AddCrispCore();
-        
+
         // Assert
-        var provider = services.BuildServiceProvider();
-        
+        ServiceProvider provider = services.BuildServiceProvider();
+
         // Verify core services are registered
-        provider.GetService<IMediator>().Should().NotBeNull();
-        provider.GetService<IEventDispatcher>().Should().NotBeNull();
+        provider.GetService<IMediator>().ShouldNotBeNull();
+        provider.GetService<IEventDispatcher>().ShouldNotBeNull();
     }
 
     [Fact]
     public void AddCrispCore_WithCustomOptions_ConfiguresOptions()
     {
         // Arrange
-        var services = new ServiceCollection();
-        
+        ServiceCollection services = new();
+
         // Act
-        services.AddCrispCore(options => {
-            options.ConfigureMediator(m => {
+        services.AddCrispCore(options =>
+        {
+            options.ConfigureMediator(m =>
+            {
                 m.AllowMultipleHandlers = true;
                 m.DefaultTimeoutSeconds = 60;
             });
-            
-            options.ConfigureResilience(r => {
+
+            options.ConfigureResilience(r =>
+            {
                 r.Retry.MaxRetryAttempts = 5;
             });
         });
-        
+
         // Assert
-        var provider = services.BuildServiceProvider();
-        
-        var mediatorOptions = provider.GetRequiredService<MediatorOptions>();
-        mediatorOptions.AllowMultipleHandlers.Should().BeTrue();
-        mediatorOptions.DefaultTimeoutSeconds.Should().Be(60);
-        
-        var resilienceOptions = provider.GetRequiredService<ResilienceOptions>();
-        resilienceOptions.Retry.MaxRetryAttempts.Should().Be(5);
+        ServiceProvider provider = services.BuildServiceProvider();
+
+        MediatorOptions mediatorOptions = provider.GetRequiredService<MediatorOptions>();
+        mediatorOptions.AllowMultipleHandlers.ShouldBeTrue();
+        mediatorOptions.DefaultTimeoutSeconds.ShouldBe(60);
+
+        ResilienceOptions resilienceOptions = provider.GetRequiredService<ResilienceOptions>();
+        resilienceOptions.Retry.MaxRetryAttempts.ShouldBe(5);
     }
 
     [Fact]
     public void AddCrispFromAssemblies_RegistersAllComponents()
     {
         // Arrange
-        var services = new ServiceCollection();
-        
+        ServiceCollection services = new();
+
         // Add required logger registration
         services.AddSingleton<ILoggerFactory>(new NullLoggerFactory());
         services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
-        
+
         // Act
         services.AddCrispFromAssemblies(typeof(TestModule).Assembly);
-        
+
         // Assert
-        var provider = services.BuildServiceProvider();
-        
+        ServiceProvider provider = services.BuildServiceProvider();
+
         // Verify all component types are registered
-        provider.GetService<IMediator>().Should().NotBeNull();
-        provider.GetService<IEventDispatcher>().Should().NotBeNull();
-        
+        provider.GetService<IMediator>().ShouldNotBeNull();
+        provider.GetService<IEventDispatcher>().ShouldNotBeNull();
+
         // Verify module is registered
-        var modules = provider.GetServices<IModule>();
-        modules.Should().Contain(m => m.GetType() == typeof(TestModule));
+        IEnumerable<IModule> modules = provider.GetServices<IModule>();
+        modules.ShouldContain(m => m.GetType() == typeof(TestModule));
     }
 
     [Fact]
     public void AddResilienceStrategies_RegistersCorrectStrategies()
     {
         // Arrange
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
         services.AddSingleton<ILoggerFactory>(new NullLoggerFactory());
         services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
         services.AddSingleton<ResilienceOptions>(new ResilienceOptions());
-        
+
         // Act - Use the real extension method
         services.AddResilienceStrategies();
-        
+
         // Assert
-        var provider = services.BuildServiceProvider();
-        
+        ServiceProvider provider = services.BuildServiceProvider();
+
         // Check if specific strategies are registered
-        provider.GetService<RetryStrategy>().Should().NotBeNull();
-        provider.GetService<CircuitBreakerStrategy>().Should().NotBeNull();
-        provider.GetService<TimeoutStrategy>().Should().NotBeNull();
-        
+        provider.GetService<RetryStrategy>().ShouldNotBeNull();
+        provider.GetService<CircuitBreakerStrategy>().ShouldNotBeNull();
+        provider.GetService<TimeoutStrategy>().ShouldNotBeNull();
+
         // Check if IResilienceStrategy is registered
-        var resilienceStrategy = provider.GetService<IResilienceStrategy>();
-        resilienceStrategy.Should().NotBeNull();
-        
+        IResilienceStrategy? resilienceStrategy = provider.GetService<IResilienceStrategy>();
+        resilienceStrategy.ShouldNotBeNull();
+
         // The composite strategy should be registered as IResilienceStrategy
-        resilienceStrategy.Should().BeOfType<CompositeResilienceStrategy>();
+        resilienceStrategy.ShouldBeOfType<CompositeResilienceStrategy>();
     }
 
     [Fact]
     public void UseChannelEventProcessing_ConfiguresChannelEventDispatcher()
     {
         // Arrange
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
         services.AddSingleton<ILoggerFactory>(new NullLoggerFactory());
         services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
-        
+
         // Act
-        services.AddCrispCore(options => {
-            options.UseChannelEventProcessing(channelOptions => {
+        services.AddCrispCore(options =>
+        {
+            options.UseChannelEventProcessing(channelOptions =>
+            {
                 channelOptions.ChannelCapacity = 200;
                 channelOptions.ConsumerCount = 4;
             });
         });
-        
+
         // Assert
-        var provider = services.BuildServiceProvider();
-        
+        ServiceProvider provider = services.BuildServiceProvider();
+
         // Event dispatcher should be channel-based
-        var eventDispatcher = provider.GetService<IEventDispatcher>();
-        eventDispatcher.Should().BeOfType<ChannelEventDispatcher>();
-        
+        IEventDispatcher? eventDispatcher = provider.GetService<IEventDispatcher>();
+        eventDispatcher.ShouldBeOfType<ChannelEventDispatcher>();
+
         // Options should be configured
-        var channelOptions = provider.GetService<ChannelEventOptions>();
-        channelOptions.Should().NotBeNull();
-        channelOptions!.ChannelCapacity.Should().Be(200);
-        channelOptions.ConsumerCount.Should().Be(4);
+        ChannelEventOptions? channelOptions = provider.GetService<ChannelEventOptions>();
+        channelOptions.ShouldNotBeNull();
+        channelOptions!.ChannelCapacity.ShouldBe(200);
+        channelOptions.ConsumerCount.ShouldBe(4);
     }
 
     [Fact]
     public void AddPipelineBehaviors_RegistersBehaviorsInCorrectOrder()
     {
         // Arrange
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
         services.AddSingleton<ILoggerFactory>(new NullLoggerFactory());
         services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
-        
+
         // Need to register IPipelineBehavior<,> interfaces
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
-        
+
         // Act
         services.AddCrispCore();
-        
+
         // Assert
-        var behaviors = services.Where(sd => sd.ServiceType.IsGenericType && 
+        List<ServiceDescriptor> behaviors = services.Where(sd => sd.ServiceType.IsGenericType &&
                                         sd.ServiceType.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>))
                                 .OrderBy(sd => sd.ImplementationInstance != null ? 0 : 1) // Instance behaviors first
                                 .ThenBy(sd => sd.ServiceType.ToString())
                                 .ToList();
-        
+
         // Validate the pipeline behaviors
-        behaviors.Should().NotBeEmpty();
-        
+        behaviors.ShouldNotBeEmpty();
+
         // Check that the behaviors are registered in the correct order
         // Validation should be first, then logging, then performance
-        var behaviorTypes = behaviors.Select(sd => sd.ImplementationType?.Name ?? sd.ImplementationInstance?.GetType().Name)
+        string?[] behaviorTypes = behaviors.Select(sd => sd.ImplementationType?.Name ?? sd.ImplementationInstance?.GetType().Name)
                                     .Where(name => name != null)
                                     .ToArray();
-        
-        behaviorTypes.Should().Contain("ValidationBehavior`2");
-        behaviorTypes.Should().Contain("LoggingBehavior`2");
-        behaviorTypes.Should().Contain("PerformanceBehavior`2");
+
+        behaviorTypes.ShouldContain("ValidationBehavior`2");
+        behaviorTypes.ShouldContain("LoggingBehavior`2");
+        behaviorTypes.ShouldContain("PerformanceBehavior`2");
     }
 
     public class TestModule : ModuleBase
     {
         public override string ModuleName => "TestModule";
-        
+
         public override void RegisterServices(IServiceCollection services)
         {
             // This is just a test module for testing registration
@@ -200,30 +199,21 @@ public class ServiceCollectionExtensionsTests
 
     // Sample handlers and validators for testing registration
     public class TestCommand : IRequest<string> { }
-    
+
     public class TestCommandHandler : IRequestHandler<TestCommand, string>
     {
-        public ValueTask<string> Handle(TestCommand request, CancellationToken cancellationToken)
-        {
-            return new ValueTask<string>("Test");
-        }
+        public ValueTask<string> Handle(TestCommand request, CancellationToken cancellationToken) => new("Test");
     }
-    
+
     public class TestValidator : IValidator<TestCommand>
     {
-        public ValidationResult Validate(TestCommand request)
-        {
-            return new ValidationResult();
-        }
+        public ValidationResult Validate(TestCommand request) => new();
     }
-    
+
     public class TestEvent : DomainEvent { }
-    
+
     public class TestEventHandler : IEventHandler<TestEvent>
     {
-        public ValueTask Handle(TestEvent @event, CancellationToken cancellationToken)
-        {
-            return new ValueTask();
-        }
+        public ValueTask Handle(TestEvent @event, CancellationToken cancellationToken) => new();
     }
 }

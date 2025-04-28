@@ -28,13 +28,13 @@ public class EventOptions
     /// Default is 100. Used when dispatching a large number of events to prevent resource exhaustion.
     /// </summary>
     public int MaxBatchSize { get; set; } = 100;
-    
+
     /// <summary>
     /// Gets or sets a value indicating whether to log detailed event processing information.
     /// Default is true.
     /// </summary>
     public bool EnableDetailedLogging { get; set; } = true;
-    
+
     /// <summary>
     /// Gets or sets a value indicating whether to use channels for event processing.
     /// Default is false, which means events are processed immediately.
@@ -52,25 +52,25 @@ public class ChannelEventOptions
     /// Default is 1000. If set to 0 or negative, an unbounded channel is used.
     /// </summary>
     public int ChannelCapacity { get; set; } = 1000;
-    
+
     /// <summary>
     /// Gets or sets the number of consumers processing events from the channel.
     /// Default is Environment.ProcessorCount to match the number of available processors.
     /// </summary>
     public int ConsumerCount { get; set; } = Environment.ProcessorCount;
-    
+
     /// <summary>
     /// Gets or sets the time in milliseconds to wait when the channel is full.
     /// Default is 1000 (1 second). If set to 0 or negative, it will wait indefinitely.
     /// </summary>
     public int FullChannelWaitTimeMs { get; set; } = 1000;
-    
+
     /// <summary>
     /// Gets or sets a value indicating whether to wait for all events to be processed when shutting down.
     /// Default is true.
     /// </summary>
     public bool WaitForChannelDrainOnDispose { get; set; } = true;
-    
+
     /// <summary>
     /// Gets or sets the timeout in milliseconds to wait for the channel to drain on shutdown.
     /// Default is 10000 (10 seconds). If set to 0 or negative, it will wait indefinitely.

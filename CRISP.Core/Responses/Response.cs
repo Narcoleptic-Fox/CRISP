@@ -11,17 +11,17 @@ public class Response<T>
     /// Gets or sets a value indicating whether the operation was successful.
     /// </summary>
     public bool IsSuccess { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the message associated with the response.
     /// </summary>
     public string Message { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Gets or sets the data returned by the operation.
     /// </summary>
     public T? Data { get; set; }
-    
+
     /// <summary>
     /// Gets or sets any errors that occurred during the operation.
     /// </summary>
@@ -33,15 +33,12 @@ public class Response<T>
     /// <param name="data">The data to include in the response.</param>
     /// <param name="message">An optional success message.</param>
     /// <returns>A successful response containing the specified data.</returns>
-    public static Response<T> Success(T data, string message = "Operation completed successfully")
+    public static Response<T> Success(T data, string message = "Operation completed successfully") => new()
     {
-        return new Response<T>
-        {
-            IsSuccess = true,
-            Message = message,
-            Data = data
-        };
-    }
+        IsSuccess = true,
+        Message = message,
+        Data = data
+    };
 
     /// <summary>
     /// Creates a failure response with the specified error message.
@@ -49,15 +46,12 @@ public class Response<T>
     /// <param name="message">The error message.</param>
     /// <param name="errors">Optional collection of specific errors.</param>
     /// <returns>A failure response with the specified error details.</returns>
-    public static Response<T> Failure(string message, IEnumerable<string>? errors = null)
+    public static Response<T> Failure(string message, IEnumerable<string>? errors = null) => new()
     {
-        return new Response<T>
-        {
-            IsSuccess = false,
-            Message = message,
-            Errors = errors
-        };
-    }
+        IsSuccess = false,
+        Message = message,
+        Errors = errors
+    };
 }
 
 /// <summary>
@@ -70,14 +64,11 @@ public class Response : Response<object>
     /// </summary>
     /// <param name="message">An optional success message.</param>
     /// <returns>A successful response with no data.</returns>
-    public static Response Success(string message = "Operation completed successfully")
+    public static Response Success(string message = "Operation completed successfully") => new()
     {
-        return new Response
-        {
-            IsSuccess = true,
-            Message = message
-        };
-    }
+        IsSuccess = true,
+        Message = message
+    };
 
     /// <summary>
     /// Creates a failure response with the specified error message.
@@ -85,13 +76,10 @@ public class Response : Response<object>
     /// <param name="message">The error message.</param>
     /// <param name="errors">Optional collection of specific errors.</param>
     /// <returns>A failure response with the specified error details.</returns>
-    public static new Response Failure(string message, IEnumerable<string>? errors = null)
+    public static new Response Failure(string message, IEnumerable<string>? errors = null) => new()
     {
-        return new Response
-        {
-            IsSuccess = false,
-            Message = message,
-            Errors = errors
-        };
-    }
+        IsSuccess = false,
+        Message = message,
+        Errors = errors
+    };
 }

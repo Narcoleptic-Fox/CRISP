@@ -28,7 +28,7 @@ public class MediatorOptions
     /// Default is 60 seconds. A value of 0 or negative means no timeout.
     /// </summary>
     public int DefaultTimeoutSeconds { get; set; } = 60;
-    
+
     /// <summary>
     /// Gets or sets a value indicating whether to track request metrics.
     /// Default is true.

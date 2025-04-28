@@ -3,7 +3,6 @@ using CRISP.Core.Interfaces;
 using CRISP.Core.Responses;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Shouldly;
 
 namespace CRISP.Core.Tests.Abstractions;
 
@@ -15,12 +14,12 @@ public class BaseHandlerTests
     public async Task BaseHandler_Handle_Success_ReturnsSuccessResponse()
     {
         // Arrange
-        var logger = new Mock<ILogger>();
-        var handler = new TestCommandHandler(logger.Object);
-        var request = new TestCommand();
+        Mock<ILogger> logger = new();
+        TestCommandHandler handler = new(logger.Object);
+        TestCommand request = new();
 
         // Act
-        var response = await handler.Handle(request, CancellationToken.None);
+        Response response = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         response.ShouldNotBeNull();
@@ -46,12 +45,12 @@ public class BaseHandlerTests
     public async Task BaseHandler_Handle_WithException_ReturnsFailureResponse()
     {
         // Arrange
-        var logger = new Mock<ILogger>();
-        var handler = new TestFailingCommandHandler(logger.Object);
-        var request = new TestCommand();
+        Mock<ILogger> logger = new();
+        TestFailingCommandHandler handler = new(logger.Object);
+        TestCommand request = new();
 
         // Act
-        var response = await handler.Handle(request, CancellationToken.None);
+        Response response = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         response.ShouldNotBeNull();
@@ -75,12 +74,12 @@ public class BaseHandlerTests
     public async Task BaseHandlerWithResponse_Handle_Success_ReturnsSuccessResponseWithData()
     {
         // Arrange
-        var logger = new Mock<ILogger>();
-        var handler = new TestQueryHandler(logger.Object);
-        var request = new TestQuery();
+        Mock<ILogger> logger = new();
+        TestQueryHandler handler = new(logger.Object);
+        TestQuery request = new();
 
         // Act
-        var response = await handler.Handle(request, CancellationToken.None);
+        Response<TestQueryResult> response = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         response.ShouldNotBeNull();
@@ -108,12 +107,12 @@ public class BaseHandlerTests
     public async Task BaseHandlerWithResponse_Handle_WithException_ReturnsFailureResponse()
     {
         // Arrange
-        var logger = new Mock<ILogger>();
-        var handler = new TestFailingQueryHandler(logger.Object);
-        var request = new TestQuery();
+        Mock<ILogger> logger = new();
+        TestFailingQueryHandler handler = new(logger.Object);
+        TestQuery request = new();
 
         // Act
-        var response = await handler.Handle(request, CancellationToken.None);
+        Response<TestQueryResult> response = await handler.Handle(request, CancellationToken.None);
 
         // Assert
         response.ShouldNotBeNull();
@@ -145,11 +144,9 @@ public class BaseHandlerTests
         {
         }
 
-        protected override ValueTask Process(TestCommand request, CancellationToken cancellationToken)
-        {
+        protected override ValueTask Process(TestCommand request, CancellationToken cancellationToken) =>
             // Simulate some work
-            return ValueTask.CompletedTask;
-        }
+            ValueTask.CompletedTask;
     }
 
     public class TestFailingCommandHandler : BaseHandler<TestCommand>
@@ -158,10 +155,7 @@ public class BaseHandlerTests
         {
         }
 
-        protected override ValueTask Process(TestCommand request, CancellationToken cancellationToken)
-        {
-            throw new InvalidOperationException("Test exception");
-        }
+        protected override ValueTask Process(TestCommand request, CancellationToken cancellationToken) => throw new InvalidOperationException("Test exception");
     }
 
     // Query (with response data)
@@ -180,11 +174,9 @@ public class BaseHandlerTests
         {
         }
 
-        protected override ValueTask<TestQueryResult> Process(TestQuery request, CancellationToken cancellationToken)
-        {
+        protected override ValueTask<TestQueryResult> Process(TestQuery request, CancellationToken cancellationToken) =>
             // Return some test data
-            return ValueTask.FromResult(new TestQueryResult { Message = "Test data" });
-        }
+            ValueTask.FromResult(new TestQueryResult { Message = "Test data" });
     }
 
     public class TestFailingQueryHandler : BaseHandler<TestQuery, TestQueryResult>
@@ -193,10 +185,7 @@ public class BaseHandlerTests
         {
         }
 
-        protected override ValueTask<TestQueryResult> Process(TestQuery request, CancellationToken cancellationToken)
-        {
-            throw new InvalidOperationException("Test exception");
-        }
+        protected override ValueTask<TestQueryResult> Process(TestQuery request, CancellationToken cancellationToken) => throw new InvalidOperationException("Test exception");
     }
 
     #endregion

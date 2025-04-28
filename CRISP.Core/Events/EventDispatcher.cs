@@ -34,17 +34,17 @@ public class EventDispatcher : IEventDispatcher
     public async ValueTask Dispatch(IDomainEvent @event, CancellationToken cancellationToken = default)
     {
         Type eventType = @event.GetType();
-        
+
         if (_options.EnableDetailedLogging)
         {
             _logger.LogDebug("Dispatching domain event {EventType} - {EventId}", eventType.Name, @event.EventId);
         }
 
         Type handlerType = typeof(IEventHandler<>).MakeGenericType(eventType);
-        
+
         // Get all handlers for this event type
-        var handlers = _serviceProvider.GetServices(handlerType).Where(h => h != null).ToList();
-        
+        List<object?> handlers = _serviceProvider.GetServices(handlerType).Where(h => h != null).ToList();
+
         if (!handlers.Any())
         {
             if (_options.EnableDetailedLogging)
@@ -71,7 +71,7 @@ public class EventDispatcher : IEventDispatcher
         Type eventType,
         CancellationToken cancellationToken)
     {
-        foreach (var handler in handlers)
+        foreach (object? handler in handlers)
         {
             if (handler != null)
             {
@@ -79,29 +79,29 @@ public class EventDispatcher : IEventDispatcher
             }
         }
     }
-    
+
     private async ValueTask InvokeHandlersInParallel(
         IEnumerable<object?> handlers,
         IDomainEvent @event,
         Type eventType,
         CancellationToken cancellationToken)
     {
-        var tasks = handlers
+        IEnumerable<Task> tasks = handlers
             .Where(h => h != null)
-            .Select(handler => 
+            .Select(handler =>
                 InvokeHandler(handler!, @event, eventType, cancellationToken).AsTask());
-        
+
         if (_options.MaxDegreeOfParallelism > 0)
         {
 #if NET9_0
-            var partitioner = Partitioner.Create(tasks);
-            
-            var parallelOptions = new ParallelOptions
+            OrderablePartitioner<Task> partitioner = Partitioner.Create(tasks);
+
+            ParallelOptions parallelOptions = new()
             {
                 MaxDegreeOfParallelism = _options.MaxDegreeOfParallelism,
                 CancellationToken = cancellationToken
             };
-            
+
             await Parallel.ForEachAsync(
                 partitioner.GetPartitions(_options.MaxDegreeOfParallelism),
                 parallelOptions,
@@ -117,17 +117,17 @@ public class EventDispatcher : IEventDispatcher
                 });
 #else
             // For .NET Standard 2.1, implement a custom limited parallel execution
-            var taskList = tasks.ToList();
-            var semaphore = new SemaphoreSlim(_options.MaxDegreeOfParallelism);
-            var runningTasks = new List<Task>();
-            
-            foreach (var task in taskList)
+            List<Task> taskList = tasks.ToList();
+            SemaphoreSlim semaphore = new(_options.MaxDegreeOfParallelism);
+            List<Task> runningTasks = [];
+
+            foreach (Task? task in taskList)
             {
                 // Wait until we have an available slot
                 await semaphore.WaitAsync(cancellationToken);
-                
+
                 // Start a new task that will release the semaphore when done
-                var runningTask = task.ContinueWith(t => 
+                Task runningTask = task.ContinueWith(t =>
                 {
                     semaphore.Release();
                     // Propagate any exceptions
@@ -136,10 +136,10 @@ public class EventDispatcher : IEventDispatcher
                         throw t.Exception;
                     }
                 }, cancellationToken);
-                
+
                 runningTasks.Add(runningTask);
             }
-            
+
             // Wait for all tasks to complete
             await Task.WhenAll(runningTasks);
 #endif
@@ -149,7 +149,7 @@ public class EventDispatcher : IEventDispatcher
             await Task.WhenAll(tasks);
         }
     }
-    
+
     private async ValueTask InvokeHandler(
         object handler,
         IDomainEvent @event,
@@ -159,25 +159,25 @@ public class EventDispatcher : IEventDispatcher
         try
         {
             // Get the Handle method
-            var method = handler.GetType().GetInterfaceMap(
+            System.Reflection.MethodInfo method = handler.GetType().GetInterfaceMap(
                 typeof(IEventHandler<>).MakeGenericType(eventType)).TargetMethods.First();
-            
+
             if (method == null)
             {
                 throw new InvalidOperationException($"Handler for {eventType.Name} does not implement Handle method.");
             }
-            
+
             // Invoke the Handle method
-            var result = method.Invoke(handler, new object[] { @event, cancellationToken });
-            
+            object? result = method.Invoke(handler, [@event, cancellationToken]);
+
             if (result == null)
             {
                 throw new InvalidOperationException($"Handler for {eventType.Name} returned null.");
             }
-            
+
             // Await the ValueTask
-            await ((ValueTask)result);
-            
+            await (ValueTask)result;
+
             if (_options.EnableDetailedLogging)
             {
                 _logger.LogDebug("Handler {HandlerType} processed event {EventType}",
@@ -188,7 +188,7 @@ public class EventDispatcher : IEventDispatcher
         {
             _logger.LogError(ex, "Error handling domain event {EventType} by handler {HandlerType}",
                 eventType.Name, handler.GetType().Name);
-            
+
             // Throw exception if configured to do so
             if (_options.ThrowOnHandlerFailure)
             {
@@ -201,16 +201,16 @@ public class EventDispatcher : IEventDispatcher
     public async ValueTask DispatchAll(IEnumerable<IDomainEvent> events, CancellationToken cancellationToken = default)
     {
         if (events == null) return;
-        
-        var eventsList = events.ToList();
+
+        List<IDomainEvent> eventsList = events.ToList();
         if (!eventsList.Any()) return;
-        
+
         // Process events in batches if needed
         if (eventsList.Count > _options.MaxBatchSize)
         {
             for (int i = 0; i < eventsList.Count; i += _options.MaxBatchSize)
             {
-                var batch = eventsList.Skip(i).Take(_options.MaxBatchSize);
+                IEnumerable<IDomainEvent> batch = eventsList.Skip(i).Take(_options.MaxBatchSize);
                 await DispatchBatch(batch, cancellationToken);
             }
         }
@@ -219,10 +219,10 @@ public class EventDispatcher : IEventDispatcher
             await DispatchBatch(eventsList, cancellationToken);
         }
     }
-    
+
     private async ValueTask DispatchBatch(IEnumerable<IDomainEvent> events, CancellationToken cancellationToken)
     {
-        foreach (var @event in events)
+        foreach (IDomainEvent @event in events)
         {
             await Dispatch(@event, cancellationToken);
         }

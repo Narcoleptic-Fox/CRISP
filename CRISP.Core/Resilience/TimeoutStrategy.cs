@@ -26,29 +26,29 @@ public class TimeoutStrategy : IResilienceStrategy
     /// <inheritdoc />
     public async ValueTask<T> Execute<T>(Func<CancellationToken, ValueTask<T>> operation, CancellationToken cancellationToken = default)
     {
-        using var timeoutCts = new CancellationTokenSource(_timeout);
-        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken);
-        
+        using CancellationTokenSource timeoutCts = new(_timeout);
+        using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken);
+
         try
         {
             _logger.LogDebug("Executing operation with timeout of {Timeout}ms", _timeout.TotalMilliseconds);
-            
+
             // Create task for the operation
             Task<T> operationTask = operation(linkedCts.Token).AsTask();
-            
+
             // Create a task that completes after the timeout
             Task timeoutTask = Task.Delay(Timeout.InfiniteTimeSpan, timeoutCts.Token);
-            
+
             // Wait for either operation completion or timeout
             Task completedTask = await Task.WhenAny(operationTask, timeoutTask);
-            
+
             // If the timeout task completed first, throw timeout exception
             if (completedTask == timeoutTask)
             {
                 _logger.LogWarning("Operation timed out after {Timeout}ms", _timeout.TotalMilliseconds);
                 throw new TimeoutException($"Operation timed out after {_timeout.TotalMilliseconds}ms");
             }
-            
+
             // Operation completed successfully, return result
             return await operationTask;
         }
@@ -67,29 +67,29 @@ public class TimeoutStrategy : IResilienceStrategy
     /// <inheritdoc />
     public async ValueTask Execute(Func<CancellationToken, ValueTask> operation, CancellationToken cancellationToken = default)
     {
-        using var timeoutCts = new CancellationTokenSource(_timeout);
-        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken);
-        
+        using CancellationTokenSource timeoutCts = new(_timeout);
+        using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken);
+
         try
         {
             _logger.LogDebug("Executing operation with timeout of {Timeout}ms", _timeout.TotalMilliseconds);
-            
+
             // Create task for the operation
             Task operationTask = operation(linkedCts.Token).AsTask();
-            
+
             // Create a task that completes after the timeout
             Task timeoutTask = Task.Delay(Timeout.InfiniteTimeSpan, timeoutCts.Token);
-            
+
             // Wait for either operation completion or timeout
             Task completedTask = await Task.WhenAny(operationTask, timeoutTask);
-            
+
             // If the timeout task completed first, throw timeout exception
             if (completedTask == timeoutTask)
             {
                 _logger.LogWarning("Operation timed out after {Timeout}ms", _timeout.TotalMilliseconds);
                 throw new TimeoutException($"Operation timed out after {_timeout.TotalMilliseconds}ms");
             }
-            
+
             // Operation completed successfully
             await operationTask;
         }

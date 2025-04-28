@@ -13,7 +13,7 @@ public interface IResilienceStrategy
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A value task containing the result of the operation.</returns>
     ValueTask<T> Execute<T>(Func<CancellationToken, ValueTask<T>> operation, CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Executes the operation with resilience patterns applied.
     /// </summary>

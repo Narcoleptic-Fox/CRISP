@@ -1,5 +1,4 @@
 using CRISP.Core.Interfaces;
-using FluentAssertions;
 
 namespace CRISP.Core.Tests.Interfaces;
 
@@ -9,32 +8,32 @@ public class ValidationResultTests
     public void Success_ReturnsValidResult()
     {
         // Act
-        var result = ValidationResult.Success();
+        ValidationResult result = ValidationResult.Success();
 
         // Assert
-        result.Should().NotBeNull();
-        result.IsValid.Should().BeTrue();
-        result.Errors.Should().NotBeNull();
-        result.Errors.Should().BeEmpty();
+        result.ShouldNotBeNull();
+        result.IsValid.ShouldBeTrue();
+        result.Errors.ShouldNotBeNull();
+        result.Errors.ShouldBeEmpty();
     }
 
     [Fact]
     public void Failure_WithErrors_ReturnsInvalidResultWithErrors()
     {
         // Arrange
-        var error1 = new ValidationError("Name", "Name is required");
-        var error2 = new ValidationError("Email", "Email is invalid");
+        ValidationError error1 = new("Name", "Name is required");
+        ValidationError error2 = new("Email", "Email is invalid");
 
         // Act
-        var result = ValidationResult.Failure(error1, error2);
+        ValidationResult result = ValidationResult.Failure(error1, error2);
 
         // Assert
-        result.Should().NotBeNull();
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().NotBeNull();
-        result.Errors.Should().HaveCount(2);
-        result.Errors.Should().Contain(error1);
-        result.Errors.Should().Contain(error2);
+        result.ShouldNotBeNull();
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldNotBeNull();
+        result.Errors.Count().ShouldBe(2);
+        result.Errors.ShouldContain(error1);
+        result.Errors.ShouldContain(error2);
     }
 
     [Fact]
@@ -45,17 +44,17 @@ public class ValidationResultTests
         string propertyName = "TestProperty";
 
         // Act
-        var result = ValidationResult.Failure(errorMessage, propertyName);
+        ValidationResult result = ValidationResult.Failure(errorMessage, propertyName);
 
         // Assert
-        result.Should().NotBeNull();
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().NotBeNull();
-        result.Errors.Should().HaveCount(1);
-        
-        var error = result.Errors.First();
-        error.PropertyName.Should().Be(propertyName);
-        error.ErrorMessage.Should().Be(errorMessage);
+        result.ShouldNotBeNull();
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldNotBeNull();
+        result.Errors.Count().ShouldBe(1);
+
+        ValidationError error = result.Errors.First();
+        error.PropertyName.ShouldBe(propertyName);
+        error.ErrorMessage.ShouldBe(errorMessage);
     }
 
     [Fact]
@@ -65,52 +64,52 @@ public class ValidationResultTests
         string errorMessage = "Value is invalid";
 
         // Act
-        var result = ValidationResult.Failure(errorMessage);
+        ValidationResult result = ValidationResult.Failure(errorMessage);
 
         // Assert
-        result.Should().NotBeNull();
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().NotBeNull();
-        result.Errors.Should().HaveCount(1);
-        
-        var error = result.Errors.First();
-        error.PropertyName.Should().BeEmpty();
-        error.ErrorMessage.Should().Be(errorMessage);
+        result.ShouldNotBeNull();
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldNotBeNull();
+        result.Errors.Count().ShouldBe(1);
+
+        ValidationError error = result.Errors.First();
+        error.PropertyName.ShouldBeEmpty();
+        error.ErrorMessage.ShouldBe(errorMessage);
     }
 
     [Fact]
     public void Constructor_DefaultValues_SetsCorrectDefaults()
     {
         // Act
-        var result = new ValidationResult();
+        ValidationResult result = new();
 
         // Assert
-        result.Should().NotBeNull();
-        result.IsValid.Should().BeFalse(); // Default value of bool is false
-        result.Errors.Should().NotBeNull();
-        result.Errors.Should().BeEmpty();
+        result.ShouldNotBeNull();
+        result.IsValid.ShouldBeFalse(); // Default value of bool is false
+        result.Errors.ShouldNotBeNull();
+        result.Errors.ShouldBeEmpty();
     }
 
     [Fact]
     public void IValidationResult_Errors_ReturnsReadOnlyList()
     {
         // Arrange
-        var errors = new[]
+        ValidationError[] errors = new[]
         {
             new ValidationError("Name", "Name is required"),
             new ValidationError("Email", "Email is invalid")
         };
-        var result = ValidationResult.Failure(errors);
-        
+        ValidationResult result = ValidationResult.Failure(errors);
+
         // Act
         IValidationResult interfaceResult = result;
-        var readOnlyErrors = interfaceResult.Errors;
+        IReadOnlyList<ValidationError> readOnlyErrors = interfaceResult.Errors;
 
         // Assert
-        readOnlyErrors.Should().NotBeNull();
-        readOnlyErrors.Should().HaveCount(2);
-        readOnlyErrors.Should().BeEquivalentTo(errors);
-        readOnlyErrors.Should().BeAssignableTo<IReadOnlyList<ValidationError>>();
+        readOnlyErrors.ShouldNotBeNull();
+        readOnlyErrors.Count().ShouldBe(2);
+        readOnlyErrors.ShouldBeEquivalentTo(errors);
+        readOnlyErrors.ShouldBeAssignableTo<IReadOnlyList<ValidationError>>();
     }
 }
 
@@ -124,26 +123,27 @@ public class ValidationErrorTests
         string errorMessage = "Name is required";
 
         // Act
-        var error = new ValidationError(propertyName, errorMessage);
+        ValidationError error = new(propertyName, errorMessage);
 
         // Assert
-        error.Should().NotBeNull();
-        error.PropertyName.Should().Be(propertyName);
-        error.ErrorMessage.Should().Be(errorMessage);
+        error.ShouldNotBeNull();
+        error.PropertyName.ShouldBe(propertyName);
+        error.ErrorMessage.ShouldBe(errorMessage);
     }
 
     [Fact]
     public void PropertySetters_UpdateValues()
     {
         // Arrange
-        var error = new ValidationError("Name", "Name is required");
-        
-        // Act
-        error.PropertyName = "Email";
-        error.ErrorMessage = "Email is invalid";
+        ValidationError error = new("Name", "Name is required")
+        {
+            // Act
+            PropertyName = "Email",
+            ErrorMessage = "Email is invalid"
+        };
 
         // Assert
-        error.PropertyName.Should().Be("Email");
-        error.ErrorMessage.Should().Be("Email is invalid");
+        error.PropertyName.ShouldBe("Email");
+        error.ErrorMessage.ShouldBe("Email is invalid");
     }
 }

@@ -1,7 +1,6 @@
 using CRISP.Core.Resilience;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Shouldly;
 
 namespace CRISP.Core.Tests.Resilience;
 

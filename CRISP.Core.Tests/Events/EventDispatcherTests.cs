@@ -1,6 +1,5 @@
 using CRISP.Core.Events;
 using CRISP.Core.Options;
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -74,22 +73,22 @@ public class EventDispatcherTests : IDisposable
         await dispatcher.Dispatch(testEvent, CancellationToken.None);
 
         // Assert
-        TestEventHandler.ProcessedEvents.Should().HaveCount(1);
-        TestEventHandler.ProcessedEvents[0].Value.Should().Be("Test Value");
-        AnotherTestEventHandler.ProcessedEvents.Should().HaveCount(1);
-        AnotherTestEventHandler.ProcessedEvents[0].Value.Should().Be("Test Value");
+        TestEventHandler.ProcessedEvents.Count().ShouldBe(1);
+        TestEventHandler.ProcessedEvents[0].Value.ShouldBe("Test Value");
+        AnotherTestEventHandler.ProcessedEvents.Count().ShouldBe(1);
+        AnotherTestEventHandler.ProcessedEvents[0].Value.ShouldBe("Test Value");
     }
 
     [Fact]
     public async Task DispatchAll_MultipleEvents_ProcessesAllEventsCorrectly()
     {
         // Arrange
-        List<TestEvent> testEvents = new()
-        {
+        List<TestEvent> testEvents =
+        [
             new() { Value = "Event 1" },
             new() { Value = "Event 2" },
             new() { Value = "Event 3" }
-        };
+        ];
 
         EventDispatcher dispatcher = new(_serviceProvider, _loggerMock.Object, _eventOptions);
 
@@ -97,11 +96,11 @@ public class EventDispatcherTests : IDisposable
         await dispatcher.DispatchAll(testEvents, CancellationToken.None);
 
         // Assert
-        TestEventHandler.ProcessedEvents.Should().HaveCount(3);
-        AnotherTestEventHandler.ProcessedEvents.Should().HaveCount(3);
+        TestEventHandler.ProcessedEvents.Count().ShouldBe(3);
+        AnotherTestEventHandler.ProcessedEvents.Count().ShouldBe(3);
 
         TestEventHandler.ProcessedEvents.Select(e => e.Value)
-            .Should().BeEquivalentTo(new[] { "Event 1", "Event 2", "Event 3" });
+            .ShouldBeEquivalentTo(new[] { "Event 1", "Event 2", "Event 3" });
     }
 
     [Fact]
@@ -115,12 +114,12 @@ public class EventDispatcherTests : IDisposable
             MaxDegreeOfParallelism = 4
         };
 
-        List<TestEvent> testEvents = new()
-        {
+        List<TestEvent> testEvents =
+        [
             new() { Value = "Event 1" },
             new() { Value = "Event 2" },
             new() { Value = "Event 3" }
-        };
+        ];
 
         // Add a delay to better observe parallel execution
         TestEventHandler.ProcessingDelayMs = 100;
@@ -134,8 +133,8 @@ public class EventDispatcherTests : IDisposable
         stopwatch.Stop();
 
         // Assert
-        TestEventHandler.ProcessedEvents.Should().HaveCount(3);
-        AnotherTestEventHandler.ProcessedEvents.Should().HaveCount(3);
+        TestEventHandler.ProcessedEvents.Count().ShouldBe(3);
+        AnotherTestEventHandler.ProcessedEvents.Count().ShouldBe(3);
     }
 
     [Fact]
@@ -151,7 +150,8 @@ public class EventDispatcherTests : IDisposable
         Func<Task> act = async () => await dispatcher.Dispatch(testEvent, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Handler failed");
+        InvalidOperationException exception = await act.ShouldThrowAsync<InvalidOperationException>();
+        exception.Message.ShouldBe("Handler failed");
     }
 
     [Fact]
@@ -174,7 +174,7 @@ public class EventDispatcherTests : IDisposable
 
         // Assert - Second handler still processed the event
         // Important: We expect exactly one processed event in the AnotherTestEventHandler
-        AnotherTestEventHandler.ProcessedEvents.Count.Should().Be(1);
+        AnotherTestEventHandler.ProcessedEvents.Count.ShouldBe(1);
 
         // Verify an error was logged - use more flexible verification
 #pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
@@ -195,12 +195,12 @@ public class EventDispatcherTests : IDisposable
     public async Task Dispatch_WithCancellation_StopsProcessing()
     {
         // Arrange
-        List<TestEvent> testEvents = new()
-        {
+        List<TestEvent> testEvents =
+        [
             new() { Value = "Event 1" },
             new() { Value = "Event 2" },
             new() { Value = "Event 3" }
-        };
+        ];
 
         // Add a delay to make cancellation more reliable
         TestEventHandler.ProcessingDelayMs = 100;
@@ -223,7 +223,7 @@ public class EventDispatcherTests : IDisposable
         Func<Task> act = async () => await dispatcher.DispatchAll(testEvents, cts.Token);
 
         // Assert
-        await act.Should().ThrowAsync<OperationCanceledException>();
+        await act.ShouldThrowAsync<OperationCanceledException>();
     }
 
     // Test event and handlers

@@ -16,10 +16,10 @@ public abstract class DomainEvent : IDomainEvent
 
     /// <inheritdoc />
     public Guid EventId { get; }
-    
+
     /// <inheritdoc />
     public DateTime OccurredOn { get; }
-    
+
     /// <inheritdoc />
     public string EventTypeName => GetType().Name;
 }

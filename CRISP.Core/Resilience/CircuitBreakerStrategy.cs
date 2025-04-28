@@ -11,12 +11,12 @@ public enum CircuitState
     /// The circuit is closed and operations are allowed to execute normally.
     /// </summary>
     Closed,
-    
+
     /// <summary>
     /// The circuit is open and operations will immediately fail.
     /// </summary>
     Open,
-    
+
     /// <summary>
     /// The circuit is half-open and allows a limited number of operations to test if the system has recovered.
     /// </summary>
@@ -32,7 +32,7 @@ public class CircuitBreakerStrategy : IResilienceStrategy
     private readonly int _failureThreshold;
     private readonly TimeSpan _durationOfBreak;
     private readonly object _lock = new();
-    
+
     private CircuitState _state = CircuitState.Closed;
     private int _failureCount;
     private DateTime _lastFailureTime;
@@ -61,7 +61,7 @@ public class CircuitBreakerStrategy : IResilienceStrategy
 
         try
         {
-            var result = await operation(cancellationToken);
+            T? result = await operation(cancellationToken);
             OnOperationSuccess();
             return result;
         }
@@ -108,11 +108,11 @@ public class CircuitBreakerStrategy : IResilienceStrategy
                         throw new CircuitBreakerOpenException($"Circuit is open and is not allowing calls. Circuit will remain open until {_openUntil}");
                     }
                     break;
-                
+
                 case CircuitState.HalfOpen:
                     _logger.LogDebug("Circuit is Half-Open, allowing test operation");
                     break;
-                
+
                 case CircuitState.Closed:
                     _logger.LogDebug("Circuit is Closed, allowing operation");
                     break;
@@ -127,7 +127,7 @@ public class CircuitBreakerStrategy : IResilienceStrategy
             if (_state == CircuitState.HalfOpen)
             {
                 _logger.LogInformation("Test operation succeeded, circuit transitioning from Half-Open to Closed");
-                
+
                 // Reset the circuit
                 _state = CircuitState.Closed;
                 _failureCount = 0;
@@ -145,7 +145,7 @@ public class CircuitBreakerStrategy : IResilienceStrategy
         lock (_lock)
         {
             _lastFailureTime = DateTime.UtcNow;
-            
+
             switch (_state)
             {
                 case CircuitState.HalfOpen:
@@ -154,10 +154,10 @@ public class CircuitBreakerStrategy : IResilienceStrategy
                     _state = CircuitState.Open;
                     _logger.LogWarning(exception, "Test operation failed, circuit transitioning from Half-Open to Open until {OpenUntil}", _openUntil);
                     break;
-                
+
                 case CircuitState.Closed:
                     _failureCount++;
-                    
+
                     if (_failureCount >= _failureThreshold)
                     {
                         _openUntil = _lastFailureTime + _durationOfBreak;
@@ -176,7 +176,7 @@ public class CircuitBreakerStrategy : IResilienceStrategy
     /// <summary>
     /// Gets the current state of the circuit.
     /// </summary>
-    public CircuitState State 
+    public CircuitState State
     {
         get
         {
@@ -186,7 +186,7 @@ public class CircuitBreakerStrategy : IResilienceStrategy
                 {
                     _state = CircuitState.HalfOpen;
                 }
-                
+
                 return _state;
             }
         }

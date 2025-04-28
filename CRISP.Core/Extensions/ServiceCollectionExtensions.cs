@@ -3,11 +3,10 @@ using CRISP.Core.Interfaces;
 using CRISP.Core.Options;
 using CRISP.Core.Resilience;
 using CRISP.Core.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 
-namespace CRISP.Core.Extensions;
+namespace Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
 /// Extension methods for configuring CRISP services in an <see cref="IServiceCollection"/>.
