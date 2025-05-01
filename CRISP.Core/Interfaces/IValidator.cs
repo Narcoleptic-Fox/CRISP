@@ -27,12 +27,12 @@ public class ValidationResult : IValidationResult
     /// <summary>
     /// Gets or sets the validation errors.
     /// </summary>
-    public IEnumerable<ValidationError> Errors { get; set; } = [];
+    public List<ValidationError> Errors { get; set; } = [];
 
     /// <summary>
     /// Gets the validation errors as a read-only list.
     /// </summary>
-    IReadOnlyList<ValidationError> IValidationResult.Errors => Errors.ToList();
+    IReadOnlyList<ValidationError> IValidationResult.Errors => Errors;
 
     /// <summary>
     /// Creates a successful validation result.
@@ -48,7 +48,7 @@ public class ValidationResult : IValidationResult
     public static ValidationResult Failure(params ValidationError[] errors) => new()
     {
         IsValid = false,
-        Errors = [.. errors]
+        Errors = errors.ToList()
     };
 
     /// <summary>
@@ -57,7 +57,8 @@ public class ValidationResult : IValidationResult
     /// <param name="errorMessage">The error message.</param>
     /// <param name="propertyName">The name of the property with the error.</param>
     /// <returns>A failed validation result.</returns>
-    public static ValidationResult Failure(string errorMessage, string? propertyName = null) => Failure(new ValidationError(propertyName ?? string.Empty, errorMessage));
+    public static ValidationResult Failure(string errorMessage, string? propertyName = null) => 
+        Failure(new ValidationError(propertyName ?? string.Empty, errorMessage));
 }
 
 /// <summary>

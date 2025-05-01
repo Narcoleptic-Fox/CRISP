@@ -37,7 +37,7 @@ public class CompositeResilienceStrategy : IResilienceStrategy
         Func<CancellationToken, ValueTask<T>> compositeOperation = operation;
 
         // Apply each strategy in reverse order to create the execution chain
-        foreach (IResilienceStrategy? strategy in _strategies.Reverse())
+        foreach (IResilienceStrategy? strategy in _strategies)
         {
             IResilienceStrategy currentStrategy = strategy;
             Func<CancellationToken, ValueTask<T>> currentOperation = compositeOperation;

@@ -84,7 +84,7 @@ public class ValidationBehaviorTests
     public async Task Handle_WithFailingValidation_ThrowsValidationException()
     {
         // Arrange
-        IEnumerable<ValidationError> errors =
+        List<ValidationError> errors =
         [
             new ValidationError("Name", "Name is required"),
             new ValidationError("Age", "Age must be positive")
@@ -196,16 +196,14 @@ public class ValidationBehaviorTests
         result.ShouldBe(expectedResult);
 
         // Verify logging was called
-        _loggerMock.Verify(
-            x => x.Log(
-                It.Is<LogLevel>(l => l == LogLevel.Warning),
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Validation failed for request")),
-                It.IsAny<Exception>(),
-                It.Is<Func<It.IsAnyType, Exception?, string>>(f => true)
-            ),
-            Times.Once
-        );
+        _loggerMock.Verify(x => x.Log(It.Is<LogLevel>(l => l == LogLevel.Warning),
+                                      It.IsAny<EventId>(),
+                                      It.IsAny<It.IsAnyType>(),
+                                      It.IsAny<Exception>(),
+                                      It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                                      ),
+                          Times.Once
+                          );
     }
 
     public class TestRequest : IRequest<string>

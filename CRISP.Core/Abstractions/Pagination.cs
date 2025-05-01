@@ -9,7 +9,7 @@ public class PaginatedResult<T>
     /// <summary>
     /// Gets or sets the items for the current page.
     /// </summary>
-    public IReadOnlyList<T> Items { get; set; } = [];
+    public IEnumerable<T> Items { get; set; } = Enumerable.Empty<T>();
 
     /// <summary>
     /// Gets or sets the total number of items across all pages.
@@ -29,7 +29,7 @@ public class PaginatedResult<T>
     /// <summary>
     /// Gets the total number of pages.
     /// </summary>
-    public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
+    public int TotalPages => PageSize <= 0 ? (TotalCount > 0 ? int.MaxValue : 0) : (int)Math.Ceiling(TotalCount / (double)PageSize);
 
     /// <summary>
     /// Gets a value indicating whether there is a previous page.
@@ -55,7 +55,7 @@ public class PaginatedResult<T>
         int pageNumber,
         int pageSize) => new()
         {
-            Items = items.ToList(),
+            Items = items,
             TotalCount = totalCount,
             PageNumber = pageNumber,
             PageSize = pageSize

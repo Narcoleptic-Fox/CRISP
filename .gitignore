@@ -363,3 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 /coveragereport
 /.runsettings
+/RULES.md
+/TASKS.md

@@ -1,4 +1,5 @@
 using CRISP.Core.Abstractions;
+using System.Linq;
 
 namespace CRISP;
 
@@ -54,11 +55,13 @@ public static class QueryExtensions
         }
 
         int totalCount = query.Count();
-        List<T> items = query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+        
+        // We need to preserve the query as IQueryable to maintain the expected type
+        var items = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
 
         return new PaginatedResult<T>
         {
-            Items = items,
+            Items = items, // Pass the IQueryable directly without materializing
             TotalCount = totalCount,
             PageNumber = pageNumber,
             PageSize = pageSize
@@ -72,7 +75,8 @@ public static class QueryExtensions
     /// <param name="query">The queryable collection.</param>
     /// <param name="filter">The filter parameters.</param>
     /// <returns>A queryable collection with pagination applied.</returns>
-    public static IQueryable<T> ApplyFilter<T>(this IQueryable<T> query, FilterBase filter) => query.ApplyPaging(filter.PageNumber, filter.PageSize);
+    public static IQueryable<T> ApplyFilter<T>(this IQueryable<T> query, FilterBase filter) => 
+        query.ApplyPaging(filter.PageNumber, filter.PageSize);
 
     /// <summary>
     /// Creates a paginated result from a queryable collection using filter parameters.

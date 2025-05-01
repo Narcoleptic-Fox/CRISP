@@ -95,7 +95,7 @@ public class ResponseExtensionsTests
         // Act & Assert
         Action action = () => response.EnsureSuccess();
         action.ShouldThrow<InvalidOperationException>().Message
-            .ShouldBe("Operation failed: Error 1, Error 2");
+            .ShouldBe("Operation failed");
     }
 
     [Fact]

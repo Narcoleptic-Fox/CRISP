@@ -137,7 +137,8 @@ public class ResponseTests
         response.IsSuccess.ShouldBeFalse();
         response.Message.ShouldBe(message);
         response.Data.ShouldBeNull();
-        response.Errors.ShouldBeNull();
+        response.Errors.ShouldNotBeNull();
+        response.Errors!.ShouldContain(message);
     }
 
     [Fact]
@@ -177,7 +178,7 @@ public class ResponseTests
         // Assert
         response.ShouldSatisfyAllConditions(
             () => response.IsSuccess.ShouldBeTrue(),
-            () => response.Errors.ShouldBeEmpty()
+            () => response.Errors.ShouldBeNull()
         );
     }
 
@@ -194,7 +195,7 @@ public class ResponseTests
         response.ShouldSatisfyAllConditions(
             () => response.IsSuccess.ShouldBeTrue(),
             () => response.Data.ShouldBe(data),
-            () => response.Errors.ShouldBeEmpty()
+            () => response.Errors.ShouldBeNull()
         );
     }
 
@@ -250,7 +251,7 @@ public class ResponseTests
         // Assert
         response.ShouldSatisfyAllConditions(
             () => response.IsSuccess.ShouldBeFalse(),
-            () => response.Data.ShouldBe(data),
+            () => response.Data.ShouldBe(default),
             () => response.Errors!.Count().ShouldBe(1),
             () => response.Errors!.ElementAt(0).ShouldBe(errorMessage)
         );
@@ -269,7 +270,7 @@ public class ResponseTests
         // Assert
         response.ShouldSatisfyAllConditions(
             () => response.IsSuccess.ShouldBeFalse(),
-            () => response.Data.ShouldBe(data),
+            () => response.Data.ShouldBe(default),
             () => response.Errors!.Count().ShouldBe(errorMessages.Count)
         );
 

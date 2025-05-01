@@ -56,7 +56,7 @@ public class TimeoutStrategyTests
         // Act
         Func<Task<int>> act = async () => await strategy.Execute<int>((ct) =>
         {
-            return ValueTask.FromResult(42);
+            return ct.IsCancellationRequested ? ValueTask.FromCanceled<int>(ct) : ValueTask.FromResult(42);
         }, cts.Token);
 
         // Assert

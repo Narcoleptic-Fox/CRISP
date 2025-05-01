@@ -43,20 +43,21 @@ public class CircuitBreakerStrategy : IResilienceStrategy
     /// </summary>
     /// <param name="logger">The logger.</param>
     /// <param name="failureThreshold">The number of consecutive failures required to open the circuit.</param>
-    /// <param name="durationOfBreak">The duration that the circuit will stay open before transitioning to half-open.</param>
+    /// <param name="resetTimeout">The duration that the circuit will stay open before transitioning to half-open.</param>
     public CircuitBreakerStrategy(
         ILogger<CircuitBreakerStrategy> logger,
-        int failureThreshold = 5,
-        TimeSpan? durationOfBreak = null)
+        TimeSpan resetTimeout,
+        int failureThreshold = 5)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _failureThreshold = failureThreshold > 0 ? failureThreshold : throw new ArgumentOutOfRangeException(nameof(failureThreshold));
-        _durationOfBreak = durationOfBreak ?? TimeSpan.FromSeconds(30);
+        _durationOfBreak = resetTimeout > TimeSpan.Zero ? resetTimeout : throw new ArgumentOutOfRangeException(nameof(resetTimeout));
     }
 
     /// <inheritdoc />
     public async ValueTask<T> Execute<T>(Func<CancellationToken, ValueTask<T>> operation, CancellationToken cancellationToken = default)
     {
+        if (operation is null) throw new ArgumentNullException(nameof(operation));
         EnsureCircuitAllowsOperation();
 
         try
@@ -75,6 +76,7 @@ public class CircuitBreakerStrategy : IResilienceStrategy
     /// <inheritdoc />
     public async ValueTask Execute(Func<CancellationToken, ValueTask> operation, CancellationToken cancellationToken = default)
     {
+        if (operation is null) throw new ArgumentNullException(nameof(operation));
         EnsureCircuitAllowsOperation();
 
         try

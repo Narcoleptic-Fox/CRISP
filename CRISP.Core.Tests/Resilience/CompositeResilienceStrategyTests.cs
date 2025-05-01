@@ -28,7 +28,7 @@ public class CompositeResilienceStrategyTests
     {
         // Arrange
         RetryStrategy retryStrategy = new(_retryLoggerMock.Object, _maxRetryAttempts, _initialDelay, _backoffFactor);
-        CircuitBreakerStrategy circuitBreakerStrategy = new(_circuitBreakerLoggerMock.Object, _failureThreshold, _breakDuration);
+        CircuitBreakerStrategy circuitBreakerStrategy = new(_circuitBreakerLoggerMock.Object, _breakDuration, _failureThreshold);
         TimeoutStrategy timeoutStrategy = new(_timeoutLoggerMock.Object, _timeout);
 
         CompositeResilienceStrategy compositeStrategy = new(
@@ -86,7 +86,7 @@ public class CompositeResilienceStrategyTests
     public async Task Execute_WithCircuitBreakerAndTimeout_TimeoutExceededException()
     {
         // Arrange
-        CircuitBreakerStrategy circuitBreakerStrategy = new(_circuitBreakerLoggerMock.Object, _failureThreshold, _breakDuration);
+        CircuitBreakerStrategy circuitBreakerStrategy = new(_circuitBreakerLoggerMock.Object, _breakDuration, _failureThreshold);
 
         // Short timeout to trigger timeout exception
         TimeSpan shortTimeout = TimeSpan.FromMilliseconds(10);
@@ -112,7 +112,7 @@ public class CompositeResilienceStrategyTests
     {
         // Arrange
         int failureThreshold = 2; // Lower threshold for testing
-        CircuitBreakerStrategy circuitBreakerStrategy = new(_circuitBreakerLoggerMock.Object, failureThreshold, _breakDuration);
+        CircuitBreakerStrategy circuitBreakerStrategy = new(_circuitBreakerLoggerMock.Object, _breakDuration, failureThreshold);
         CompositeResilienceStrategy compositeStrategy = new(new IResilienceStrategy[] { circuitBreakerStrategy });
 
         int callCount = 0;
@@ -157,12 +157,12 @@ public class CompositeResilienceStrategyTests
         // Create strategies with a retry predicate to retry InvalidOperationException
         Func<Exception, bool> retryPredicate = ex => ex is InvalidOperationException;
         RetryStrategy retryStrategy = new(_retryLoggerMock.Object, _maxRetryAttempts, _initialDelay, _backoffFactor, retryPredicate);
-        CircuitBreakerStrategy circuitBreaker = new(_circuitBreakerLoggerMock.Object, failureThreshold, breakDuration);
+        CircuitBreakerStrategy circuitBreaker = new(_circuitBreakerLoggerMock.Object, breakDuration, failureThreshold);
 
         // Create two separate strategy instances for the two operations:
         // 1. First to cause the failures and open the circuit
         // 2. Second to test the circuit is open
-        CompositeResilienceStrategy compositeStrategy1 = new(circuitBreaker, retryStrategy);
+        CompositeResilienceStrategy compositeStrategy1 = new(retryStrategy, circuitBreaker);
         CompositeResilienceStrategy compositeStrategy2 = new(circuitBreaker); // Same circuit breaker instance
 
         List<DateTime> callCounts = [];
@@ -223,13 +223,13 @@ public class CompositeResilienceStrategyTests
         // Set up the first mock strategy to do something when Execute is called
         mockStrategy1.Setup(s => s.Execute<int>(It.IsAny<Func<CancellationToken, ValueTask<int>>>(),
                 It.IsAny<CancellationToken>()))
-            .Returns<Func<CancellationToken, Task<int>>, CancellationToken>(
+            .Returns<Func<CancellationToken, ValueTask<int>>, CancellationToken>(
                 async (operation, ct) => await operation(ct) * 2); // Multiply result by 2
 
         // Set up the second mock strategy to do something when Execute is called
         mockStrategy2.Setup(s => s.Execute<int>(It.IsAny<Func<CancellationToken, ValueTask<int>>>(),
                 It.IsAny<CancellationToken>()))
-            .Returns<Func<CancellationToken, Task<int>>, CancellationToken>(
+            .Returns<Func<CancellationToken, ValueTask<int>>, CancellationToken>(
                 async (operation, ct) => await operation(ct) + 1); // Add 1 to result
 
         // Create the composite strategy with our mocks
@@ -263,13 +263,13 @@ public class CompositeResilienceStrategyTests
         // Set up the first mock strategy to delegate to the operation
         mockStrategy1.Setup(s => s.Execute(It.IsAny<Func<CancellationToken, ValueTask>>(),
                 It.IsAny<CancellationToken>()))
-            .Returns<Func<CancellationToken, Task>, CancellationToken>(
+            .Returns<Func<CancellationToken, ValueTask>, CancellationToken>(
                 async (operation, ct) => await operation(ct));
 
         // Set up the second mock strategy to delegate to the operation
         mockStrategy2.Setup(s => s.Execute(It.IsAny<Func<CancellationToken, ValueTask>>(),
                 It.IsAny<CancellationToken>()))
-            .Returns<Func<CancellationToken, Task>, CancellationToken>(
+            .Returns<Func<CancellationToken, ValueTask>, CancellationToken>(
                 async (operation, ct) => await operation(ct));
 
         // Create the composite strategy with our mocks
@@ -315,7 +315,7 @@ public class CompositeResilienceStrategyTests
     {
         // Arrange - Create real retry, circuit breaker and timeout strategies
         RetryStrategy retryStrategy = new(_retryLoggerMock.Object, 1, TimeSpan.FromMilliseconds(1));
-        CircuitBreakerStrategy circuitBreaker = new(_circuitBreakerLoggerMock.Object, 3, TimeSpan.FromSeconds(1));
+        CircuitBreakerStrategy circuitBreaker = new(_circuitBreakerLoggerMock.Object, TimeSpan.FromSeconds(1), 3);
         TimeoutStrategy timeoutStrategy = new(_timeoutLoggerMock.Object, TimeSpan.FromSeconds(1));
 
         // Create a composite of all three strategies
@@ -341,7 +341,7 @@ public class CompositeResilienceStrategyTests
             retryPredicate:  // Retry only on TimeoutException 
                 ex => ex is TimeoutException);
 
-        CircuitBreakerStrategy circuitBreaker = new(_circuitBreakerLoggerMock.Object, 3, TimeSpan.FromSeconds(1));
+        CircuitBreakerStrategy circuitBreaker = new(_circuitBreakerLoggerMock.Object, TimeSpan.FromSeconds(1), 3);
 
         CompositeResilienceStrategy compositeStrategy = new(new IResilienceStrategy[]
         {
@@ -354,8 +354,7 @@ public class CompositeResilienceStrategyTests
             throw new InvalidOperationException("Test exception"), CancellationToken.None);
 
         // Assert
-        InvalidOperationException exception = await Should.ThrowAsync<InvalidOperationException>(act);
-        exception.Message.ShouldBe("Test exception");
+        await act.ShouldThrowAsync<RetryFailedException>();
     }
 
     [Fact]

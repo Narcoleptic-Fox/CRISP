@@ -232,7 +232,7 @@ public static class ServiceCollectionExtensions
             return new CircuitBreakerStrategy(
                 sp.GetRequiredService<ILogger<CircuitBreakerStrategy>>(),
                 failureThreshold: options.CircuitBreaker.FailureThreshold,
-                durationOfBreak: TimeSpan.FromSeconds(options.CircuitBreaker.DurationOfBreakSeconds));
+                resetTimeout: TimeSpan.FromSeconds(options.CircuitBreaker.DurationOfBreakSeconds));
         });
 
         services.AddTransient<TimeoutStrategy>(sp =>

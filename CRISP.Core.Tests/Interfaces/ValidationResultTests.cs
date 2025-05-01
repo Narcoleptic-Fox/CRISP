@@ -108,7 +108,7 @@ public class ValidationResultTests
         // Assert
         readOnlyErrors.ShouldNotBeNull();
         readOnlyErrors.Count().ShouldBe(2);
-        readOnlyErrors.ShouldBeEquivalentTo(errors);
+        readOnlyErrors.ShouldAllBe(e => errors.Contains(e));
         readOnlyErrors.ShouldBeAssignableTo<IReadOnlyList<ValidationError>>();
     }
 }

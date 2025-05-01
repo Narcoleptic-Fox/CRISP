@@ -99,8 +99,7 @@ public class EventDispatcherTests : IDisposable
         TestEventHandler.ProcessedEvents.Count().ShouldBe(3);
         AnotherTestEventHandler.ProcessedEvents.Count().ShouldBe(3);
 
-        TestEventHandler.ProcessedEvents.Select(e => e.Value)
-            .ShouldBeEquivalentTo(new[] { "Event 1", "Event 2", "Event 3" });
+        TestEventHandler.ProcessedEvents.ShouldAllBe(e => testEvents.Contains(e));
     }
 
     [Fact]

@@ -17,7 +17,7 @@ public class QueryExtensionsTests
 
         // Assert
         result.Count().ShouldBe(10);
-        result.ShouldBeEquivalentTo(Enumerable.Range(11, 10));
+        result.ShouldBeEquivalentTo(Enumerable.Range(11, 10).ToList());
     }
 
     [Fact]
@@ -33,7 +33,7 @@ public class QueryExtensionsTests
 
         // Assert
         result.Count().ShouldBe(10);
-        result.ShouldBeEquivalentTo(Enumerable.Range(1, 10));
+        result.ShouldBeEquivalentTo(Enumerable.Range(1, 10).ToList());
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class QueryExtensionsTests
 
         // Assert
         result.Count().ShouldBe(5); // Only 5 items on the last page
-        result.ShouldBeEquivalentTo(Enumerable.Range(21, 5));
+        result.ShouldBeEquivalentTo(Enumerable.Range(21, 5).ToList());
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public class QueryExtensionsTests
 
         // Assert
         result.Count().ShouldBe(10);
-        result.ShouldBeEquivalentTo(Enumerable.Range(1, 10));
+        result.ShouldBeEquivalentTo(Enumerable.Range(1, 10).ToList());
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public class QueryExtensionsTests
 
         // Assert
         result.Count().ShouldBe(10);
-        result.ShouldBeEquivalentTo(Enumerable.Range(1, 10));
+        result.ShouldBeEquivalentTo(Enumerable.Range(1, 10).ToList());
     }
 
     [Fact]
@@ -112,7 +112,7 @@ public class QueryExtensionsTests
 
         // Assert
         result.Count().ShouldBe(10); // Default page size is 10
-        result.ShouldBeEquivalentTo(Enumerable.Range(1, 10));
+        result.ShouldBeEquivalentTo(Enumerable.Range(1, 10).ToList());
     }
 
     [Fact]
@@ -128,7 +128,7 @@ public class QueryExtensionsTests
 
         // Assert
         result.Count().ShouldBe(10); // Default page size is 10
-        result.ShouldBeEquivalentTo(Enumerable.Range(1, 10));
+        result.ShouldBeEquivalentTo(Enumerable.Range(1, 10).ToList());
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public class QueryExtensionsTests
 
         // Assert
         result.Items.Count().ShouldBe(10);
-        result.Items.ShouldBeEquivalentTo(Enumerable.Range(11, 10));
+        result.Items.ToList().ShouldBeEquivalentTo(Enumerable.Range(11, 10).ToList());
         result.TotalCount.ShouldBe(100);
         result.PageNumber.ShouldBe(2);
         result.PageSize.ShouldBe(10);
@@ -169,7 +169,7 @@ public class QueryExtensionsTests
 
         // Assert
         result.Count().ShouldBe(10);
-        result.ShouldBeEquivalentTo(Enumerable.Range(11, 10));
+        result.ShouldBeEquivalentTo(Enumerable.Range(11, 10).ToList());
     }
 
     [Fact]
@@ -188,7 +188,7 @@ public class QueryExtensionsTests
 
         // Assert
         result.Items.Count().ShouldBe(10);
-        result.Items.ShouldBeEquivalentTo(Enumerable.Range(11, 10));
+        result.Items.ToList().ShouldBeEquivalentTo(Enumerable.Range(11, 10).ToList());
         result.TotalCount.ShouldBe(100);
         result.PageNumber.ShouldBe(2);
         result.PageSize.ShouldBe(10);

@@ -17,10 +17,12 @@ public class TimeoutStrategy : IResilienceStrategy
     /// <param name="timeout">The timeout duration.</param>
     public TimeoutStrategy(
         ILogger<TimeoutStrategy> logger,
-        TimeSpan? timeout = null)
+        TimeSpan timeout)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _timeout = timeout ?? TimeSpan.FromSeconds(30);
+        if (timeout <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero.");
+        _timeout = timeout;
     }
 
     /// <inheritdoc />
@@ -34,13 +36,13 @@ public class TimeoutStrategy : IResilienceStrategy
             _logger.LogDebug("Executing operation with timeout of {Timeout}ms", _timeout.TotalMilliseconds);
 
             // Create task for the operation
-            Task<T> operationTask = operation(linkedCts.Token).AsTask();
+            ValueTask<T> operationTask = operation(linkedCts.Token);
 
             // Create a task that completes after the timeout
             Task timeoutTask = Task.Delay(Timeout.InfiniteTimeSpan, timeoutCts.Token);
 
             // Wait for either operation completion or timeout
-            Task completedTask = await Task.WhenAny(operationTask, timeoutTask);
+            Task completedTask = await Task.WhenAny(operationTask.AsTask(), timeoutTask);
 
             // If the timeout task completed first, throw timeout exception
             if (completedTask == timeoutTask)
