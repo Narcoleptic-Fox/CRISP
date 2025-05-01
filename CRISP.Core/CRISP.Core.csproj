@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup Label="NuGet package">
-    <PackageId>NarcolepticFox.CRISP.Core</PackageId>
+    <PackageId>NarcolepticFox.Crisp.Core</PackageId>
     <Description>Core Reusable Infrastructure for Structured Programming - a lightweight, modular .NET framework for clean architecture.</Description>
     <PackageTags>mediator;cqrs;events;clean-architecture;domain-driven-design</PackageTags>
     <PackageIcon>icon.png</PackageIcon>
