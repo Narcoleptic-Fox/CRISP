@@ -331,20 +331,20 @@ public class RuleBuilder<T, TProperty> : IRuleBuilder<T, TProperty>
         Func<string> errorMessageProvider)
     {
         // Create a validator definition that binds the predicate with its error message
-        var validator = new ValidatorDefinition(predicate, errorMessageProvider, _customErrorMessage);
-        
+        ValidatorDefinition validator = new(predicate, errorMessageProvider, _customErrorMessage);
+        _lastDefinition = validator;
         _rule.AddValidator((instance, propertyValue) =>
         {
             if (!validator.Predicate(propertyValue))
             {
                 string errorMessage = validator.CustomErrorMessage ?? validator.ErrorMessageProvider();
-                
+
 #if DEBUG
                 Console.WriteLine($"ValidationError: PropertyName='{_rule._propertyName}', ErrorMessage='{errorMessage}'");
                 Console.WriteLine($"CapturedErrorMessage: '{validator.CustomErrorMessage}'");
                 Console.WriteLine($"ErrorMessageProvider: '{validator.ErrorMessageProvider()}'");
 #endif
-                
+
                 return new ValidationError(_rule._propertyName, errorMessage);
             }
             return null;
