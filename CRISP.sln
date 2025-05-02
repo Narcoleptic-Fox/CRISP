@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRISP.Core", "CRISP.Core\CRISP.Core.csproj", "{3161BC56-E54D-40AF-B13D-1F358CED9B1D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRISP", "CRISP\CRISP.csproj", "{3161BC56-E54D-40AF-B13D-1F358CED9B1D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRISP.Core.Tests", "CRISP.Core.Tests\CRISP.Core.Tests.csproj", "{F5B78706-D9DA-4577-A63B-173B2AA829CB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRISP.Tests", "CRISP.Tests\CRISP.Tests.csproj", "{F5B78706-D9DA-4577-A63B-173B2AA829CB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
