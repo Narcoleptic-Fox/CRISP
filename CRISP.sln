@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRISP.Blazor", "Samples\CRI
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRISP.Blazor.Client", "Samples\CRISP.Blazor\CRISP.Blazor.Client\CRISP.Blazor.Client.csproj", "{B7591ABC-386E-40D1-B356-472B88129DAC}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -100,6 +102,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{66186443-B57F-4346-8903-C4F474EDDBD8} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{B7591ABC-386E-40D1-B356-472B88129DAC} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4D5CFA17-6A7B-439D-B23B-808194C4D9A4}
