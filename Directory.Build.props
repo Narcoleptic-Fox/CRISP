@@ -4,7 +4,7 @@
     <Authors>Brock Claussen</Authors>
     <Company>Narcoleptic Fox</Company>
     <Product>CRISP Framework</Product>
-    <Copyright>Copyright © CRISP $([System.DateTime]::Now.ToString('yyyy'))</Copyright>
+    <Copyright>Copyright © Narcoleptic Fox $([System.DateTime]::Now.ToString('yyyy'))</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Narcoleptic-Fox/CRISP</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Narcoleptic-Fox/CRISP</RepositoryUrl>

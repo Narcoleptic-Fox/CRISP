@@ -84,7 +84,8 @@ if (-not $coverageFiles) {
     exit 1
 }
 
-reportgenerator -reports:"$projectRoot\$testProject\$testResultsFolder\*\coverage.cobertura.xml" -targetdir:"$reportFolder" -reporttypes:Html
+# Use ReportGenerator with filters to exclude test project
+reportgenerator -reports:"$projectRoot\$testProject\$testResultsFolder\*\coverage.cobertura.xml" -targetdir:"$reportFolder" -reporttypes:Html -filters:"-$testProject.*" -classfilters:"-$testProject.*"
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error generating coverage report." -ForegroundColor Red

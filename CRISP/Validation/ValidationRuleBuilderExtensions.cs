@@ -1,7 +1,4 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace CRISP.Validation;
@@ -17,12 +14,9 @@ public static class ValidationRuleBuilderExtensions
     /// <typeparam name="T">The type being validated.</typeparam>
     /// <param name="ruleBuilder">The rule builder to extend.</param>
     /// <returns>The same rule builder, for chaining.</returns>
-    public static IRuleBuilder<T, string> NotEmpty<T>(this IRuleBuilder<T, string> ruleBuilder)
-    {
-        return ((RuleBuilder<T, string>)ruleBuilder).AddValidator(
+    public static IRuleBuilder<T, string> NotEmpty<T>(this IRuleBuilder<T, string> ruleBuilder) => ((RuleBuilder<T, string>)ruleBuilder).AddValidator(
             value => !string.IsNullOrWhiteSpace(value),
             () => "Must not be empty.");
-    }
 
     /// <summary>
     /// Specifies that the property value must not be null.
@@ -31,12 +25,9 @@ public static class ValidationRuleBuilderExtensions
     /// <typeparam name="TProperty">The type of the property being validated.</typeparam>
     /// <param name="ruleBuilder">The rule builder to extend.</param>
     /// <returns>The same rule builder, for chaining.</returns>
-    public static IRuleBuilder<T, TProperty?> NotNull<T, TProperty>(this IRuleBuilder<T, TProperty?> ruleBuilder)
-    {
-        return ((RuleBuilder<T, TProperty?>)ruleBuilder).AddValidator(
+    public static IRuleBuilder<T, TProperty?> NotNull<T, TProperty>(this IRuleBuilder<T, TProperty?> ruleBuilder) => ((RuleBuilder<T, TProperty?>)ruleBuilder).AddValidator(
             value => value != null,
             () => "Must not be null.");
-    }
 
     /// <summary>
     /// Specifies that the collection must contain at least the specified number of items.
@@ -51,8 +42,8 @@ public static class ValidationRuleBuilderExtensions
         int min)
         where TCollection : IEnumerable?
     {
-        var actualRuleBuilder = (RuleBuilder<T, TCollection>)ruleBuilder;
-        var rule = actualRuleBuilder.GetRule();
+        RuleBuilder<T, TCollection> actualRuleBuilder = (RuleBuilder<T, TCollection>)ruleBuilder;
+        ValidationRule<T, TCollection> rule = actualRuleBuilder.GetRule();
 
         return actualRuleBuilder.AddValidator(
             value =>
@@ -61,7 +52,7 @@ public static class ValidationRuleBuilderExtensions
                     return false;
 
                 int count = 0;
-                foreach (var _ in value)
+                foreach (object? _ in value)
                 {
                     count++;
                     if (count >= min)
@@ -83,16 +74,14 @@ public static class ValidationRuleBuilderExtensions
     public static IRuleBuilder<T, TCollection> MaxCount<T, TCollection>(
         this IRuleBuilder<T, TCollection> ruleBuilder,
         int max)
-        where TCollection : IEnumerable
-    {
-        return ((RuleBuilder<T, TCollection>)ruleBuilder).AddValidator(
+        where TCollection : IEnumerable => ((RuleBuilder<T, TCollection>)ruleBuilder).AddValidator(
             value =>
             {
                 if (value == null)
                     return true;
 
                 int count = 0;
-                foreach (var _ in value)
+                foreach (object? _ in value)
                 {
                     count++;
                     if (count > max)
@@ -101,7 +90,6 @@ public static class ValidationRuleBuilderExtensions
                 return true;
             },
             () => $"Must contain at most {max} item(s).");
-    }
 
     /// <summary>
     /// Specifies that each item in the collection must satisfy the specified predicate.
@@ -115,18 +103,12 @@ public static class ValidationRuleBuilderExtensions
     public static IRuleBuilder<T, IEnumerable<TElement>> ForEach<T, TElement>(
         this IRuleBuilder<T, IEnumerable<TElement>> ruleBuilder,
         Func<TElement, bool> predicate,
-        string errorMessage)
-    {
-        return ((RuleBuilder<T, IEnumerable<TElement>>)ruleBuilder).AddValidator(
+        string errorMessage) => ((RuleBuilder<T, IEnumerable<TElement>>)ruleBuilder).AddValidator(
             value =>
             {
-                if (value == null)
-                    return true;
-
-                return value.All(predicate);
+                return value == null ? true : value.All(predicate);
             },
             () => errorMessage);
-    }
 
     /// <summary>
     /// Specifies that each item in the List must satisfy the specified predicate.
@@ -142,15 +124,12 @@ public static class ValidationRuleBuilderExtensions
         Func<TElement, bool> predicate,
         string errorMessage)
     {
-        var actualRuleBuilder = (RuleBuilder<T, List<TElement>>)ruleBuilder;
-        var rule = actualRuleBuilder.GetRule();
+        RuleBuilder<T, List<TElement>> actualRuleBuilder = (RuleBuilder<T, List<TElement>>)ruleBuilder;
+        ValidationRule<T, List<TElement>> rule = actualRuleBuilder.GetRule();
 
         rule.AddValidator((instance, list) =>
         {
-            if (list == null || list.All(predicate))
-                return null;
-
-            return new ValidationError(rule._propertyName, errorMessage);
+            return list == null || list.All(predicate) ? null : new ValidationError(rule._propertyName, errorMessage);
         });
 
         return ruleBuilder;
@@ -169,23 +148,23 @@ public static class ValidationRuleBuilderExtensions
         IValidator<TElement> validator)
     {
         // Need to use a special implementation for this validator since it returns multiple errors
-        var actualRuleBuilder = (RuleBuilder<T, IEnumerable<TElement>>)ruleBuilder;
-        var rule = actualRuleBuilder.GetRule();
+        RuleBuilder<T, IEnumerable<TElement>> actualRuleBuilder = (RuleBuilder<T, IEnumerable<TElement>>)ruleBuilder;
+        ValidationRule<T, IEnumerable<TElement>> rule = actualRuleBuilder.GetRule();
 
         rule.AddComplexValidator((instance, collection) =>
         {
             if (collection == null)
                 return Array.Empty<ValidationError>();
 
-            List<ValidationError> allErrors = new();
+            List<ValidationError> allErrors = [];
             int index = 0;
 
-            foreach (var item in collection)
+            foreach (TElement? item in collection)
             {
-                var result = validator.Validate(item);
+                ValidationResult result = validator.Validate(item);
                 if (!result.IsValid)
                 {
-                    foreach (var error in result.Errors)
+                    foreach (ValidationError error in result.Errors)
                     {
                         string indexedPropertyName = string.IsNullOrEmpty(error.PropertyName)
                             ? $"{rule._propertyName}[{index}]"
@@ -215,24 +194,24 @@ public static class ValidationRuleBuilderExtensions
         this IRuleBuilder<T, TProperty> ruleBuilder,
         IValidator<TProperty> validator) where TProperty : class
     {
-        var actualRuleBuilder = (RuleBuilder<T, TProperty>)ruleBuilder;
-        var rule = actualRuleBuilder.GetRule();
+        RuleBuilder<T, TProperty> actualRuleBuilder = (RuleBuilder<T, TProperty>)ruleBuilder;
+        ValidationRule<T, TProperty> rule = actualRuleBuilder.GetRule();
 
         rule.AddComplexValidator((instance, property) =>
         {
             if (property == null)
                 return Array.Empty<ValidationError>();
 
-            List<ValidationError> allErrors = new();
-            var result = validator.Validate(property);
+            List<ValidationError> allErrors = [];
+            ValidationResult result = validator.Validate(property);
 
 #if DEBUG
             Console.WriteLine($"ForEach validation for {rule._propertyName}: Found {result.Errors.Count} errors");
 #endif
-            
+
             if (!result.IsValid)
             {
-                foreach (var error in result.Errors)
+                foreach (ValidationError error in result.Errors)
                 {
                     // Correctly construct nested property paths by combining parent and child property names
                     string nestedPropertyName = string.IsNullOrEmpty(error.PropertyName)
@@ -242,7 +221,7 @@ public static class ValidationRuleBuilderExtensions
 #if DEBUG
                     Console.WriteLine($"Creating nested error: PropertyName='{nestedPropertyName}', ErrorMessage='{error.ErrorMessage}' (Original: PropertyName='{error.PropertyName}')");
 #endif
-                    
+
                     allErrors.Add(new ValidationError(nestedPropertyName, error.ErrorMessage));
                 }
             }
@@ -264,12 +243,9 @@ public static class ValidationRuleBuilderExtensions
     public static IRuleBuilder<T, TProperty> Equal<T, TProperty>(
         this IRuleBuilder<T, TProperty> ruleBuilder,
         TProperty valueToCompare)
-        where TProperty : IEquatable<TProperty>
-    {
-        return ((RuleBuilder<T, TProperty>)ruleBuilder).AddValidator(
+        where TProperty : IEquatable<TProperty> => ((RuleBuilder<T, TProperty>)ruleBuilder).AddValidator(
             value => value != null && value.Equals(valueToCompare),
             () => $"Must be equal to '{valueToCompare}'.");
-    }
 
     /// <summary>
     /// Specifies that the property value must have a length within the specified range.
@@ -282,12 +258,9 @@ public static class ValidationRuleBuilderExtensions
     public static IRuleBuilder<T, string> Length<T>(
         this IRuleBuilder<T, string> ruleBuilder,
         int min,
-        int max)
-    {
-        return ((RuleBuilder<T, string>)ruleBuilder).AddValidator(
+        int max) => ((RuleBuilder<T, string>)ruleBuilder).AddValidator(
             value => value != null && value.Length >= min && value.Length <= max,
             () => $"Length must be between {min} and {max}.");
-    }
 
     /// <summary>
     /// Specifies that the property value must have a minimum length.
@@ -298,12 +271,9 @@ public static class ValidationRuleBuilderExtensions
     /// <returns>The same rule builder, for chaining.</returns>
     public static IRuleBuilder<T, string> MinLength<T>(
         this IRuleBuilder<T, string> ruleBuilder,
-        int min)
-    {
-        return ((RuleBuilder<T, string>)ruleBuilder).AddValidator(
+        int min) => ((RuleBuilder<T, string>)ruleBuilder).AddValidator(
             value => value != null && value.Length >= min,
             () => $"Length must be at least {min}.");
-    }
 
     /// <summary>
     /// Specifies that the property value must have a maximum length.
@@ -314,12 +284,9 @@ public static class ValidationRuleBuilderExtensions
     /// <returns>The same rule builder, for chaining.</returns>
     public static IRuleBuilder<T, string> MaxLength<T>(
         this IRuleBuilder<T, string> ruleBuilder,
-        int max)
-    {
-        return ((RuleBuilder<T, string>)ruleBuilder).AddValidator(
+        int max) => ((RuleBuilder<T, string>)ruleBuilder).AddValidator(
             value => value == null || value.Length <= max,
             () => $"Length must not exceed {max}.");
-    }
 
     /// <summary>
     /// Specifies that the property value must match the specified regular expression.
@@ -330,12 +297,9 @@ public static class ValidationRuleBuilderExtensions
     /// <returns>The same rule builder, for chaining.</returns>
     public static IRuleBuilder<T, string> Matches<T>(
         this IRuleBuilder<T, string> ruleBuilder,
-        string regex)
-    {
-        return ((RuleBuilder<T, string>)ruleBuilder).AddValidator(
+        string regex) => ((RuleBuilder<T, string>)ruleBuilder).AddValidator(
             value => value != null && Regex.IsMatch(value, regex),
             () => $"Must match the regular expression '{regex}'.");
-    }
 
     /// <summary>
     /// A sophisticated email regex that complies with RFC 5322 standards.
@@ -356,12 +320,9 @@ public static class ValidationRuleBuilderExtensions
     /// <param name="ruleBuilder">The rule builder to extend.</param>
     /// <returns>The same rule builder, for chaining.</returns>
     public static IRuleBuilder<T, string> EmailAddress<T>(
-        this IRuleBuilder<T, string> ruleBuilder)
-    {
-        return ((RuleBuilder<T, string>)ruleBuilder).AddValidator(
+        this IRuleBuilder<T, string> ruleBuilder) => ((RuleBuilder<T, string>)ruleBuilder).AddValidator(
             value => value != null && Regex.IsMatch(value, EmailRegex),
             () => "Must be a valid email address.");
-    }
 
     /// <summary>
     /// Specifies that the property value must be greater than the specified value.
@@ -376,8 +337,8 @@ public static class ValidationRuleBuilderExtensions
         TProperty valueToCompare)
         where TProperty : IComparable<TProperty>
     {
-        var actualRuleBuilder = (RuleBuilder<T, TProperty>)ruleBuilder;
-        var rule = actualRuleBuilder.GetRule();
+        RuleBuilder<T, TProperty> actualRuleBuilder = (RuleBuilder<T, TProperty>)ruleBuilder;
+        ValidationRule<T, TProperty> rule = actualRuleBuilder.GetRule();
 
         return actualRuleBuilder.AddValidator(
             value => value != null && value.CompareTo(valueToCompare) > 0,
@@ -395,12 +356,9 @@ public static class ValidationRuleBuilderExtensions
     public static IRuleBuilder<T, TProperty> LessThan<T, TProperty>(
         this IRuleBuilder<T, TProperty> ruleBuilder,
         TProperty valueToCompare)
-        where TProperty : IComparable<TProperty>
-    {
-        return ((RuleBuilder<T, TProperty>)ruleBuilder).AddValidator(
+        where TProperty : IComparable<TProperty> => ((RuleBuilder<T, TProperty>)ruleBuilder).AddValidator(
             value => value != null && value.CompareTo(valueToCompare) < 0,
             () => $"Must be less than {valueToCompare}.");
-    }
 
     /// <summary>
     /// Specifies a custom validation rule.
@@ -414,12 +372,9 @@ public static class ValidationRuleBuilderExtensions
     public static IRuleBuilder<T, TProperty> Must<T, TProperty>(
         this IRuleBuilder<T, TProperty> ruleBuilder,
         Func<TProperty, bool> predicate,
-        string errorMessage)
-    {
-        return ((RuleBuilder<T, TProperty>)ruleBuilder).AddValidator(
+        string errorMessage) => ((RuleBuilder<T, TProperty>)ruleBuilder).AddValidator(
             predicate,
             () => errorMessage);
-    }
 
     /// <summary>
     /// Specifies that the property must be in a specified collection.
@@ -432,10 +387,7 @@ public static class ValidationRuleBuilderExtensions
     public static IRuleBuilder<T, TProperty> In<T, TProperty>(
         this IRuleBuilder<T, TProperty> ruleBuilder,
         params TProperty[] validValues)
-        where TProperty : IEquatable<TProperty>
-    {
-        return ((RuleBuilder<T, TProperty>)ruleBuilder).AddValidator(
+        where TProperty : IEquatable<TProperty> => ((RuleBuilder<T, TProperty>)ruleBuilder).AddValidator(
             value => Array.Exists(validValues, validValue => value != null && value.Equals(validValue)),
             () => $"Must be one of the allowed values: {string.Join(", ", validValues)}.");
-    }
 }

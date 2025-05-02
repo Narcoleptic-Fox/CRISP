@@ -66,5 +66,5 @@ public static class QueryExtensions
     /// <returns>A paginated result.</returns>
     public static PagedResult<T> ToPaginatedResult<T>(
         this IQueryable<T> query,
-        FilterBase filter) => query.ToPaginatedResult(filter.PageNumber, filter.PageSize);
+        FilterBase filter) => query.ToPaginatedResult(filter.Page, filter.PageSize);
 }

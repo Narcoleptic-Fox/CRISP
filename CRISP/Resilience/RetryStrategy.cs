@@ -178,11 +178,11 @@ public class RetryStrategy : IResilienceStrategy
         return exception is TimeoutException ||
                exception is HttpRequestException ||
                exception is IOException ||
-               exception.Message != null && (
+               (exception.Message != null && (
                    exception.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase) ||
                    exception.Message.Contains("timed out", StringComparison.OrdinalIgnoreCase) ||
                    exception.Message.Contains("temporarily unavailable", StringComparison.OrdinalIgnoreCase)
-               );
+               ));
     }
 }
 

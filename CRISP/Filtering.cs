@@ -8,7 +8,7 @@ public abstract class FilterBase
     /// <summary>
     /// Gets or sets the page number (1-based).
     /// </summary>
-    public int PageNumber { get; set; } = 1;
+    public int Page { get; set; } = 1;
 
     /// <summary>
     /// Gets or sets the page size. (default is int.MaxValue).

@@ -158,7 +158,7 @@ public class QueryExtensionsTests
         IQueryable<int> query = Enumerable.Range(1, 100).AsQueryable();
         TestFilter filter = new()
         {
-            PageNumber = 2,
+            Page = 2,
             PageSize = 10
         };
 

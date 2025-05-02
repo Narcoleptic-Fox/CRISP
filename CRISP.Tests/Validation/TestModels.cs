@@ -28,7 +28,7 @@ public class User
     /// <summary>
     /// Gets or sets the user's roles.
     /// </summary>
-    public List<string> Roles { get; set; } = new List<string>();
+    public List<string> Roles { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the user's address.

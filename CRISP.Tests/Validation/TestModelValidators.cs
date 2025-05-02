@@ -65,7 +65,7 @@ public class UserValidator : FluentValidator<User>
 
         // ForEach validation on collection items
         RuleFor(u => u.Roles)
-            .ForEach(role => !string.IsNullOrEmpty(role) && role.Length <= 20, 
+            .ForEach(role => !string.IsNullOrEmpty(role) && role.Length <= 20,
                     "Each role must not be empty and must be 20 characters or less");
 
         // Complex object validation
@@ -83,11 +83,11 @@ public class UserValidator : FluentValidator<User>
         RuleSet("AdminValidation", () =>
         {
             RuleFor(u => u.Username)
-                .Must(username => username.StartsWith("admin_"), 
+                .Must(username => username.StartsWith("admin_"),
                      "Admin usernames must start with 'admin_'");
-                
+
             RuleFor(u => u.Roles)
-                .ForEach(role => role == "Admin" || role == "SuperAdmin", 
+                .ForEach(role => role == "Admin" || role == "SuperAdmin",
                         "Admins must have either 'Admin' or 'SuperAdmin' role");
         });
     }

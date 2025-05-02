@@ -57,7 +57,7 @@ public class ValidationResult : IValidationResult
     /// <param name="errorMessage">The error message.</param>
     /// <param name="propertyName">The name of the property with the error.</param>
     /// <returns>A failed validation result.</returns>
-    public static ValidationResult Failure(string errorMessage, string? propertyName = null) => 
+    public static ValidationResult Failure(string errorMessage, string? propertyName = null) =>
         Failure(new ValidationError(propertyName ?? string.Empty, errorMessage));
 }
 

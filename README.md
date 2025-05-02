@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="assets/icon.png" alt="CRISP Framework Logo" width="200" height="200"/>
+  <img src="https://github.com/Narcoleptic-Fox/CRISP/blob/master/assets/icon.png" alt="CRISP Framework Logo" width="200" height="200"/>
 </p>
 
 <p align="center">
-  <img src="assets/comapny_logo.png" alt="Company Logo" height="50"/>
+  <img src="https://github.com/Narcoleptic-Fox/CRISP/blob/master/assets/comapny_logo.png" alt="Company Logo" height="50"/>
 </p>
 
 # CRISP: Core Reusable Infrastructure for Structured Programming
