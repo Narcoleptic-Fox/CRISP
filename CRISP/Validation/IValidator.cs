@@ -35,6 +35,30 @@ public class ValidationResult : IValidationResult
     IReadOnlyList<ValidationError> IValidationResult.Errors => Errors;
 
     /// <summary>
+    /// Adds an error to the validation result.
+    /// </summary>
+    /// <param name="error">The error message to add.</param>
+    public void AddError(ValidationError error)
+    {
+        if (error is not null)
+        {
+            Errors.Add(error);
+        }
+    }
+
+    /// <summary>
+    /// Adds multiple errors to the validation result.
+    /// </summary>
+    /// <param name="errors">The error messages to add.</param>
+    public void AddErrors(IEnumerable<ValidationError> errors)
+    {
+        if (errors is not null)
+        {
+            Errors.AddRange(errors);
+        }
+    }
+
+    /// <summary>
     /// Creates a successful validation result.
     /// </summary>
     /// <returns>A successful validation result.</returns>
@@ -59,6 +83,34 @@ public class ValidationResult : IValidationResult
     /// <returns>A failed validation result.</returns>
     public static ValidationResult Failure(string errorMessage, string? propertyName = null) =>
         Failure(new ValidationError(propertyName ?? string.Empty, errorMessage));
+
+    /// <summary>
+    /// Combines multiple validation results into a single result.
+    /// </summary>
+    /// <param name="validationResults">The validation results to combine.</param>
+    /// <returns>
+    /// A new validation result that is valid only if all input results are valid,
+    /// and contains all errors from all input results.
+    /// </returns>
+    public static ValidationResult Combine(IEnumerable<ValidationResult> validationResults)
+    {
+        if (validationResults == null)
+        {
+            return Success();
+        }
+
+        ValidationResult combinedResult = new();
+
+        foreach (ValidationResult result in validationResults)
+        {
+            if (result != null && result.Errors.Any())
+            {
+                combinedResult.AddErrors(result.Errors);
+            }
+        }
+
+        return combinedResult;
+    }
 }
 
 /// <summary>

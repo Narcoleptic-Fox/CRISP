@@ -7,6 +7,30 @@ namespace CRISP
     {
     }
 
+    public interface IRequestService<TRequest> : IService
+        where TRequest : IRequest
+    {
+        /// <summary>
+        /// Sends a request to the service.
+        /// </summary>
+        /// <param name="request">The request to send.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A value task representing the operation.</returns>
+        ValueTask Send(TRequest request, CancellationToken cancellationToken = default);
+    }
+
+    public interface IRequestService<in TRequest, TResult> : IService
+        where TRequest : IRequest<TResult>
+    {
+        /// <summary>
+        /// Sends a request to the service.
+        /// </summary>
+        /// <param name="request">The request to send.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A value task representing the operation with the result.</returns>
+        ValueTask<TResult> Send(TRequest request, CancellationToken cancellationToken = default);
+    }
+
     /// <summary>
     /// Interface for command services that handle commands of type <typeparamref name="TCommand"/>.
     /// </summary>
@@ -75,9 +99,11 @@ namespace CRISP
     /// and return a paged result of type <typeparamref name="TResponse"/>.
     /// </summary>
     /// <typeparam name="TQuery">The type of the filtered query.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter the query has.</typeparam>
     /// <typeparam name="TResponse">The type of the response items in the paged result.</typeparam>
-    public interface IFilteredQueryService<in TQuery, TResponse> : IQueryService<TQuery, PagedResult<TResponse>>
-        where TQuery : FilteredQuery<FilterBase, TResponse>
+    public interface IFilteredQueryService<in TQuery, TFilter, TResponse> : IQueryService<TQuery, PagedResult<TResponse>>
+        where TQuery : FilteredQuery<TFilter, TResponse>
+        where TFilter : FilterBase
     {
     }
 }

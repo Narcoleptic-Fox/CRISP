@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace CRISP;
 
 /// <summary>
@@ -24,6 +26,17 @@ public abstract class FilterBase
     /// Gets or sets a value indicating whether to sort in descending order.
     /// </summary>
     public bool SortDescending { get; set; }
+
+    public virtual string ToString()
+    {
+        PropertyInfo[] properties = GetType().GetProperties();
+        string filterString = string.Join("&", properties.Select(p =>
+        {
+            object? value = p.GetValue(this);
+            return value != null ? $"{p.Name}={value}" : null;
+        }).Where(x => x != null));
+        return filterString;
+    }
 }
 
 /// <summary>
@@ -35,6 +48,15 @@ public class SearchFilter : FilterBase
     /// Gets or sets the search term.
     /// </summary>
     public string? Search { get; set; }
+    public override string ToString()
+    {
+        string filterString = base.ToString();
+        if (!string.IsNullOrEmpty(Search))
+        {
+            filterString += $"&Search={Search}";
+        }
+        return filterString;
+    }
 }
 
 /// <summary>
@@ -51,4 +73,18 @@ public class DateRangeFilter : FilterBase
     /// Gets or sets the end date.
     /// </summary>
     public DateTime? EndDate { get; set; }
+
+    public override string ToString()
+    {
+        string filterString = base.ToString();
+        if (StartDate.HasValue)
+        {
+            filterString += $"&StartDate={StartDate.Value:yyyy-MM-dd}";
+        }
+        if (EndDate.HasValue)
+        {
+            filterString += $"&EndDate={EndDate.Value:yyyy-MM-dd}";
+        }
+        return filterString;
+    }
 }

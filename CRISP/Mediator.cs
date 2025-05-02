@@ -8,6 +8,18 @@ namespace CRISP;
 /// <summary>
 /// Default implementation of the <see cref="IMediator"/> interface.
 /// </summary>
+/// <remarks>
+/// The Mediator implementation follows the mediator pattern to decouple request senders from handlers.
+/// It provides a centralized request processing pipeline with support for:
+/// <list type="bullet">
+/// <item>Request timeout handling</item>
+/// <item>Pipeline behaviors for cross-cutting concerns</item>
+/// <item>Performance metrics tracking</item>
+/// <item>Comprehensive error handling and logging</item>
+/// <item>Support for both void and result-returning operations</item>
+/// </list>
+/// This implementation is thread-safe and designed for high-performance scenarios.
+/// </remarks>
 internal class Mediator : IMediator
 {
     private readonly IServiceProvider _serviceProvider;
@@ -20,6 +32,7 @@ internal class Mediator : IMediator
     /// <param name="serviceProvider">The service provider used to resolve handlers.</param>
     /// <param name="logger">The logger instance.</param>
     /// <param name="options">The mediator options.</param>
+    /// <exception cref="ArgumentNullException">Thrown when any of the required dependencies are null.</exception>
     public Mediator(
         IServiceProvider serviceProvider,
         ILogger<Mediator> logger,
@@ -31,6 +44,20 @@ internal class Mediator : IMediator
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// This implementation:
+    /// <list type="bullet">
+    /// <item>Applies configured timeout settings from <see cref="MediatorOptions"/></item>
+    /// <item>Creates a pipeline of behaviors that wrap the handler execution</item>
+    /// <item>Tracks metrics when enabled</item>
+    /// <item>Provides detailed error information and appropriate exception handling</item>
+    /// </list>
+    /// The handler resolution is done via the dependency injection container, allowing for
+    /// flexible registration of request handlers.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">Thrown when no handler is registered for the request type, 
+    /// multiple handlers are registered when not allowed, or if the handler implementation is invalid.</exception>
+    /// <exception cref="TimeoutException">Thrown when request processing exceeds the configured timeout.</exception>
     public async ValueTask<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
     {
         using CancellationTokenSource? timeoutCts = _options.DefaultTimeoutSeconds > 0
@@ -116,6 +143,13 @@ internal class Mediator : IMediator
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// This implementation mirrors the behavior of the typed Send method, but for void-returning operations.
+    /// It applies the same timeout handling and error processing patterns.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">Thrown when no handler is registered for the request type, 
+    /// multiple handlers are registered when not allowed, or if the handler implementation is invalid.</exception>
+    /// <exception cref="TimeoutException">Thrown when request processing exceeds the configured timeout.</exception>
     public async ValueTask Send(IRequest request, CancellationToken cancellationToken = default)
     {
         using CancellationTokenSource? timeoutCts = _options.DefaultTimeoutSeconds > 0

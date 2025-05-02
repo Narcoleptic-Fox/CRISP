@@ -6,19 +6,19 @@ namespace CRISP.Tests.Validation
     {
         private class TestModel
         {
-            public string StringProperty { get; set; }
+            public string? StringProperty { get; set; }
             public int IntProperty { get; set; }
             public DateTime DateProperty { get; set; }
             public List<string> ListProperty { get; set; } = [];
-            public TestNestedModel NestedProperty { get; set; }
+            public TestNestedModel? NestedProperty { get; set; }
             public List<TestNestedModel> NestedListProperty { get; set; } = [];
-            public string ZipCode { get; set; }
-            public string Email { get; set; }
+            public string? ZipCode { get; set; }
+            public string? Email { get; set; }
         }
 
         private class TestNestedModel
         {
-            public string NestedStringProperty { get; set; }
+            public string? NestedStringProperty { get; set; }
         }
 
         private class TestValidator : FluentValidator<TestModel>

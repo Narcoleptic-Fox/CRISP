@@ -5,6 +5,16 @@ namespace CRISP;
 /// Provides a standardized structure for API responses.
 /// </summary>
 /// <typeparam name="T">The type of data contained in the response.</typeparam>
+/// <remarks>
+/// This response pattern provides a consistent envelope format for all API responses,
+/// separating success/failure status from the actual payload. This allows for:
+/// <list type="bullet">
+/// <item>Standardized error handling across the application</item>
+/// <item>Clear separation between business data and API metadata</item>
+/// <item>Consistent client-side response processing</item>
+/// <item>Support for both successful and failure responses with appropriate context</item>
+/// </list>
+/// </remarks>
 public class Response<T>
 {
     /// <summary>
@@ -23,6 +33,11 @@ public class Response<T>
     public T? Data { get; set; }
 
     /// <summary>
+    /// Gets or sets the HTTP status code associated with the response.
+    /// </summary>
+    public int Status { get; set; }
+
+    /// <summary>
     /// Gets or sets any errors that occurred during the operation.
     /// </summary>
     public IEnumerable<string>? Errors { get; set; }
@@ -38,7 +53,8 @@ public class Response<T>
         IsSuccess = true,
         Message = message,
         Data = data,
-        Errors = null // Tests expect null for basic Success responses
+        Errors = null, // Tests expect null for basic Success responses
+        Status = 200 // Set status to 200 for success
     };
 
     /// <summary>
@@ -52,7 +68,8 @@ public class Response<T>
         IsSuccess = false,
         Message = message,
         Data = default,
-        Errors = errors // Keep original errors, which could be null
+        Errors = errors, // Keep original errors, which could be null
+        Status = 400 // Set status to 400 for failure
     };
 
     /// <summary>
@@ -66,13 +83,52 @@ public class Response<T>
         IsSuccess = false,
         Message = "Operation failed",
         Data = data, // Keep the data
+        Errors = errors,
+        Status = 400 // Set status to 400 for failure
+    };
+
+    /// <summary>
+    /// Creates a bad request response with the specified validation errors.
+    /// </summary>
+    /// <param name="errors">Collection of validation error messages.</param>
+    /// <returns>A response indicating a bad request with validation errors.</returns>
+    /// <remarks>
+    /// This method is typically used for responses to requests with invalid input data.
+    /// It sets the appropriate HTTP status code and formats the response in a standard way.
+    /// </remarks>
+    public static Response<T> BadRequest(IEnumerable<string>? errors) => new()
+    {
+        IsSuccess = false,
+        Message = "Bad Request",
+        Status = 400, // Set status to 400 for failure
         Errors = errors
+    };
+
+    /// <summary>
+    /// Creates a not found response for the specified resource.
+    /// </summary>
+    /// <param name="id">The identifier of the resource that was not found.</param>
+    /// <param name="objectName">The name of the resource type that was not found.</param>
+    /// <returns>A response indicating that the requested resource was not found.</returns>
+    /// <remarks>
+    /// This method creates a standardized response for resource not found scenarios,
+    /// including details about which resource was being requested.
+    /// </remarks>
+    public static Response NotFound(object id, string objectName) => new()
+    {
+        IsSuccess = false,
+        Message = $"{objectName} with Id ({id}) was not found.",
+        Status = 404 // Set status to 404 for not found
     };
 
     /// <summary>
     /// Returns a string representation of the response.
     /// </summary>
     /// <returns>A string representation of the response.</returns>
+    /// <remarks>
+    /// This implementation includes special handling for test scenarios to ensure
+    /// consistent string representation across different response types.
+    /// </remarks>
     public override string ToString()
     {
         string typeName = typeof(T) == typeof(object) ? "Response" : $"Response<{typeof(T).Name}>";
@@ -99,6 +155,11 @@ public class Response<T>
 /// <summary>
 /// Represents a response with no data payload.
 /// </summary>
+/// <remarks>
+/// This specialized version of Response is used for operations that don't return data,
+/// such as commands that only indicate success or failure without a result. It simplifies
+/// the API by removing the need for generic type parameters in these scenarios.
+/// </remarks>
 public class Response : Response<object>
 {
     /// <summary>
@@ -106,11 +167,16 @@ public class Response : Response<object>
     /// </summary>
     /// <param name="message">An optional success message.</param>
     /// <returns>A successful response with no data.</returns>
+    /// <remarks>
+    /// This is the most common success response for command operations that don't
+    /// return specific data, such as updates or deletes.
+    /// </remarks>
     public static Response Success(string message = "Operation completed successfully") => new()
     {
         IsSuccess = true,
         Message = message,
-        Errors = null // Tests expect null for basic Success responses
+        Errors = null, // Tests expect null for basic Success responses
+        Status = 200 // Set status to 200 for success
     };
 
     /// <summary>
@@ -119,10 +185,49 @@ public class Response : Response<object>
     /// <param name="message">The error message.</param>
     /// <param name="errors">Optional collection of specific errors.</param>
     /// <returns>A failure response with the specified error details.</returns>
+    /// <remarks>
+    /// This method ensures that at minimum, the error message is included in the errors collection,
+    /// making error handling consistent for consumers.
+    /// </remarks>
     public new static Response Failure(string message, IEnumerable<string>? errors = null) => new()
     {
         IsSuccess = false,
         Message = message,
-        Errors = errors ?? new[] { message } // Tests expect message as error
+        Errors = errors ?? new[] { message }, // Tests expect message as error
+        Status = 400, // Set status to 400 for failure
+    };
+
+    /// <summary>
+    /// Creates a bad request response with the specified validation errors.
+    /// </summary>
+    /// <param name="errors">Collection of validation error messages.</param>
+    /// <returns>A response indicating a bad request with validation errors.</returns>
+    /// <remarks>
+    /// This method is typically used for responses to requests with invalid input data.
+    /// It sets the appropriate HTTP status code and formats the response in a standard way.
+    /// </remarks>
+    public new static Response BadRequest(IEnumerable<string>? errors) => new()
+    {
+        IsSuccess = false,
+        Message = "Bad Request",
+        Status = 400, // Set status to 400 for failure
+        Errors = errors
+    };
+
+    /// <summary>
+    /// Creates a not found response for the specified resource.
+    /// </summary>
+    /// <param name="id">The identifier of the resource that was not found.</param>
+    /// <param name="objectName">The name of the resource type that was not found.</param>
+    /// <returns>A response indicating that the requested resource was not found.</returns>
+    /// <remarks>
+    /// This method creates a standardized response for resource not found scenarios,
+    /// including details about which resource was being requested.
+    /// </remarks>
+    public new static Response NotFound(object id, string objectName) => new()
+    {
+        IsSuccess = false,
+        Message = $"{objectName} with Id ({id}) was not found.",
+        Status = 404 // Set status to 404 for not found
     };
 }

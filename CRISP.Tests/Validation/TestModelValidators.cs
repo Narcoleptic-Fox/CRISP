@@ -57,7 +57,7 @@ public class UserValidator : FluentValidator<User>
             .WithMessage("Age must be less than 120");
 
         // Collection validation
-        RuleFor(u => u.Roles)
+        RuleFor(u => u.Roles!)
             .NotNull()
             .WithMessage("Roles collection cannot be null")
             .MinCount(1)
