@@ -213,14 +213,16 @@ namespace CRISP.Tests.Behaviors
 
             // Assert
             result.ShouldBe(expectedResult);
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
             _loggerMock.Verify(
                 l => l.Log(
                     LogLevel.Warning,
                     It.IsAny<EventId>(),
                     It.Is<It.IsAnyType>((v, _) => v.ToString().Contains("Validation failed")),
                     It.IsAny<Exception>(),
-                    It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
         }
 
         [Fact]
@@ -418,7 +420,7 @@ namespace CRISP.Tests.Behaviors
             level2Validator.Verify(v => v.Validate(It.Is<NestedObject>(o => o.Value == "Level3")), Times.Once);
             level2Validator.Verify(v => v.Validate(It.Is<NestedObject>(o => o.Value == "Level4")), Times.Once);
             // Should not validate the deepest level where Value is empty
-            level2Validator.Verify(v => v.Validate(It.Is<NestedObject>(o => o.Value == "")), Times.Never);
+            level2Validator.Verify(v => v.Validate(It.Is<NestedObject>(o => o.Value == string.Empty)), Times.Never);
         }
 
         [Fact]

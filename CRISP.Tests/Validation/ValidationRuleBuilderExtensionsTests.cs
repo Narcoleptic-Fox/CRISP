@@ -37,7 +37,7 @@ namespace CRISP.Tests.Validation
         {
             // Arrange
             TestValidator validator = new();
-            IRuleBuilder<TestModel, string> rule = validator.TestRuleFor(m => m.StringProperty).NotEmpty();
+            IRuleBuilder<TestModel, string>? rule = validator.TestRuleFor(m => m.StringProperty)?.NotEmpty();
 
             TestModel model = new() { StringProperty = null };
             ValidationResult result = validator.Validate(model);
@@ -168,7 +168,7 @@ namespace CRISP.Tests.Validation
         {
             // Arrange
             TestValidator validator = new();
-            IRuleBuilder<TestModel, string> rule = validator.TestRuleFor(m => m.StringProperty).Length(3, 5);
+            IRuleBuilder<TestModel, string?> rule = validator.TestRuleFor(m => m.StringProperty).Length(3, 5);
 
             TestModel model = new() { StringProperty = "ab" }; // Too short
             ValidationResult result = validator.Validate(model);
@@ -198,7 +198,7 @@ namespace CRISP.Tests.Validation
         {
             // Arrange
             TestValidator validator = new();
-            IRuleBuilder<TestModel, string> rule = validator.TestRuleFor(m => m.StringProperty).MinLength(3);
+            IRuleBuilder<TestModel, string?> rule = validator.TestRuleFor(m => m.StringProperty).MinLength(3);
 
             TestModel model = new() { StringProperty = "ab" }; // Too short
             ValidationResult result = validator.Validate(model);
@@ -223,7 +223,7 @@ namespace CRISP.Tests.Validation
         {
             // Arrange
             TestValidator validator = new();
-            IRuleBuilder<TestModel, string> rule = validator.TestRuleFor(m => m.StringProperty).MaxLength(5);
+            IRuleBuilder<TestModel, string?> rule = validator.TestRuleFor(m => m.StringProperty).MaxLength(5);
 
             TestModel model = new() { StringProperty = "abcdef" }; // Too long
             ValidationResult result = validator.Validate(model);
@@ -253,7 +253,7 @@ namespace CRISP.Tests.Validation
         {
             // Arrange
             TestValidator validator = new();
-            IRuleBuilder<TestModel, string> rule = validator.TestRuleFor(m => m.ZipCode).Matches(@"^\d{5}(-\d{4})?$");
+            IRuleBuilder<TestModel, string?> rule = validator.TestRuleFor(m => m.ZipCode).Matches(@"^\d{5}(-\d{4})?$");
 
             TestModel model = new() { ZipCode = "invalid" }; // Not a valid ZIP
             ValidationResult result = validator.Validate(model);
@@ -278,7 +278,7 @@ namespace CRISP.Tests.Validation
         {
             // Arrange
             TestValidator validator = new();
-            IRuleBuilder<TestModel, string> rule = validator.TestRuleFor(m => m.Email).EmailAddress();
+            IRuleBuilder<TestModel, string?> rule = validator.TestRuleFor(m => m.Email).EmailAddress();
 
             TestModel model = new() { Email = "not-an-email" }; // Not a valid email
             ValidationResult result = validator.Validate(model);

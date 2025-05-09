@@ -9,8 +9,8 @@
 # CRISP: Core Reusable Infrastructure for Structured Programming
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/Narcoleptic-Fox/CRISP/build.yml?branch=master&style=flat-square)](https://github.com/Narcoleptic-Fox/CRISP/actions)
-[![NuGet](https://img.shields.io/nuget/v/NarcolepticFox.Crisp.Core)](https://www.nuget.org/packages/NarcolepticFox.Crisp.Core/)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/NarcolepticFox.Crisp.Core?style=flat-square)](https://www.nuget.org/packages/NarcolepticFox.Crisp.Core//)
+[![NuGet](https://img.shields.io/nuget/v/Crisp?style=flat-square)](https://www.nuget.org/packages/Crisp/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/Crisp%20?style=flat-square)](https://www.nuget.org/packages/Crisp/)
 [![License](https://img.shields.io/github/license/Narcoleptic-Fox/CRISP?style=flat-square&label=license)](LICENSE.txt)
 [![Target Frameworks](https://img.shields.io/badge/targets-net9.0%20|%20netstandard2.1-blue?style=flat-square)](https://github.com/Narcoleptic-Fox/CRISP/)
 ![Test Coverage](https://img.shields.io/codecov/c/github/Narcoleptic-Fox/CRISP?style=flat-square)

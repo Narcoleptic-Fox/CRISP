@@ -27,7 +27,7 @@ public abstract class FilterBase
     /// </summary>
     public bool SortDescending { get; set; }
 
-    public virtual string ToString()
+    public override string ToString()
     {
         PropertyInfo[] properties = GetType().GetProperties();
         string filterString = string.Join("&", properties.Select(p =>
