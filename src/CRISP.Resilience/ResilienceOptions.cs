@@ -1,4 +1,4 @@
-namespace CRISP.Options;
+namespace CRISP.Resilience;
 
 /// <summary>
 /// Options for configuring the resilience strategies.

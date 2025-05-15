@@ -1,4 +1,4 @@
-namespace CRISP.Options;
+namespace CRISP.Validation;
 
 /// <summary>
 /// Options for configuring validation behavior.

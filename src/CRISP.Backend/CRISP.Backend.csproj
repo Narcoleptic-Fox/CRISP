@@ -11,7 +11,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CRISP\CRISP.csproj" />
+    <ProjectReference Include="..\CRISP.Core\CRISP.Core.csproj" />
+    <ProjectReference Include="..\CRISP.Resilience\CRISP.Resilience.csproj" />
+    <ProjectReference Include="..\CRISP.Validation\CRISP.Validation.csproj" />
   </ItemGroup>
 
   <ItemGroup>
