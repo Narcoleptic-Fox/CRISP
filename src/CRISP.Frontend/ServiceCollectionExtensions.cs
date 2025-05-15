@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
-namespace CRISP.Backend;
+namespace CRISP.Frontend;
 
 /// <summary>
 /// Extension methods for configuring CRISP services in an <see cref="IServiceCollection"/>.

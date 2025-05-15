@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\CRISP.Backend\CRISP.Backend.csproj" />
+    <ProjectReference Include="..\..\..\src\CRISP.Backend\CRISP.Backend.csproj" />
     <ProjectReference Include="..\CRISP.Blazor.Client\CRISP.Blazor.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.3" />
   </ItemGroup>
