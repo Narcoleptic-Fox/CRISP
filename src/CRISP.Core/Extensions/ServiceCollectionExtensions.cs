@@ -196,7 +196,8 @@ public class CrispOptionsBuilder
     /// Initializes a new instance of the <see cref="CrispOptionsBuilder"/> class.
     /// </summary>
     /// <param name="services">The service collection.</param>
-    public CrispOptionsBuilder(IServiceCollection services) => services = services ?? throw new ArgumentNullException(nameof(services));
+    public CrispOptionsBuilder(IServiceCollection services) =>
+        this.services = services ?? throw new ArgumentNullException(nameof(services));
 
     /// <summary>
     /// Configures event options.
@@ -277,7 +278,7 @@ public static class ServiceCollectionExtensions2
     {
         // Remove existing registration if any
         ServiceDescriptor? existingRegistration = services.FirstOrDefault(sd => sd.ServiceType == typeof(T));
-        if (existingRegistration != null)
+        if (existingRegistration is not null)
             services.Remove(existingRegistration);
 
         // Add new registration

@@ -1,4 +1,6 @@
 using CRISP.Options;
+using CRISP.Resilience;
+using CRISP.Validation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CRISP.Tests.Extensions;

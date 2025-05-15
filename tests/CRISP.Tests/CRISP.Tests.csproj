@@ -23,12 +23,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Xunit" />
-    <Using Include="Shouldly" />
+    <ProjectReference Include="..\..\src\CRISP.Core\CRISP.Core.csproj" />
+    <ProjectReference Include="..\..\src\CRISP.Resilience\CRISP.Resilience.csproj" />
+    <ProjectReference Include="..\..\src\CRISP.Validation\CRISP.Validation.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CRISP\CRISP.csproj" />
+    <Using Include="Xunit" />
+    <Using Include="Shouldly" />
   </ItemGroup>
 
 </Project>

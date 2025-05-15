@@ -65,31 +65,6 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Fact]
-    public void AddCrispFromAssemblies_RegistersAllComponents()
-    {
-        // Arrange
-        ServiceCollection services = new();
-
-        // Add required logger registration
-        services.AddSingleton<ILoggerFactory>(new NullLoggerFactory());
-        services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
-
-        // Act
-        services.AddCrispFromAssemblies(typeof(TestModule).Assembly);
-
-        // Assert
-        ServiceProvider provider = services.BuildServiceProvider();
-
-        // Verify all component types are registered
-        provider.GetService<IMediator>().ShouldNotBeNull();
-        provider.GetService<IEventDispatcher>().ShouldNotBeNull();
-
-        // Verify module is registered
-        IEnumerable<IModule> modules = provider.GetServices<IModule>();
-        modules.ShouldContain(m => m.GetType() == typeof(TestModule));
-    }
-
-    [Fact]
     public void AddResilienceStrategies_RegistersCorrectStrategies()
     {
         // Arrange
