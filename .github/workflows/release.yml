@@ -58,7 +58,7 @@ jobs:
       run: dotnet pack src/Crisp.AspNetCore/Crisp.AspNetCore.csproj --configuration Release --no-build --output ./packages /p:Version=${{ env.VERSION }} /p:PackageId=Crisp.AspNetCore
     
     - name: Push to NuGet Crisp.Core
-      run: dotnet nuget push ./packages/Crisp.Core.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: dotnet nuget push ./packages/Crisp.Core.${{ env.VERSION }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
     - name: Push to NuGet Crisp.AspNetCore
-      run: dotnet nuget push ./packages/Crisp.AspNetCore.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: dotnet nuget push ./packages/Crisp.AspNetCore.${{ env.VERSION }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
