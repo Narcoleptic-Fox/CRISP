@@ -57,25 +57,10 @@ jobs:
     - name: Package Crisp.AspNetCore
       run: dotnet pack src/Crisp.AspNetCore/Crisp.AspNetCore.csproj --configuration Release --no-build --output ./packages /p:Version=${{ env.VERSION }} /p:PackageId=Crisp.AspNetCore
     
-    - name: Debug packages created
-      run: |
-        echo "=== Packages created ==="
-        ls -la ./packages/
-        echo "=== Package contents verification ==="
-        for file in ./packages/*.nupkg; do
-          echo "Package: $file"
-        done
-    
     - name: Push to NuGet Crisp.Core
       run: |
-        echo "=== Pushing Crisp.Core version ${{ env.VERSION }} ==="
-        echo "File to push: ./packages/Crisp.Core.${{ env.VERSION }}.nupkg"
-        ls -la ./packages/Crisp.Core.${{ env.VERSION }}.nupkg
-        dotnet nuget push ./packages/Crisp.Core.${{ env.VERSION }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        dotnet nuget push ./packages/Crisp.Core.${{ env.VERSION }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json 
 
     - name: Push to NuGet Crisp.AspNetCore
       run: |
-        echo "=== Pushing Crisp.AspNetCore version ${{ env.VERSION }} ==="
-        echo "File to push: ./packages/Crisp.AspNetCore.${{ env.VERSION }}.nupkg"
-        ls -la ./packages/Crisp.AspNetCore.${{ env.VERSION }}.nupkg
-        dotnet nuget push ./packages/Crisp.AspNetCore.${{ env.VERSION }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        dotnet nuget push ./packages/Crisp.AspNetCore.${{ env.VERSION }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json 
