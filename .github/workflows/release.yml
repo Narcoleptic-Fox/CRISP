@@ -22,13 +22,9 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-       dotnet-version: |
+        dotnet-version: |
           8.0.x
-    
-    - name: Install .NET 8.0 Runtime
-      run: |
-        curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0 --runtime dotnet
-        echo "$HOME/.dotnet" >> $GITHUB_PATH
+          9.0.x
     
     - name: Restore dependencies
       run: dotnet restore Crisp.sln --verbosity normal
