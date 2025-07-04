@@ -29,7 +29,17 @@ jobs:
       with:
         dotnet-version: |
           8.0.x
-        dotnet-quality: 'release'
+    
+    - name: Verify project structure
+      run: |
+        echo "Current directory:"
+        pwd
+        echo "Directory contents:"
+        ls -la
+        echo "Solution projects:"
+        dotnet sln list
+        echo "Checking Crisp.Core project:"
+        ls -la src/Crisp.Core/
     
     - name: Restore dependencies
       run: dotnet restore Crisp.sln --verbosity normal
