@@ -25,6 +25,11 @@ jobs:
        dotnet-version: |
           8.0.x
     
+    - name: Install .NET 8.0 Runtime
+      run: |
+        curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0 --runtime dotnet
+        echo "$HOME/.dotnet" >> $GITHUB_PATH
+    
     - name: Restore dependencies
       run: dotnet restore Crisp.sln --verbosity normal
     
