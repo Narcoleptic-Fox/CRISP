@@ -8,32 +8,41 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+      pull-requests: write
+
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 9.0.x
+       dotnet-version: |
+          8.0.x
     
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore Crisp.sln --verbosity normal
     
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build Crisp.sln --configuration Release --no-restore --verbosity normal
     
     - name: Test
-      run: dotnet test --configuration Release --no-build
+      run: dotnet test Crisp.sln --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage" --logger trx --results-directory ./TestResults
     
     - name: Set Version from Release Tag
       id: get_version
       run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
         
-    - name: Package
-      run: dotnet pack --configuration Release --no-build --output ./packages /p:Version=${{ env.VERSION }} /p:PackageId=Crisp
+    - name: Package Crisp.Core
+      run: dotnet pack src/Crisp.Core/Crisp.Core.csproj --configuration Release --no-build --output ./packages /p:Version=${{ env.VERSION }} /p:PackageId=Crisp
+
+    - name: Package Crisp.AspNetCore
+      run: dotnet pack src/Crisp.AspNetCore/Crisp.AspNetCore.csproj --configuration Release --no-build --output ./packages /p:Version=${{ env.VERSION }} /p:PackageId=Crisp.AspNetCore
     
     - name: Push to NuGet
       run: dotnet nuget push ./packages/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
