@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <PackageId>Crisp.Blazor</PackageId>
+    <Description>Blazor integration for CRISP - state management, loading states, and UI helpers</Description>
+    <PackageTags>blazor;cqrs;commands;queries;crisp;state-management</PackageTags>
+    <RootNamespace>Crisp</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Project References -->
+    <ProjectReference Include="..\Crisp.Core\Crisp.Core.csproj" />
+    <ProjectReference Include="..\Crisp.Runtime\Crisp.Runtime.csproj" />
+
+    <!-- NuGet Packages -->
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="System.Text.Json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Include Razor files if any -->
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Blazor.Concurrency.Core">
+      <HintPath>..\..\..\..\Projects\Blazor.Concurrency\src\Blazor.Concurrency.Core\bin\Debug\net8.0\Blazor.Concurrency.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
