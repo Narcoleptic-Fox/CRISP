@@ -24,7 +24,19 @@ jobs:
       with:
         dotnet-version: |
           8.0.x
-          9.0.x
+    
+    - name: Debug .NET installation
+      run: |
+        echo "=== .NET Info ==="
+        dotnet --info
+        echo "=== Available runtimes ==="
+        dotnet --list-runtimes
+        echo "=== Available SDKs ==="
+        dotnet --list-sdks
+        echo "=== Environment ==="
+        echo "DOTNET_ROOT: $DOTNET_ROOT"
+        echo "PATH: $PATH"
+        ls -la /usr/share/dotnet/shared/Microsoft.NETCore.App/ || echo "Directory not found"
     
     - name: Restore dependencies
       run: dotnet restore Crisp.sln --verbosity normal
