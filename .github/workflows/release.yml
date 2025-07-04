@@ -52,10 +52,13 @@ jobs:
       run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
         
     - name: Package Crisp.Core
-      run: dotnet pack src/Crisp.Core/Crisp.Core.csproj --configuration Release --no-build --output ./packages /p:Version=${{ env.VERSION }} /p:PackageId=Crisp
+      run: dotnet pack src/Crisp.Core/Crisp.Core.csproj --configuration Release --no-build --output ./packages /p:Version=${{ env.VERSION }} /p:PackageId=Crisp.Core
 
     - name: Package Crisp.AspNetCore
       run: dotnet pack src/Crisp.AspNetCore/Crisp.AspNetCore.csproj --configuration Release --no-build --output ./packages /p:Version=${{ env.VERSION }} /p:PackageId=Crisp.AspNetCore
     
-    - name: Push to NuGet
-      run: dotnet nuget push ./packages/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+    - name: Push to NuGet Crisp.Core
+      run: dotnet nuget push ./packages/Crisp.Core.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+    - name: Push to NuGet Crisp.AspNetCore
+      run: dotnet nuget push ./packages/Crisp.AspNetCore.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
