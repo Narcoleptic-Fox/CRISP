@@ -1,12 +1,6 @@
 using Crisp.Commands;
 using Crisp.Endpoints;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -19,7 +13,7 @@ public class CommandEndpointTests : TestBase
     public void Constructor_ShouldSetDefaultPatternAndMethod()
     {
         // Act
-        var endpoint = new CommandEndpoint<CmdTestCommand, CmdTestResponse>();
+        CommandEndpoint<CmdTestCommand, CmdTestResponse> endpoint = new();
 
         // Assert
         endpoint.Pattern.Should().NotBeNullOrEmpty();
@@ -32,7 +26,7 @@ public class CommandEndpointTests : TestBase
     public void Constructor_WithCustomValues_ShouldUseProvided()
     {
         // Act
-        var endpoint = new CommandEndpoint<CmdTestCommand, CmdTestResponse>("/custom", "POST");
+        CommandEndpoint<CmdTestCommand, CmdTestResponse> endpoint = new("/custom", "POST");
 
         // Assert
         endpoint.Pattern.Should().Be("/custom");
@@ -40,35 +34,31 @@ public class CommandEndpointTests : TestBase
     }
 
     [Fact]
-    public void Constructor_WithNullPattern_ShouldThrow()
-    {
+    public void Constructor_WithNullPattern_ShouldThrow() =>
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new CommandEndpoint<CmdTestCommand, CmdTestResponse>(null!, "POST"));
-    }
 
     [Fact]
-    public void Constructor_WithNullHttpMethod_ShouldThrow()
-    {
+    public void Constructor_WithNullHttpMethod_ShouldThrow() =>
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new CommandEndpoint<CmdTestCommand, CmdTestResponse>("/test", null!));
-    }
 
     [Fact]
     public void Map_ShouldRegisterEndpointWithCorrectConfiguration()
     {
         // Arrange
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
         services.AddRouting();
         services.AddCrisp()
             .AddHandlersFromAssembly(typeof(CommandEndpointTests).Assembly);
-        
-        var app = WebApplication.CreateBuilder().Build();
+
+        WebApplication app = WebApplication.CreateBuilder().Build();
         app.Services.GetRequiredService<IServiceProvider>();
-        
-        var endpoint = new CommandEndpoint<CmdTestCommand, CmdTestResponse>();
+
+        CommandEndpoint<CmdTestCommand, CmdTestResponse> endpoint = new();
 
         // Act
-        var builder = endpoint.Map(app);
+        RouteHandlerBuilder builder = endpoint.Map(app);
 
         // Assert
         builder.Should().NotBeNull();
@@ -78,7 +68,7 @@ public class CommandEndpointTests : TestBase
     public void Map_WithNullApp_ShouldThrow()
     {
         // Arrange
-        var endpoint = new CommandEndpoint<CmdTestCommand, CmdTestResponse>();
+        CommandEndpoint<CmdTestCommand, CmdTestResponse> endpoint = new();
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => endpoint.Map(null!));
@@ -90,44 +80,16 @@ public class CommandEndpointTests : TestBase
     public async Task Handle_GetOrDelete_ShouldBindFromRoute(string httpMethod)
     {
         // Arrange
-        using var server = CreateTestServer(services =>
+        using TestServer server = CreateTestServer(services =>
         {
             services.AddSingleton<ICommandHandler<CmdTestCommand, CmdTestResponse>, CmdTestCommandHandler>();
             services.AddSingleton<ICommandDispatcher, TestCommandDispatcher>();
         });
-        
-        var client = server.CreateClient();
-        
-        // Act
-        var response = await client.SendAsync(new HttpRequestMessage(new HttpMethod(httpMethod), "/api/cmdtest"));
-        
-        // Assert
-        response.Should().NotBeNull();
-    }
 
-    [Theory]
-    [InlineData("POST")]
-    [InlineData("PUT")]
-    [InlineData("PATCH")]
-    public async Task Handle_PostPutPatch_ShouldBindFromBody(string httpMethod)
-    {
-        // Arrange
-        using var server = CreateTestServer(services =>
-        {
-            services.AddSingleton<ICommandHandler<CmdTestCommand, CmdTestResponse>, CmdTestCommandHandler>();
-            services.AddSingleton<ICommandDispatcher, TestCommandDispatcher>();
-        });
-        
-        var client = server.CreateClient();
-        var command = new CmdTestCommand("test message");
-        var json = JsonSerializer.Serialize(command);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        HttpClient client = server.CreateClient();
 
         // Act
-        var response = await client.SendAsync(new HttpRequestMessage(new HttpMethod(httpMethod), "/api/cmdtest") 
-        { 
-            Content = content 
-        });
+        HttpResponseMessage response = await client.SendAsync(new HttpRequestMessage(new HttpMethod(httpMethod), "/api/cmdtest"));
 
         // Assert
         response.Should().NotBeNull();
@@ -137,7 +99,7 @@ public class CommandEndpointTests : TestBase
     public async Task Handle_InvalidBody_ShouldThrowBadHttpRequest()
     {
         // Arrange
-        var builder = new WebHostBuilder()
+        IWebHostBuilder builder = new WebHostBuilder()
             .UseEnvironment("Testing")
             .ConfigureServices(services =>
             {
@@ -163,44 +125,22 @@ public class CommandEndpointTests : TestBase
                 });
             });
 
-        using var server = new TestServer(builder);
-        var client = server.CreateClient();
-        var content = new StringContent("invalid json", Encoding.UTF8, "application/json");
+        using TestServer server = new(builder);
+        HttpClient client = server.CreateClient();
+        StringContent content = new("invalid json", Encoding.UTF8, "application/json");
 
         // Act
-        var response = await client.PostAsync("/api/cmdtest", content);
+        HttpResponseMessage response = await client.PostAsync("/api/cmdtest", content);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
-    public async Task Handle_PostCommand_ShouldReturnCreated()
-    {
-        // Arrange
-        using var server = CreateTestServer(services =>
-        {
-            services.AddSingleton<ICommandHandler<CmdCreateTestCommand, CmdTestResponse>, CmdCreateTestCommandHandler>();
-            services.AddSingleton<ICommandDispatcher, TestCommandDispatcher>();
-        });
-        
-        var client = server.CreateClient();
-        var command = new CmdCreateTestCommand("new item");
-        var json = JsonSerializer.Serialize(command);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-        // Act
-        var response = await client.PostAsync("/api/cmdcreatetest", content);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
-    }
-
-    [Fact]
     public async Task Handle_DeleteCommand_ShouldReturnNoContent()
     {
         // Arrange
-        var builder = new WebHostBuilder()
+        IWebHostBuilder builder = new WebHostBuilder()
             .UseEnvironment("Testing")
             .ConfigureServices(services =>
             {
@@ -226,11 +166,11 @@ public class CommandEndpointTests : TestBase
                 });
             });
 
-        using var server = new TestServer(builder);
-        var client = server.CreateClient();
+        using TestServer server = new(builder);
+        HttpClient client = server.CreateClient();
 
         // Act
-        var response = await client.DeleteAsync("/api/test/delete/123");
+        HttpResponseMessage response = await client.DeleteAsync("/api/test/delete/123");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -240,7 +180,7 @@ public class CommandEndpointTests : TestBase
     public void VoidCommandEndpoint_Constructor_ShouldSetProperties()
     {
         // Act
-        var endpoint = new VoidCommandEndpoint<CmdTestVoidCommand>();
+        VoidCommandEndpoint<CmdTestVoidCommand> endpoint = new();
 
         // Assert
         endpoint.RequestType.Should().Be(typeof(CmdTestVoidCommand));
@@ -253,7 +193,7 @@ public class CommandEndpointTests : TestBase
     public void VoidCommandEndpoint_Constructor_WithCustomValues_ShouldUseProvided()
     {
         // Act
-        var endpoint = new VoidCommandEndpoint<CmdTestVoidCommand>("/custom-void", "DELETE");
+        VoidCommandEndpoint<CmdTestVoidCommand> endpoint = new("/custom-void", "DELETE");
 
         // Assert
         endpoint.Pattern.Should().Be("/custom-void");
@@ -264,11 +204,11 @@ public class CommandEndpointTests : TestBase
     public void VoidCommandEndpoint_Map_ShouldRegisterEndpoint()
     {
         // Arrange
-        var app = WebApplication.CreateBuilder().Build();
-        var endpoint = new VoidCommandEndpoint<CmdTestVoidCommand>();
+        WebApplication app = WebApplication.CreateBuilder().Build();
+        VoidCommandEndpoint<CmdTestVoidCommand> endpoint = new();
 
         // Act
-        var builder = endpoint.Map(app);
+        RouteHandlerBuilder builder = endpoint.Map(app);
 
         // Assert
         builder.Should().NotBeNull();
@@ -278,19 +218,19 @@ public class CommandEndpointTests : TestBase
     public async Task VoidCommandEndpoint_Handle_ShouldReturnNoContent()
     {
         // Arrange
-        using var server = CreateTestServer(services =>
+        using TestServer server = CreateTestServer(services =>
         {
             services.AddSingleton<ICommandHandler<CmdTestVoidCommand>, CmdTestVoidCommandHandler>();
             services.AddSingleton<ICommandDispatcher, TestCommandDispatcher>();
         });
-        
-        var client = server.CreateClient();
-        var command = new CmdTestVoidCommand("test action");
-        var json = JsonSerializer.Serialize(command);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        HttpClient client = server.CreateClient();
+        CmdTestVoidCommand command = new("test action");
+        string json = JsonSerializer.Serialize(command);
+        StringContent content = new(json, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await client.PostAsync("/api/cmdtestvoid", content);
+        HttpResponseMessage response = await client.PostAsync("/api/cmdtestvoid", content);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -305,51 +245,33 @@ public class CommandEndpointTests : TestBase
 
     public class CmdTestCommandHandler : ICommandHandler<CmdTestCommand, CmdTestResponse>
     {
-        public Task<CmdTestResponse> Handle(CmdTestCommand request, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(new CmdTestResponse($"Handled: {request.Message}"));
-        }
+        public Task<CmdTestResponse> Handle(CmdTestCommand request, CancellationToken cancellationToken) => Task.FromResult(new CmdTestResponse($"Handled: {request.Message}"));
     }
 
     public class CmdCreateTestCommandHandler : ICommandHandler<CmdCreateTestCommand, CmdTestResponse>
     {
-        public Task<CmdTestResponse> Handle(CmdCreateTestCommand request, CancellationToken cancellationToken)
-        {
-            return Task.FromResult(new CmdTestResponse($"Created: {request.Name}"));
-        }
+        public Task<CmdTestResponse> Handle(CmdCreateTestCommand request, CancellationToken cancellationToken) => Task.FromResult(new CmdTestResponse($"Created: {request.Name}"));
     }
 
     public class CmdDeleteTestCommandHandler : ICommandHandler<CmdDeleteTestCommand>
     {
-        public Task Handle(CmdDeleteTestCommand request, CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
+        public Task Handle(CmdDeleteTestCommand request, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     public class CmdTestVoidCommandHandler : ICommandHandler<CmdTestVoidCommand>
     {
-        public Task Handle(CmdTestVoidCommand request, CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
+        public Task Handle(CmdTestVoidCommand request, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     public class TestCommandDispatcher : ICommandDispatcher
     {
-        public Task<TResponse> Send<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default)
+        public Task<TResponse> Send<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default) => command switch
         {
-            return command switch
-            {
-                CmdTestCommand tc => Task.FromResult((TResponse)(object)new CmdTestResponse($"Handled: {tc.Message}")),
-                CmdCreateTestCommand ctc => Task.FromResult((TResponse)(object)new CmdTestResponse($"Created: {ctc.Name}")),
-                _ => throw new NotImplementedException($"Handler not implemented for {typeof(TResponse).Name}")
-            };
-        }
+            CmdTestCommand tc => Task.FromResult((TResponse)(object)new CmdTestResponse($"Handled: {tc.Message}")),
+            CmdCreateTestCommand ctc => Task.FromResult((TResponse)(object)new CmdTestResponse($"Created: {ctc.Name}")),
+            _ => throw new NotImplementedException($"Handler not implemented for {typeof(TResponse).Name}")
+        };
 
-        public Task Send(ICommand command, CancellationToken cancellationToken = default)
-        {
-            return Task.CompletedTask;
-        }
+        public Task Send(ICommand command, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 }

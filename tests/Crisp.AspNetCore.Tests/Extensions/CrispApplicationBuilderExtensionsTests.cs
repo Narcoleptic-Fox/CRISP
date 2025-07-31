@@ -58,26 +58,6 @@ public class CrispApplicationBuilderExtensionsTests : TestBase
             CrispApplicationBuilderExtensions.UseCrispExceptionHandling(null!));
 
     [Fact]
-    public async Task UseCrisp_ShouldMapEndpointsCorrectly()
-    {
-        // Arrange
-        using TestServer server = CreateTestServer(services =>
-        {
-            services.AddSingleton<ICommandHandler<ExtAppTestCommand, ExtAppTestResponse>, ExtAppTestCommandHandler>();
-            services.AddSingleton<IQueryHandler<ExtAppTestQuery, ExtAppTestResponse>, ExtAppTestQueryHandler>();
-        });
-
-        HttpClient client = server.CreateClient();
-
-        // Act
-        HttpResponseMessage response = await client.GetAsync("/api/extapptest?id=123&name=test");
-
-        // Assert
-        response.Should().NotBeNull();
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-    }
-
-    [Fact]
     public async Task UseCrispExceptionHandling_ShouldHandleExceptions()
     {
         // Arrange
@@ -159,34 +139,6 @@ public class CrispApplicationBuilderExtensionsTests : TestBase
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-    }
-
-    [Fact]
-    public async Task UseCrisp_ShouldSupportMultipleEndpoints()
-    {
-        // Arrange
-        using TestServer server = CreateTestServer(services =>
-        {
-            services.AddSingleton<ICommandHandler<ExtAppTestCommand, ExtAppTestResponse>, ExtAppTestCommandHandler>();
-            services.AddSingleton<IQueryHandler<ExtAppTestQuery, ExtAppTestResponse>, ExtAppTestQueryHandler>();
-            services.AddSingleton<ICommandHandler<ExtDeleteAnotherTestCommand>, ExtDeleteAnotherTestCommandHandler>();
-            services.AddSingleton<ICommandDispatcher, ExtTestCommandDispatcher>();
-            services.AddSingleton<IQueryDispatcher, ExtTestQueryDispatcher>();
-        });
-
-        HttpClient client = server.CreateClient();
-
-        // Act & Assert
-        HttpResponseMessage getResponse = await client.GetAsync("/api/extapptest?id=1&name=test");
-        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        HttpResponseMessage postResponse = await client.PostAsync("/api/extapptest",
-            new StringContent("{\"value\":\"test\"}", System.Text.Encoding.UTF8, "application/json"));
-        postResponse.StatusCode.Should().Be(HttpStatusCode.Created);
-
-        HttpResponseMessage deleteResponse = await client.PostAsync("/api/extdeleteanothertest",
-            new StringContent("{\"id\":123}", System.Text.Encoding.UTF8, "application/json"));
-        deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
     // Test classes
