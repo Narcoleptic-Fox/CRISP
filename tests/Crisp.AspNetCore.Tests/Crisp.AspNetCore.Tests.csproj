@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Crisp.AspNetCore/Crisp.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\src\Crisp.Runtime\Crisp.Runtime.csproj" />
   </ItemGroup>
 
   <ItemGroup>

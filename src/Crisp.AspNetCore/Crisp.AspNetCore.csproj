@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Crisp.Core\Crisp.Core.csproj" PrivateAssets="all"/>
+    <ProjectReference Include="..\Crisp.Core\Crisp.Core.csproj" />
     <ProjectReference Include="..\Crisp.Runtime\Crisp.Runtime.csproj" PrivateAssets="all"/>
   </ItemGroup>
 

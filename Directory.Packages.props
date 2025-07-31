@@ -5,8 +5,8 @@
   <ItemGroup>
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5" />
     <!-- ASP.NET Core Dependencies -->
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.16" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="8.1.4" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="9.0.3" />
     <!-- Blazor Dependencies -->
     <PackageVersion Include="Microsoft.AspNetCore.Components" Version="8.0.16" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.5" />
