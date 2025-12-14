@@ -1,147 +1,119 @@
-<p align="center">
-  <img src="https://github.com/Narcoleptic-Fox/CRISP/blob/master/assets/icon.png" alt="CRISP Framework Logo" width="200" height="200"/>
-</p>
+## CRISP
 
-<p align="center">
-  <img src="https://github.com/Narcoleptic-Fox/CRISP/blob/master/assets/comapny_logo.png" alt="Company Logo" height="50"/>
-</p>
+CRISP is a .NET 9 solution built around **.NET Aspire** for local orchestration and an **ASP.NET Core + Blazor** web app backed by **PostgreSQL** (and Redis via Aspire).
 
-# CRISP - Command Response Interface Service Pattern
+In this repo, “CRISP” also refers to the **Command Response Interface Service Pattern**: a feature-oriented architecture that combines CQRS-style commands/queries with explicit service contracts (interfaces) that are easy to discover and implement across layers.
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/Narcoleptic-Fox/CRISP/build.yml?branch=master&style=flat-square)](https://github.com/Narcoleptic-Fox/CRISP/actions)
-[![NuGet](https://img.shields.io/nuget/v/Crisp?style=flat-square)](https://www.nuget.org/packages/Crisp/)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/Crisp%20?style=flat-square)](https://www.nuget.org/packages/Crisp/)
-[![License](https://img.shields.io/github/license/Narcoleptic-Fox/CRISP?style=flat-square&label=license)](LICENSE)
-[![Target Frameworks](https://img.shields.io/badge/targets-net8.0%20|%20net9.0-blue?style=flat-square)](https://github.com/Narcoleptic-Fox/CRISP/)
-![Test Coverage](https://img.shields.io/codecov/c/github/Narcoleptic-Fox/CRISP?style=flat-square)
+## Solution layout
 
-Clean, procedural architecture for ASP.NET Core & Blazor. No inheritance hierarchies. No magic. Just a clear pipeline from request to response.
+- **src/CRISP.AppHost**: .NET Aspire AppHost that starts infrastructure (PostgreSQL + Redis) and the web server.
+- **src/CRISP.Server**: ASP.NET Core host for the Blazor app (interactive server + WebAssembly), Identity, EF Core, feature endpoints.
+- **src/CRISP.Client**: Blazor WebAssembly client project (UI + shared client logic).
+- **src/CRISP.Core**: shared domain/core layer (models, commands/queries/events, identity abstractions, etc.).
+- **src/CRISP.ServiceDefaults**: shared Aspire defaults (health checks, service discovery, resilience, OpenTelemetry).
 
-## 🚀 Quick Start (30 seconds)
+## Architecture (CRISP patterns)
 
-```bash
-dotnet add package Crisp.AspNetCore
+- **Core is the contract**: commands, queries, DTOs, validators, and service interfaces live in `CRISP.Core`.
+- **Dependency direction**: other layers depend on Core; Core should not depend on infrastructure/UI.
+- **No duplication**: client/server reuse Core DTOs and commands/queries instead of redefining request/response types.
+- **Validation lives in Core**: FluentValidation validators are registered from the Core assembly.
+- **Vertical slices**: server features are organized by capability; endpoints should be thin and delegate to services that implement Core interfaces.
+
+High-level view of this solution:
+
+```mermaid
+flowchart TD
+	subgraph Runtime["Runtime (Aspire)"]
+		AppHost["CRISP.AppHost"] --> Postgres[("PostgreSQL")]
+		AppHost --> Redis[("Redis")]
+		AppHost --> Server["CRISP.Server"]
+	end
+
+	subgraph Code["Code layering (CRISP)"]
+		Client["CRISP.Client (UI)"] --> Core["CRISP.Core (contracts)"]
+		Server --> Core
+		ServiceDefaults["CRISP.ServiceDefaults (infra)"] --> Core
+	end
 ```
+
+Request pipeline notes:
+
+- All `/api/*` endpoints are grouped and automatically validated via `CRISP.ServiceDefaults.Middlwares.ValidationEndpointFilter`.
+- Errors are handled consistently by `CRISP.ServiceDefaults.Middlwares.ExceptionHandler`.
+- Request logging is enabled via `CRISP.ServiceDefaults.Middlwares.LoggingMiddleware`.
+
+Practical workflow for adding a feature:
+
+1. Define the Core contracts (DTOs, command/query, validator, interface)
+2. Implement the server service + endpoint as a vertical slice
+3. Implement the client service (HTTP) using the Core contracts
+4. Add UI state/components (without duplicating domain DTOs)
+
+```mermaid
+flowchart LR
+	Req["Requirements"] --> CoreContracts["Core: DTOs + Commands/Queries + Validators + Interfaces"]
+	CoreContracts --> ServerSlice["Server: Feature slice (endpoint + service)"]
+	ServerSlice --> ClientSvc["Client: HTTP service implementing Core interfaces"]
+	ClientSvc --> UI["UI: pages/components + UI state"]
+```
+
+## Prerequisites
+
+- **.NET SDK**: `9.0.100` (pinned by `global.json`)
+- **Docker Desktop**: required for Aspire-managed PostgreSQL/Redis containers
+- Optional: **Visual Studio 2022** (the solution targets VS 17.x)
+
+## Run (recommended)
+
+Run the system via Aspire (starts the web app + dependencies):
+
+```powershell
+# From the repo root
+
+dotnet restore
+
+dotnet run --project src/CRISP.AppHost
+```
+
+The console output will include the URLs for the app and the Aspire dashboard.
+
+## Run the web server only (advanced)
+
+`CRISP.Server` is configured to use an Aspire-provided PostgreSQL connection named `postgres`:
 
 ```csharp
-// 1. Define a command
-public record CreateTodoCommand(string Title) : ICommand<int>;
-
-// 2. Handle it
-public class CreateTodoHandler : ICommandHandler<CreateTodoCommand, int>
-{
-    public Task<int> Handle(CreateTodoCommand command, CancellationToken cancellationToken)
-        => Task.FromResult(new Random().Next()); // Your logic here
-}
-
-// 3. Wire it up
-builder.Services.AddCrisp();
-app.MapCrisp();
-
-// That's it! 🎉
+builder.AddNpgsqlDbContext<ApplicationDbContext>("postgres");
 ```
 
-## 🎯 What is CRISP?
+If you start `CRISP.Server` without the AppHost, provide the connection string yourself (for example):
 
-CRISP is a design pattern that brings clarity to your codebase by establishing a simple, procedural flow:
+```powershell
+$env:ConnectionStrings__postgres = "Host=localhost;Port=5432;Database=crisp;Username=postgres;Password=postgres"
 
-```
-Request → Validate → Handle → Response
-```
-
-No deep inheritance. No "enterprise" complexity. Just clean, testable, maintainable code.
-
-## ✨ Core Features
-
-- **🔄 Pipeline Pattern**: Every request follows the same predictable path
-- **📦 Vertical Layers**: Organize by feature, not by file type
-- **🎮 State Machines**: Built-in support for complex workflows
-- **⚡ Multiple Protocols**: HTTP, gRPC, JSON-RPC from the same handlers
-- **🧪 Testability First**: Every component is independently testable
-
-## 📚 Documentation
-
-- [Getting Started](docs/getting-started.md) - Your first CRISP application
-- [Core Concepts](docs/concepts/) - Understand the pattern
-- [Examples](examples/) - Real working code
-- [API Reference](docs/api/) - Complete API documentation
-
-## 💡 Why CRISP?
-
-Traditional controllers and services often lead to scattered logic and tight coupling. CRISP provides structure without the overhead:
-
-**Before (Controller mess):**
-```csharp
-[ApiController]
-public class TodoController : ControllerBase
-{
-    private readonly ITodoService _service;
-    private readonly IValidator _validator;
-    private readonly ILogger _logger;
-    // Constructor injection nightmare...
-    
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] TodoDto dto)
-    {
-        // Validation mixed with logic
-        // Error handling everywhere
-        // Hard to test
-    }
-}
+dotnet run --project src/CRISP.Server
 ```
 
-**After (CRISP clarity):**
-```csharp
-public record CreateTodoCommand(string Title) : ICommand<int>;
+## EF Core migrations
 
-public class CreateTodoHandler : ICommandHandler<CreateTodoCommand, int>
-{
-    public Task<int> Handle(CreateTodoCommand command, CancellationToken cancellationToken)
-        => Task.FromResult(_todos.Add(command.Title));
-}
-// Validation, logging, retry policies - all handled by pipeline
+Migrations live under `src/CRISP.Server/Data/Migrations`.
+
+Common commands:
+
+```powershell
+# Add a migration
+
+dotnet ef migrations add <Name> --project src/CRISP.Server --startup-project src/CRISP.Server
+
+# Apply migrations
+
+dotnet ef database update --project src/CRISP.Server --startup-project src/CRISP.Server
 ```
 
-## 🏗️ Real Examples
+When running server-only, make sure `ConnectionStrings__postgres` is set so EF can connect.
 
-### Web API
-```csharp
-app.MapCrisp() // Auto-discovers all commands/queries
-   .RequireAuthorization();
-```
+## Notes
 
-### Blazor
-```razor
-@inject ICommandDispatcher Commands
-
-<button @onclick="CreateTodo">Add</button>
-
-@code {
-    async Task CreateTodo() 
-        => await Commands.Send(new CreateTodoCommand("New Todo"));
-}
-```
-
-### Game Server
-```csharp
-public record MovePlayerCommand(int PlayerId, Position To) : ICommand<GameState>;
-
-// Same pattern works for games, web apps, microservices...
-```
-
-## 📦 Packages
-
-| Package          | Description                     | NuGet                                                                                                             |
-| ---------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Crisp.Core       | Core interfaces and pipeline    | [![NuGet](https://img.shields.io/nuget/v/Crisp.Core.svg)](https://www.nuget.org/packages/Crisp.Core/)             |
-| Crisp.AspNetCore | ASP.NET Core integration        | [![NuGet](https://img.shields.io/nuget/v/Crisp.AspNetCore.svg)](https://www.nuget.org/packages/Crisp.AspNetCore/) |
-| Crisp.Blazor     | Blazor components & integration | [![NuGet](https://img.shields.io/nuget/v/Crisp.Blazor.svg)](https://www.nuget.org/packages/Crisp.Blazor/)         |
-| Crisp.Runtime    | Runtime optimizations           | [![NuGet](https://img.shields.io/nuget/v/Crisp.Runtime.svg)](https://www.nuget.org/packages/Crisp.Runtime/)       |
-
-## 🤝 Contributing
-
-CRISP is open source and we love contributions! Check out our [contributing guide](CONTRIBUTING.md).
-
-## 📄 License
-
-CRISP is licensed under the [MIT License](LICENSE).
+- Package versions are centrally managed in `Directory.Packages.props`.
+- UI uses MudBlazor.
+- Observability is wired via OpenTelemetry in `CRISP.ServiceDefaults`.

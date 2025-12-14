@@ -1,0 +1,119 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_NOLOGO: true
+  NUGET_XMLDOC_MODE: skip
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        dotnet-quality: 'ga'
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore dependencies
+      run: dotnet restore --verbosity minimal
+
+    - name: Check for vulnerable packages
+      run: dotnet list package --vulnerable --include-transitive
+
+    - name: Build solution
+      run: dotnet build --no-restore --configuration Release --verbosity minimal
+
+    - name: Run tests
+      run: dotnet test --no-build --configuration Release --verbosity minimal --collect:"XPlat Code Coverage" --results-directory ./coverage
+
+    - name: Code Coverage Report
+      uses: codecov/codecov-action@v4
+      if: success()
+      with:
+        directory: ./coverage
+        flags: unittests
+        name: codecov-umbrella
+
+    - name: Static Code Analysis
+      run: |
+        dotnet format --verify-no-changes --verbosity diagnostic
+        dotnet build --configuration Release --verbosity minimal --property:TreatWarningsAsErrors=true
+
+  security-scan:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Security Scan
+      run: |
+        dotnet list package --vulnerable --include-transitive 2>&1 | tee vulnerability-report.txt
+        if grep -q "has the following vulnerable packages" vulnerability-report.txt; then
+          echo "Security vulnerabilities found!"
+          exit 1
+        fi
+
+  publish:
+    needs: [build-and-test, security-scan]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Publish Application
+      run: |
+        dotnet publish src/CRISP.Server/CRISP.Server.csproj \
+          --configuration Release \
+          --no-restore \
+          --output ./publish \
+          --runtime linux-x64 \
+          --self-contained false
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: published-app
+        path: ./publish

@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/_SolutionItems/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+  </Folder>
+  <Project Path="src/CRISP.AppHost/CRISP.AppHost.csproj" />
+  <Project Path="src/CRISP.Client/CRISP.Client.csproj" />
+  <Project Path="src/CRISP.Core/CRISP.Core.csproj" />
+  <Project Path="src/CRISP.Server/CRISP.Server.csproj" />
+  <Project Path="src/CRISP.ServiceDefaults/CRISP.ServiceDefaults.csproj" />
+</Solution>

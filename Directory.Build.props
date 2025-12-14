@@ -1,54 +1,62 @@
 <Project>
-  <PropertyGroup>
-    <!-- Common properties for all projects -->
-    <TargetFramework>net9.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
-    <Exclude>
-      [*]*Interface*,
-      [*]I*,
-      [*.Tests]*,
-      [*.Test]*,
-      [*Tests],
-    </Exclude>
-  </PropertyGroup>
 
-  <PropertyGroup Condition="'$(IsPackable)' == 'true'">
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
+	<!-- Common Properties for All Projects -->
+	<PropertyGroup>
+		<!-- Target Framework -->
+		<TargetFramework>net9.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
 
-  <PropertyGroup>
-    <!-- Package defaults -->
-    <Version>1.0.0</Version>
-    <Authors>Brock Claussen</Authors>
-    <Company>Narcoleptic Fox</Company>
-    <Product>CRISP Framework</Product>
-    <Copyright>Copyright © 2025</Copyright>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryType>git</RepositoryType>
-    <PackageProjectUrl>https://github.com/Narcoleptic-Fox/CRISP</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/Narcoleptic-Fox/CRISP</RepositoryUrl>
-    <!-- Enable Source Link -->
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-  </PropertyGroup>
+		<!-- Code Quality -->
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<WarningsNotAsErrors>NU1605;CS1591</WarningsNotAsErrors>
+		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+		<AnalysisLevel>latest</AnalysisLevel>
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
-  <ItemGroup>
-    <!-- Global packages -->
-    <PackageReference Include="Microsoft.SourceLink.GitHub" />
-  </ItemGroup>
+		<!-- Performance -->
+		<PublishAot Condition="'$(MSBuildProjectExtension)' != '.BlazorWebAssembly'">false</PublishAot>
+		<InvariantGlobalization>false</InvariantGlobalization>
 
-  <ItemGroup Condition="'$(IsPackable)' == 'true' and Exists('$(MSBuildThisFileDirectory)README.md')">
-    <!-- Package icon and readme -->
-    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Visible="false"/>
-  </ItemGroup>
+		<!-- Assembly Information -->
+		<Company>CRISP</Company>
+		<Product>CRISP Application</Product>
+		<Copyright>Copyright © CRISP $([System.DateTime]::Now.Year)</Copyright>
+		<Authors>CRISP Team</Authors>
 
-  <ItemGroup Condition="'$(IsPackable)' == 'true' and Exists('$(MSBuildThisFileDirectory)assets/icon.png')">
-    <None Include="$(MSBuildThisFileDirectory)assets/icon.png" Pack="true" PackagePath="\" Visible="false"/>
-  </ItemGroup>
+		<!-- Versioning -->
+		<VersionPrefix>1.0.0</VersionPrefix>
+		<VersionSuffix Condition="'$(Configuration)' == 'Debug'">dev</VersionSuffix>
+	</PropertyGroup>
+
+	<!-- Web Project Specific -->
+	<PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.Web' OR '$(UsingMicrosoftNETSdkWeb)' == 'true'">
+		<IsPackable>false</IsPackable>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<!-- Test Project Specific - Fixed condition syntax -->
+	<PropertyGroup Condition="$(MSBuildProjectName.Contains('Test')) OR $(MSBuildProjectName.Contains('Tests')) OR $(MSBuildProjectName.EndsWith('.Test')) OR $(MSBuildProjectName.EndsWith('.Tests')) OR '$(IsTestProject)' == 'true'">
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+	</PropertyGroup>
+
+
+	<!-- Blazor WebAssembly Specific -->
+	<PropertyGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true'">
+		<BlazorWebAssemblyPreserveCollationData>false</BlazorWebAssemblyPreserveCollationData>
+		<BlazorWebAssemblyLoadBootResource>true</BlazorWebAssemblyLoadBootResource>
+		<RunAOTCompilation Condition="'$(Configuration)' == 'Release'">true</RunAOTCompilation>
+	</PropertyGroup>
+
+
+	<!-- Library Project Specific -->
+	<PropertyGroup Condition="'$(OutputType)' == 'Library' AND '$(IsTestProject)' != 'true'">
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
+	</PropertyGroup>
+
 </Project>

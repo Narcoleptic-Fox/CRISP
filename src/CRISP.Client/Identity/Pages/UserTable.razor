@@ -1,0 +1,97 @@
+﻿@page "/admin/users"
+@inherits BaseStateTableComponent<Users, UserTableState>
+
+<MudDataGrid @ref="dataGrid" T="Users" ServerData="ServerData"
+             FixedHeader FixedFooter Virtualize Hover
+             Filterable FilterMode="DataGridFilterMode.ColumnFilterRow" FilterCaseSensitivity="DataGridFilterCaseSensitivity.CaseInsensitive"
+             SortMode="SortMode.Single">
+    <ToolBarContent>
+        <MudStack Row="true" Justify="Justify.FlexStart" Style="width:100%">
+            <MudText Typo="Typo.h6">@nameof(Users)</MudText>
+            <MudSpacer />
+        </MudStack>
+    </ToolBarContent>
+    <Columns>
+        @if (AuthState is not null)
+        {
+            <TemplateColumn Filterable="false" Sortable="false">
+                <CellTemplate>
+                    <MudMenu Icon="@Icons.Material.Rounded.MoreVert" Size="@Size.Small">
+                        @if (AuthState.HasPermissions(Permissions.CanDeleteUser))
+                        {
+                            <MudMenuItem OnClick="@(_ => Remove(context.Item))">Delete</MudMenuItem>
+                        }
+                    </MudMenu>
+                </CellTemplate>
+            </TemplateColumn>
+        }
+        <PropertyColumn Property="m => m.UserName" Title="@nameof(Users.UserName).Titleize()" />
+        <PropertyColumn Property="m => m.Email" Title="@nameof(Users.Email).Titleize()" />
+        <PropertyColumn Property="m => m.PhoneNumber" Title="@nameof(Users.PhoneNumber).Titleize()" />
+        <PropertyColumn Property="m => m.LockOutEnabled" Title="@nameof(Users.LockOutEnabled).Titleize()" />
+    </Columns>
+</MudDataGrid>
+
+@code {
+    [CascadingParameter]
+    public AuthenticationState? AuthState { get; set; }
+
+
+    [Inject]
+    private IUserService UserService { get; set; } = default!;
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = default!;
+
+    [Inject]
+    private IDialogService DialogService { get; set; } = default!;
+
+    public override void Add()
+    {
+    }
+
+    public override async void Remove(Users model)
+    {
+        IDialogReference dialog = await DialogService.ShowAsync<ConfirmationDialog>("Warning!", new DialogParameters
+        {
+            { nameof(ConfirmationDialog.ContentText), $"Are you sure you want to delete {model.UserName}?" }
+        });
+        DialogResult? result = await dialog.Result;
+        if (result?.Canceled != true)
+        {
+            try
+            {
+                await UserService.Send(new DeleteCommand(model.Id));
+                Snackbar.Add($"{nameof(User)} {model.UserName} deleted successfully.", Severity.Success);
+                await dataGrid.ReloadServerData();
+            }
+            catch (Exception e)
+            {
+                Snackbar.Add(e.Message, Severity.Error);
+            }
+        }
+    }
+
+    protected override async Task<GridData<Users>> ServerData(GridState<Users> state)
+    {
+        var sortDefinition = state.SortDefinitions.FirstOrDefault();
+        var query = new GetUsers
+        {
+            Page = state.Page,
+            PageSize = state.PageSize,
+            SortBy = sortDefinition?.SortBy,
+            SortDescending = sortDefinition?.Descending,
+            Emails = State.Emails,
+            UserNames = State.UserNames,
+            PhoneNumbers = State.PhoneNumbers,
+            LockedOut = State.LockedOut
+        };
+
+        var result = await UserService.Send(query);
+        return new()
+        {
+            Items = result.Items,
+            TotalItems = result.TotalCount
+        };
+    }
+}

@@ -1,9 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>Crisp</RootNamespace>
-  </PropertyGroup>
-  
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="FluentValidation" />
+		<PackageReference Include="Humanizer" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="FluentValidation" />
+		<Using Include="CRISP.Core.Common" />
+		<Using Include="CRISP.Core.Constants" />
+	</ItemGroup>
 </Project>

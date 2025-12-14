@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<UserSecretsId>aspnet-CRISP-4e9120fb-fbab-4cba-b931-65491410bf6b</UserSecretsId>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\CRISP.Client\CRISP.Client.csproj" />
+		<ProjectReference Include="..\CRISP.Core\CRISP.Core.csproj" />
+		<ProjectReference Include="..\CRISP.ServiceDefaults\CRISP.ServiceDefaults.csproj" />
+		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
+		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="CRISP.Core.Common" />
+		<Using Include="CRISP.Core.Constants" />
+		<Using Include="CRISP.Core.Extensions" />
+		<Using Include="CRISP.ServiceDefaults" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Service\" />
+	</ItemGroup>
+</Project>
