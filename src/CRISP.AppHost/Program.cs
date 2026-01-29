@@ -11,14 +11,12 @@ internal class Program
                                                              .WithReference(redis)
                                                              .WaitFor(redis)
                                                              .WithReference(database)
-                                                             .WaitFor(database);
+                                                             .WaitFor(database)
+                                                             .WithExternalHttpEndpoints();
 
-        IResourceBuilder<NodeAppResource> webApp = builder.AddNpmApp("webApp", "../CRISP.Web")
-                                                          .WithReference(webServer)
-                                                          .WaitFor(webServer)
-                                                          .WithHttpEndpoint(port: 5173, env: "PORT")
-                                                          .WithExternalHttpEndpoints()
-                                                          .PublishAsDockerFile();
+        // Note: React frontend (CRISP.Web) runs separately via `npm run dev`
+        // Aspire 13.x Node.js support requires CLI integration (aspire init)
+        // TODO: Migrate to Aspire CLI for full stack orchestration
 
         builder.Build().Run();
     }
