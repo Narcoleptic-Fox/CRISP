@@ -11,5 +11,7 @@
   "externalAssemblyPaths": [],
   "createIndexFile": true,
   "csNullableTranslation": "null",
-  "generationSpecs": ["CRISP.Core.TypeGenSpec"]
+  "generationSpecs": ["CRISP.Core.TypeGenSpec"],
+  "useImportType": true,
+  "enumStringInitializersConverters": ["PascalCaseToCamelCase"]
 }

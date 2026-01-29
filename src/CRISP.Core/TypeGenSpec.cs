@@ -6,43 +6,47 @@ namespace CRISP.Core;
 
 /// <summary>
 /// TypeGen specification for generating TypeScript types from C# contracts.
-/// Run: dotnet typegen generate
+/// Run: dotnet-typegen generate
+/// Output: src/CRISP.Web/src/types/
 /// </summary>
 public class TypeGenSpec : GenerationSpec
 {
     public TypeGenSpec()
     {
-        // Common types
+        // Common types - use interfaces for cleaner TS output
         AddInterface<ICommand>();
         AddInterface(typeof(ICommand<>));
-        AddClass<CreateCommand>();
-        AddClass<ModifyCommand>();
-        AddClass<DeleteCommand>();
-        AddClass<ArchiveCommand>();
-        AddClass(typeof(PagedResponse<>));
+        AddInterface<CreateCommand>();
+        AddInterface<ModifyCommand>();
+        AddInterface<DeleteCommand>();
+        AddInterface<ArchiveCommand>();
+        AddInterface(typeof(PagedResponse<>));
+        AddInterface<BaseModel>();
+        AddInterface(typeof(PagedQuery<>));
+        AddInterface(typeof(IQuery<>));
 
-        // Identity contracts
-        AddClass<User>();
-        AddClass<Users>();
-        AddClass<Role>();
-        AddClass<Roles>();
+        // Identity models
+        AddInterface<User>();
+        AddInterface<Users>();
+        AddInterface<Role>();
+        AddInterface<Roles>();
         
         // User commands
-        AddClass<UpdateUser>();
+        AddInterface<UpdateUser>();
         
         // Role commands  
-        AddClass<CreateRole>();
-        AddClass<UpdateRole>();
+        AddInterface<CreateRole>();
+        AddInterface<UpdateRole>();
         
         // User queries
-        AddClass<GetUserByEmail>();
-        AddClass<GetUsers>();
+        AddInterface<GetUserByEmail>();
+        AddInterface<GetUsers>();
         
         // Role queries
-        AddClass<GetRoleByName>();
-        AddClass<GetRoles>();
+        AddInterface<GetRoleByName>();
+        AddInterface<GetRoles>();
         
-        // Enums
-        AddEnum<Permissions>();
+        // Enums - use const enum for erasableSyntaxOnly compatibility
+        AddEnum<Permissions>().StringInitializers();
     }
 }

@@ -2,6 +2,9 @@
 
 	<PropertyGroup>
 		<UserSecretsId>aspnet-CRISP-4e9120fb-fbab-4cba-b931-65491410bf6b</UserSecretsId>
+		<!-- Suppress BL0008: SupplyParameterFromForm with initializer warning -->
+		<!-- This is intentional - we use default! to indicate the property will be initialized -->
+		<NoWarn>$(NoWarn);BL0008</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
