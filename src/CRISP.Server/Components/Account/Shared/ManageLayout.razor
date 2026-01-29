@@ -1,16 +1,21 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @layout CRISP.Server.Layout.MainLayout
 
-<h1>Manage your account</h1>
-
-<div>
-    <h2>Change your account settings</h2>
-    <hr />
-    <div class="row">
-        <div class="col-lg-3">
+<div class="space-y-6">
+    <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground">Account Settings</h1>
+        <p class="mt-2 text-sm text-muted-foreground">
+            Manage your account settings and preferences
+        </p>
+    </div>
+    
+    <div class="border-t border-border" />
+    
+    <div class="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
+        <aside class="lg:w-1/5">
             <ManageNavMenu />
-        </div>
-        <div class="col-lg-9">
+        </aside>
+        <div class="flex-1 lg:max-w-2xl">
             @Body
         </div>
     </div>

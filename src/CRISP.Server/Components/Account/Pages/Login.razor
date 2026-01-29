@@ -1,8 +1,9 @@
-﻿@page "/Account/Login"
+@page "/Account/Login"
+@layout AccountLayout
 
 @using System.ComponentModel.DataAnnotations
-
 @using CRISP.Server.Components.Account
+@using CRISP.Server.Components.Account.Shared
 @using CRISP.Server.Data
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
@@ -14,56 +15,89 @@
 
 <PageTitle>Log in</PageTitle>
 
-<h1>Log in</h1>
-<div class="row">
-    <div class="col-lg-6">
-        <section>
-            <StatusMessage Message="@errorMessage" />
-            <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
-                <DataAnnotationsValidator />
-                <h2>Use a local account to log in.</h2>
-                <hr />
-                <ValidationSummary class="text-danger" role="alert" />
-                <div class="form-floating mb-3">
-                    <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                    <label for="Input.Email" class="form-label">Email</label>
-                    <ValidationMessage For="() => Input.Email" class="text-danger" />
+<div class="text-center">
+    <h1 class="text-3xl font-bold tracking-tight text-foreground">Welcome back</h1>
+    <p class="mt-2 text-sm text-muted-foreground">
+        Sign in to your account to continue
+    </p>
+</div>
+
+<div class="mt-8 space-y-6">
+    <StatusMessage Message="@errorMessage" />
+    
+    <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login" class="space-y-6">
+        <DataAnnotationsValidator />
+        
+        <div class="space-y-4">
+            <div>
+                <label for="Input.Email" class="block text-sm font-medium text-foreground">
+                    Email address
+                </label>
+                <div class="mt-1">
+                    <InputText @bind-Value="Input.Email" id="Input.Email" 
+                        class="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        autocomplete="username" 
+                        placeholder="name@example.com" />
                 </div>
-                <div class="form-floating mb-3">
-                    <InputText type="password" @bind-Value="Input.Password" id="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                    <label for="Input.Password" class="form-label">Password</label>
-                    <ValidationMessage For="() => Input.Password" class="text-danger" />
+                <ValidationMessage For="() => Input.Email" class="mt-1 text-sm text-destructive" />
+            </div>
+
+            <div>
+                <label for="Input.Password" class="block text-sm font-medium text-foreground">
+                    Password
+                </label>
+                <div class="mt-1">
+                    <InputText type="password" @bind-Value="Input.Password" id="Input.Password"
+                        class="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        autocomplete="current-password" 
+                        placeholder="••••••••" />
                 </div>
-                <div class="checkbox mb-3">
-                    <label class="form-label">
-                        <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
-                        Remember me
-                    </label>
-                </div>
-                <div>
-                    <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-                </div>
-                <div>
-                    <p>
-                        <a href="Account/ForgotPassword">Forgot your password?</a>
-                    </p>
-                    <p>
-                        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register as a new user</a>
-                    </p>
-                    <p>
-                        <a href="Account/ResendEmailConfirmation">Resend email confirmation</a>
-                    </p>
-                </div>
-            </EditForm>
-        </section>
+                <ValidationMessage For="() => Input.Password" class="mt-1 text-sm text-destructive" />
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <InputCheckbox @bind-Value="Input.RememberMe" id="Input.RememberMe"
+                    class="h-4 w-4 rounded border-input text-primary focus:ring-ring" />
+                <label for="Input.RememberMe" class="ml-2 block text-sm text-foreground">
+                    Remember me
+                </label>
+            </div>
+
+            <div class="text-sm">
+                <a href="Account/ForgotPassword" class="font-medium text-primary hover:text-primary/80">
+                    Forgot password?
+                </a>
+            </div>
+        </div>
+
+        <ValidationSummary class="text-sm text-destructive" role="alert" />
+
+        <button type="submit" 
+            class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-colors">
+            Sign in
+        </button>
+    </EditForm>
+
+    <div class="relative">
+        <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-border"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+            <span class="bg-background px-2 text-muted-foreground">Or continue with</span>
+        </div>
     </div>
-    <div class="col-lg-4 col-lg-offset-2">
-        <section>
-            <h3>Use another service to log in.</h3>
-            <hr />
-            <ExternalLoginPicker />
-        </section>
-    </div>
+
+    <ExternalLoginPicker />
+
+    <p class="text-center text-sm text-muted-foreground">
+        Don't have an account?
+        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" 
+           class="font-medium text-primary hover:text-primary/80">
+            Sign up
+        </a>
+    </p>
 </div>
 
 @code {
@@ -82,15 +116,12 @@
     {
         if (HttpMethods.IsGet(HttpContext.Request.Method))
         {
-            // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
         }
     }
 
     public async Task LoginUser()
     {
-        // This doesn't count login failures towards account lockout
-        // To enable password failures to trigger account lockout, set lockoutOnFailure: true
         var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
         if (result.Succeeded)
         {

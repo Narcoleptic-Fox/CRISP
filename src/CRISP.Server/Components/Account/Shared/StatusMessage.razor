@@ -1,8 +1,9 @@
-﻿@using CRISP.Server.Components.Account
+@using CRISP.Server.Components.Account
+
 @if (!string.IsNullOrEmpty(DisplayMessage))
 {
-    var statusMessageClass = DisplayMessage.StartsWith("Error") ? "danger" : "success";
-    <div class="alert alert-@statusMessageClass" role="alert">
+    var isError = DisplayMessage.StartsWith("Error");
+    <div class="@(isError ? "bg-destructive/15 text-destructive border-destructive/30" : "bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/30") border rounded-lg px-4 py-3 text-sm" role="alert">
         @DisplayMessage
     </div>
 }

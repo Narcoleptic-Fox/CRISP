@@ -1,8 +1,22 @@
-﻿@page "/Account/AccessDenied"
+@page "/Account/AccessDenied"
+@layout AccountLayout
 
 <PageTitle>Access denied</PageTitle>
 
-<header>
-    <h1 class="text-danger">Access denied</h1>
-    <p class="text-danger">You do not have access to this resource.</p>
-</header>
+<div class="text-center">
+    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/15">
+        <svg class="h-6 w-6 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+        </svg>
+    </div>
+    <h1 class="mt-4 text-3xl font-bold tracking-tight text-foreground">Access denied</h1>
+    <p class="mt-2 text-sm text-muted-foreground">
+        You don't have permission to access this resource.
+    </p>
+    <div class="mt-6">
+        <a href="/" 
+           class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            Go to home
+        </a>
+    </div>
+</div>
