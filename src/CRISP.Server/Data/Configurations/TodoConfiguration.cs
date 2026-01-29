@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace CRISP.Server.Data.Configurations;
 
-public sealed class TodoConfiguration : BaseConfiguration<TodoEntity>
+public sealed class TodoConfiguration : BaseAuditableConfiguration<TodoEntity>
 {
     public override void Configure(EntityTypeBuilder<TodoEntity> builder)
     {
@@ -22,6 +22,5 @@ public sealed class TodoConfiguration : BaseConfiguration<TodoEntity>
 
         builder.HasIndex(t => t.IsCompleted);
         builder.HasIndex(t => t.DueDate);
-        builder.HasIndex(t => t.IsDeleted);
     }
 }
