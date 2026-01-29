@@ -1,7 +1,7 @@
 {
   "assemblies": ["./bin/Debug/net10.0/CRISP.Core.dll"],
   "outputPath": "../../src/CRISP.Web/src/types",
-  "clearOutputDirectory": true,
+  "clearOutputDirectory": false,
   "singleQuotes": true,
   "tabLength": 2,
   "fileNameConverters": ["PascalCaseToKebabCase"],

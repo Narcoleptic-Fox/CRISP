@@ -1,6 +1,7 @@
 using TypeGen.Core.SpecGeneration;
 using CRISP.Core.Common;
 using CRISP.Core.Identity;
+using CRISP.Core.Todos;
 
 namespace CRISP.Core;
 
@@ -45,6 +46,19 @@ public class TypeGenSpec : GenerationSpec
         // Role queries
         AddInterface<GetRoleByName>();
         AddInterface<GetRoles>();
+        
+        // Todo models
+        AddInterface<Todos.Todo>();
+        AddInterface<Todos.Todos>();
+        
+        // Todo commands
+        AddInterface<CreateTodo>();
+        AddInterface<UpdateTodo>();
+        AddInterface<CompleteTodo>();
+        AddInterface<UncompleteTodo>();
+        
+        // Todo queries
+        AddInterface<GetTodos>();
         
         // Enums - use const enum for erasableSyntaxOnly compatibility
         AddEnum<Permissions>().StringInitializers();

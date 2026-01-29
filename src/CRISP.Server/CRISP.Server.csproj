@@ -23,6 +23,7 @@
 	<ItemGroup>
 		<Using Include="CRISP.Core.Common" />
 		<Using Include="CRISP.Core.Constants" />
+		<Using Include="CRISP.Core.Exceptions" />
 		<Using Include="CRISP.Core.Extensions" />
 		<Using Include="CRISP.ServiceDefaults" />
 	</ItemGroup>

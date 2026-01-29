@@ -4,4 +4,4 @@
 
 import type { ModifyCommand } from './modify-command';
 
-export interface DeleteCommand extends ModifyCommand {}
+export interface CompleteTodo extends ModifyCommand {}

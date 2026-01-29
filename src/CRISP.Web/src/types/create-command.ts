@@ -1,9 +1,8 @@
 /**
- * This is a TypeGen auto-generated file.
- * Any changes made to this file can be lost when this file is regenerated.
+ * This is a TypeGen auto-generated file (manually patched).
  */
 
 import type { ICommandWithResult } from './i-command';
 
-// CreateCommand returns a GUID (string) for the created entity's ID
+// Create commands return a GUID (string) of the created entity
 export interface CreateCommand extends ICommandWithResult<string> {}
