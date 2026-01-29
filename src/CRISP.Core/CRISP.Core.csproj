@@ -1,13 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<TargetFramework>net9.0</TargetFramework>
-		<Nullable>enable</Nullable>
-		<ImplicitUsings>enable</ImplicitUsings>
-	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="FluentValidation" />
 		<PackageReference Include="Humanizer" />
+		<PackageReference Include="TypeGen" />
 	</ItemGroup>
 
 	<ItemGroup>

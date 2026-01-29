@@ -1,19 +1,16 @@
-using CRISP.Server.Theme;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Components.Web;
-using MudBlazor;
 
 namespace CRISP.Server.Layout;
 
 public partial class MainLayout
 {
     private bool _isTransitioning = false;
-    private bool _drawerOpen = true;
-    private bool _isDarkMode = false;
+    private bool _drawerOpen = false;
+    private bool _userMenuOpen = false;
     private AuthenticationState? _authState;
-    private MudTheme _theme = new ServerTheme();
     private ErrorBoundary _errorBoundary = default!;
 
     [Inject]
@@ -48,6 +45,7 @@ public partial class MainLayout
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
+        _userMenuOpen = false;
         if (RenderContext.IsPreRendering(AssignedRenderMode))
         {
             _isTransitioning = true;
@@ -66,9 +64,8 @@ public partial class MainLayout
         _drawerOpen = !_drawerOpen;
     }
 
-    private void BreakPointChanged(Breakpoint breakpoint)
+    private void ToggleUserMenu()
     {
-        Logger.LogTrace("Breakpoint changed to {Breakpoint}", breakpoint);
-        _drawerOpen = breakpoint > Breakpoint.Sm;
+        _userMenuOpen = !_userMenuOpen;
     }
 }

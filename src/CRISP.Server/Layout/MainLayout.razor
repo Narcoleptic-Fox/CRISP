@@ -1,45 +1,61 @@
 @inherits LayoutComponentBase
 
-<MudThemeProvider IsDarkMode="@_isDarkMode" Theme="@_theme" />
-<MudPopoverProvider />
-<MudDialogProvider FullWidth="true"
-                   MaxWidth="MaxWidth.Small"
-                   CloseOnEscapeKey="true" />
-<MudSnackbarProvider />
-
 @if (RenderContext.IsPreRendering(AssignedRenderMode) || _isTransitioning)
 {
-    <div class="loading-screen">Loading...</div>
+    <div class="min-h-screen flex items-center justify-center bg-background">
+        <div class="text-muted-foreground">Loading...</div>
+    </div>
 }
 else
 {
     <ErrorBoundary @ref="_errorBoundary">
         <CascadingValue Value="_authState">
-            <MudLayout>
-                <MudAppBar Elevation="1">
-                    <MudBreakpointProvider OnBreakpointChanged="BreakPointChanged">
-                        <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert>
-                            <MudIconButton Class="mr-3" Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" OnClick="ToggleDrawer" />
-                        </MudHidden>
-                    </MudBreakpointProvider>
-                    <MudText Typo="Typo.h6">CRISP</MudText>
-                    <MudSpacer />
-                    <AuthorizeView>
-                        <NotAuthorized>
-                            <MudButton Href="@($"Account/Login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}")" Color="Color.Inherit">Log In</MudButton>
-                        </NotAuthorized>
-                        <Authorized>
-                            <MudMenu Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit">
-                                <MudMenuItem Href="Account/Manage">Settings</MudMenuItem>
-                                <MudMenuItem Href="Account/Logout">Log Out</MudMenuItem>
-                            </MudMenu>
-                        </Authorized>
-                    </AuthorizeView>
-                </MudAppBar>
-                <MudMainContent Class="pa-4">
+            <div class="min-h-screen bg-background">
+                <!-- Header -->
+                <header class="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                    <div class="container flex h-14 items-center">
+                        <button class="mr-4 md:hidden" @onclick="ToggleDrawer">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                        <a href="/" class="mr-6 flex items-center space-x-2">
+                            <span class="font-bold text-xl">CRISP</span>
+                        </a>
+                        <div class="flex flex-1 items-center justify-end space-x-4">
+                            <AuthorizeView>
+                                <NotAuthorized>
+                                    <a href="@($"Account/Login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}")" 
+                                       class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                                        Log In
+                                    </a>
+                                </NotAuthorized>
+                                <Authorized>
+                                    <div class="relative">
+                                        <button @onclick="ToggleUserMenu" class="flex items-center space-x-2 rounded-full p-1 hover:bg-accent">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </button>
+                                        @if (_userMenuOpen)
+                                        {
+                                            <div class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-background border border-border">
+                                                <a href="Account/Manage" class="block px-4 py-2 text-sm hover:bg-accent">Settings</a>
+                                                <a href="Account/Logout" class="block px-4 py-2 text-sm hover:bg-accent">Log Out</a>
+                                            </div>
+                                        }
+                                    </div>
+                                </Authorized>
+                            </AuthorizeView>
+                        </div>
+                    </div>
+                </header>
+                
+                <!-- Main Content -->
+                <main class="container py-6">
                     @Body
-                </MudMainContent>
-            </MudLayout>
+                </main>
+            </div>
         </CascadingValue>
     </ErrorBoundary>
 }

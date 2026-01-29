@@ -21,4 +21,10 @@ export default defineConfig({
       },
     },
   },
+  // Use shared Tailwind config from repo root
+  css: {
+    postcss: {
+      plugins: [],
+    },
+  },
 })
