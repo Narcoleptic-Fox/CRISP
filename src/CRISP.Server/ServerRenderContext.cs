@@ -1,22 +1,15 @@
-﻿using CRISP.Client;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
-namespace CRISP.Server
+namespace CRISP.Server;
+
+public class ServerRenderContext : IRenderContext
 {
-    public sealed class ServerRenderContext(IHttpContextAccessor contextAccessor) : IRenderContext
+    public bool IsClient => false;
+    public bool IsServer => true;
+
+    public bool IsPreRendering(IComponentRenderMode? renderMode)
     {
-        /// <inheritdoc/>
-        public bool IsClient => false;
-
-        /// <inheritdoc/>
-        public bool IsServer => true;
-
-        /// <inheritdoc/>
-        public bool IsPreRendering(IComponentRenderMode? renderMode)
-        {
-            if (renderMode is null)
-                return false;
-            return !contextAccessor.HttpContext?.Response.HasStarted ?? false;
-        }
+        return renderMode is null || renderMode is InteractiveServerRenderMode { Prerender: true };
     }
 }

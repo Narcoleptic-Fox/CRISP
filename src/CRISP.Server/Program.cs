@@ -22,9 +22,7 @@ namespace CRISP.Server
 
             // Add services to the container.
             builder.Services.AddRazorComponents()
-                .AddInteractiveServerComponents()
-                .AddInteractiveWebAssemblyComponents()
-                .AddAuthenticationStateSerialization();
+                .AddInteractiveServerComponents();
 
             builder.Services.AddCascadingAuthenticationState();
             builder.Services.AddScoped<IdentityUserAccessor>();
@@ -71,7 +69,7 @@ namespace CRISP.Server
             builder.Services.AddValidatorsFromAssemblies(assembliesToRegisterFrom);
 
             builder.Services.AddFeatures<Program>();
-            builder.Services.AddSingleton<Client.IRenderContext, ServerRenderContext>();
+            builder.Services.AddSingleton<IRenderContext, ServerRenderContext>();
 
 
             builder.Services.AddMudServices(config =>
@@ -89,7 +87,6 @@ namespace CRISP.Server
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                app.UseWebAssemblyDebugging();
                 app.UseMigrationsEndPoint();
             }
             else
@@ -109,9 +106,7 @@ namespace CRISP.Server
 
             app.MapStaticAssets();
             app.MapRazorComponents<App>()
-                .AddInteractiveServerRenderMode()
-                .AddInteractiveWebAssemblyRenderMode()
-                .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
+                .AddInteractiveServerRenderMode();
 
             // Add additional endpoints required by the Identity /Account Razor components.
             app.MapAdditionalIdentityEndpoints();

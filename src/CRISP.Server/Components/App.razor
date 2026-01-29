@@ -25,6 +25,5 @@
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
 
-    private IComponentRenderMode? PageRenderMode =>
-        HttpContext.AcceptsInteractiveRouting() ? InteractiveAuto : null;
+    private IComponentRenderMode? PageRenderMode => InteractiveServer;
 }

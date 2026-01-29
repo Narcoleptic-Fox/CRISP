@@ -1,0 +1,45 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider IsDarkMode="@_isDarkMode" Theme="@_theme" />
+<MudPopoverProvider />
+<MudDialogProvider FullWidth="true"
+                   MaxWidth="MaxWidth.Small"
+                   CloseOnEscapeKey="true" />
+<MudSnackbarProvider />
+
+@if (RenderContext.IsPreRendering(AssignedRenderMode) || _isTransitioning)
+{
+    <div class="loading-screen">Loading...</div>
+}
+else
+{
+    <ErrorBoundary @ref="_errorBoundary">
+        <CascadingValue Value="_authState">
+            <MudLayout>
+                <MudAppBar Elevation="1">
+                    <MudBreakpointProvider OnBreakpointChanged="BreakPointChanged">
+                        <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert>
+                            <MudIconButton Class="mr-3" Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" OnClick="ToggleDrawer" />
+                        </MudHidden>
+                    </MudBreakpointProvider>
+                    <MudText Typo="Typo.h6">CRISP</MudText>
+                    <MudSpacer />
+                    <AuthorizeView>
+                        <NotAuthorized>
+                            <MudButton Href="@($"Account/Login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}")" Color="Color.Inherit">Log In</MudButton>
+                        </NotAuthorized>
+                        <Authorized>
+                            <MudMenu Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit">
+                                <MudMenuItem Href="Account/Manage">Settings</MudMenuItem>
+                                <MudMenuItem Href="Account/Logout">Log Out</MudMenuItem>
+                            </MudMenu>
+                        </Authorized>
+                    </AuthorizeView>
+                </MudAppBar>
+                <MudMainContent Class="pa-4">
+                    @Body
+                </MudMainContent>
+            </MudLayout>
+        </CascadingValue>
+    </ErrorBoundary>
+}
