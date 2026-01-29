@@ -11,5 +11,5 @@
   "externalAssemblyPaths": [],
   "createIndexFile": true,
   "csNullableTranslation": "null",
-  "generateFromAssemblies": true
+  "generationSpecs": ["CRISP.Core.TypeGenSpec"]
 }
