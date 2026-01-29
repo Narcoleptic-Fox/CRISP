@@ -1,11 +1,12 @@
-﻿@page "/Account/ExternalLogin"
+@page "/Account/ExternalLogin"
+@layout AccountLayout
 
 @using System.ComponentModel.DataAnnotations
 @using System.Security.Claims
 @using System.Text
 @using System.Text.Encodings.Web
-
 @using CRISP.Server.Components.Account
+@using CRISP.Server.Components.Account.Shared
 @using CRISP.Server.Data
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
@@ -18,32 +19,51 @@
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<ExternalLogin> Logger
 
-<PageTitle>Register</PageTitle>
+<PageTitle>Complete registration</PageTitle>
 
-<StatusMessage Message="@message" />
-<h1>Register</h1>
-<h2>Associate your @ProviderDisplayName account.</h2>
-<hr />
-
-<div  class="alert alert-info">
-    You've successfully authenticated with <strong>@ProviderDisplayName</strong>.
-    Please enter an email address for this site below and click the Register button to finish
-    logging in.
+<div class="text-center">
+    <h1 class="text-3xl font-bold tracking-tight text-foreground">Complete registration</h1>
+    <p class="mt-2 text-sm text-muted-foreground">
+        Link your @ProviderDisplayName account
+    </p>
 </div>
 
-<div class="row">
-    <div class="col-md-4">
-        <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" FormName="confirmation" method="post">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert" />
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" autocomplete="email" placeholder="Please enter your email." />
-                <label for="Input.Email" class="form-label">Email</label>
-                <ValidationMessage For="() => Input.Email" />
-            </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-        </EditForm>
+<div class="mt-8 space-y-6">
+    <div class="rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/50 p-4">
+        <div class="flex">
+            <svg class="h-5 w-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <p class="ml-3 text-sm text-green-800 dark:text-green-200">
+                Successfully authenticated with <strong>@ProviderDisplayName</strong>. Enter your email to complete registration.
+            </p>
+        </div>
     </div>
+
+    <StatusMessage Message="@message" />
+    
+    <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" FormName="confirmation" method="post" class="space-y-6">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-sm text-destructive" role="alert" />
+        
+        <div>
+            <label for="Input.Email" class="block text-sm font-medium text-foreground">
+                Email address
+            </label>
+            <div class="mt-1">
+                <InputText @bind-Value="Input.Email" id="Input.Email"
+                    class="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    autocomplete="email"
+                    placeholder="name@example.com" />
+            </div>
+            <ValidationMessage For="() => Input.Email" class="mt-1 text-sm text-destructive" />
+        </div>
+
+        <button type="submit"
+            class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-colors">
+            Complete registration
+        </button>
+    </EditForm>
 </div>
 
 @code {
@@ -92,8 +112,6 @@
                 return;
             }
 
-            // We should only reach this page via the login callback, so redirect back to
-            // the login page if we get here some other way.
             RedirectManager.RedirectTo("Account/Login");
         }
     }
@@ -105,7 +123,6 @@
             RedirectManager.RedirectToWithStatus("Account/Login", "Error loading external login information.", HttpContext);
         }
 
-        // Sign in the user with this external login provider if the user already has a login.
         var result = await SignInManager.ExternalLoginSignInAsync(
             externalLoginInfo.LoginProvider,
             externalLoginInfo.ProviderKey,
@@ -125,7 +142,6 @@
             RedirectManager.RedirectTo("Account/Lockout");
         }
 
-        // If the user does not have an account, then ask the user to create an account.
         if (externalLoginInfo.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
         {
             Input.Email = externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Email) ?? "";
@@ -162,7 +178,6 @@
                     new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
                 await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
 
-                // If account confirmation is required, we need to show the link if we don't have a real email sender
                 if (UserManager.Options.SignIn.RequireConfirmedAccount)
                 {
                     RedirectManager.RedirectTo("Account/RegisterConfirmation", new() { ["email"] = Input.Email });

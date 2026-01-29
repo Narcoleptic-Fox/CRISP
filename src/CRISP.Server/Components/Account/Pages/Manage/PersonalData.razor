@@ -1,26 +1,45 @@
-﻿@page "/Account/Manage/PersonalData"
+@page "/Account/Manage/PersonalData"
 @using CRISP.Server.Components.Account
 
 @inject IdentityUserAccessor UserAccessor
 
 <PageTitle>Personal Data</PageTitle>
 
-<StatusMessage />
-<h3>Personal Data</h3>
-
-<div class="row">
-    <div class="col-md-6">
-        <p>Your account contains personal data that you have given us. This page allows you to download or delete that data.</p>
-        <p>
-            <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
+<div class="space-y-6">
+    <div>
+        <h2 class="text-lg font-medium text-foreground">Personal data</h2>
+        <p class="text-sm text-muted-foreground">Download or delete your personal data.</p>
+    </div>
+    
+    <StatusMessage />
+    
+    <div class="rounded-lg border border-border p-6 space-y-4">
+        <p class="text-sm text-foreground">
+            Your account contains personal data that you have provided. This page allows you to download or delete that data.
         </p>
-        <form action="Account/Manage/DownloadPersonalData" method="post">
-            <AntiforgeryToken />
-            <button class="btn btn-primary" type="submit">Download</button>
-        </form>
-        <p>
-            <a href="Account/Manage/DeletePersonalData" class="btn btn-danger">Delete</a>
+        <p class="text-sm text-muted-foreground">
+            <strong class="text-foreground">Warning:</strong> Deleting this data will permanently remove your account, and this cannot be recovered.
         </p>
+        
+        <div class="flex flex-wrap gap-3 pt-2">
+            <form action="Account/Manage/DownloadPersonalData" method="post">
+                <AntiforgeryToken />
+                <button type="submit"
+                    class="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
+                    <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download data
+                </button>
+            </form>
+            <a href="Account/Manage/DeletePersonalData"
+                class="inline-flex items-center justify-center rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors">
+                <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Delete account
+            </a>
+        </div>
     </div>
 </div>
 

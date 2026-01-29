@@ -1,5 +1,4 @@
-﻿@page "/Account/Manage/Disable2fa"
-
+@page "/Account/Manage/Disable2fa"
 
 @using CRISP.Server.Components.Account
 @using CRISP.Server.Data
@@ -10,25 +9,39 @@
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<Disable2fa> Logger
 
-<PageTitle>Disable two-factor authentication (2FA)</PageTitle>
+<PageTitle>Disable two-factor authentication</PageTitle>
 
-<StatusMessage />
-<h3>Disable two-factor authentication (2FA)</h3>
-
-<div class="alert alert-warning" role="alert">
-    <p>
-        <strong>This action only disables 2FA.</strong>
-    </p>
-    <p>
-        Disabling 2FA does not change the keys used in authenticator apps. If you wish to change the key
-        used in an authenticator app you should <a href="Account/Manage/ResetAuthenticator">reset your authenticator keys.</a>
-    </p>
-</div>
-
-<div>
+<div class="space-y-6">
+    <div>
+        <h2 class="text-lg font-medium text-foreground">Disable 2FA</h2>
+        <p class="text-sm text-muted-foreground">Turn off two-factor authentication for your account.</p>
+    </div>
+    
+    <StatusMessage />
+    
+    <div class="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50 p-4">
+        <div class="flex">
+            <svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div class="ml-3">
+                <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
+                    This action only disables 2FA
+                </p>
+                <p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                    Disabling 2FA does not change the keys used in authenticator apps. If you wish to change the key used in an authenticator app, you should 
+                    <a href="Account/Manage/ResetAuthenticator" class="underline">reset your authenticator keys</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+    
     <form @formname="disable-2fa" @onsubmit="OnSubmitAsync" method="post">
         <AntiforgeryToken />
-        <button class="btn btn-danger" type="submit">Disable 2FA</button>
+        <button type="submit"
+            class="inline-flex items-center justify-center rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors">
+            Disable 2FA
+        </button>
     </form>
 </div>
 
@@ -60,7 +73,7 @@
         Logger.LogInformation("User with ID '{UserId}' has disabled 2fa.", userId);
         RedirectManager.RedirectToWithStatus(
             "Account/Manage/TwoFactorAuthentication",
-            "2fa has been disabled. You can reenable 2fa when you setup an authenticator app",
+            "2FA has been disabled. You can re-enable 2FA when you set up an authenticator app.",
             HttpContext);
     }
 }

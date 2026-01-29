@@ -1,9 +1,8 @@
-﻿@page "/Account/Manage/Email"
+@page "/Account/Manage/Email"
 
 @using System.ComponentModel.DataAnnotations
 @using System.Text
 @using System.Text.Encodings.Web
-
 @using CRISP.Server.Components.Account
 @using CRISP.Server.Data
 @using Microsoft.AspNetCore.Identity
@@ -16,43 +15,70 @@
 
 <PageTitle>Manage email</PageTitle>
 
-<h3>Manage email</h3>
-
-<StatusMessage Message="@message"/>
-<div class="row">
-    <div class="col-xl-6">
-        <form @onsubmit="OnSendEmailVerificationAsync" @formname="send-verification" id="send-verification-form" method="post">
-            <AntiforgeryToken />
-        </form>
-        <EditForm Model="Input" FormName="change-email" OnValidSubmit="OnValidSubmitAsync" method="post">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert" />
-            @if (isEmailConfirmed)
-            {
-                <div class="form-floating mb-3 input-group">
-                    <input type="text" value="@email" id="email" class="form-control" placeholder="Enter your email" disabled />
-                    <div class="input-group-append">
-                        <span class="h-100 input-group-text text-success font-weight-bold">✓</span>
-                    </div>
-                    <label for="email" class="form-label">Email</label>
-                </div>
-            }
-            else
-            {
-                <div class="form-floating mb-3">
-                    <input type="text" value="@email" id="email" class="form-control" placeholder="Enter your email" disabled />
-                    <label for="email" class="form-label">Email</label>
-                    <button type="submit" class="btn btn-link" form="send-verification-form">Send verification email</button>
-                </div>
-            }
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.NewEmail" id="Input.NewEmail" class="form-control" autocomplete="email" aria-required="true" placeholder="Enter a new email" />
-                <label for="Input.NewEmail" class="form-label">New email</label>
-                <ValidationMessage For="() => Input.NewEmail" class="text-danger" />
-            </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Change email</button>
-        </EditForm>
+<div class="space-y-6">
+    <div>
+        <h2 class="text-lg font-medium text-foreground">Email</h2>
+        <p class="text-sm text-muted-foreground">Manage your email address.</p>
     </div>
+    
+    <StatusMessage Message="@message"/>
+    
+    <form @onsubmit="OnSendEmailVerificationAsync" @formname="send-verification" id="send-verification-form" method="post">
+        <AntiforgeryToken />
+    </form>
+    
+    <EditForm Model="Input" FormName="change-email" OnValidSubmit="OnValidSubmitAsync" method="post" class="space-y-6">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-sm text-destructive" role="alert" />
+        
+        <div class="space-y-4">
+            <div>
+                <label for="email" class="block text-sm font-medium text-foreground">
+                    Current email
+                </label>
+                <div class="mt-1 flex items-center gap-2">
+                    <input type="text" value="@email" id="email" disabled
+                        class="block w-full rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground cursor-not-allowed" />
+                    @if (isEmailConfirmed)
+                    {
+                        <span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-200">
+                            <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            Verified
+                        </span>
+                    }
+                    else
+                    {
+                        <button type="submit" form="send-verification-form"
+                            class="text-sm font-medium text-primary hover:text-primary/80">
+                            Verify
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <div>
+                <label for="Input.NewEmail" class="block text-sm font-medium text-foreground">
+                    New email
+                </label>
+                <div class="mt-1">
+                    <InputText @bind-Value="Input.NewEmail" id="Input.NewEmail"
+                        class="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                        autocomplete="email"
+                        placeholder="name@example.com" />
+                </div>
+                <ValidationMessage For="() => Input.NewEmail" class="mt-1 text-sm text-destructive" />
+            </div>
+        </div>
+
+        <div class="flex">
+            <button type="submit"
+                class="inline-flex justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors">
+                Change email
+            </button>
+        </div>
+    </EditForm>
 </div>
 
 @code {

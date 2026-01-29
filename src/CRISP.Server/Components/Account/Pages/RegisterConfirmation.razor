@@ -1,8 +1,9 @@
-﻿@page "/Account/RegisterConfirmation"
+@page "/Account/RegisterConfirmation"
+@layout AccountLayout
 
 @using System.Text
-
 @using CRISP.Server.Components.Account
+@using CRISP.Server.Components.Account.Shared
 @using CRISP.Server.Data
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
@@ -14,21 +15,42 @@
 
 <PageTitle>Register confirmation</PageTitle>
 
-<h1>Register confirmation</h1>
-
-<StatusMessage Message="@statusMessage" />
-
-@if (emailConfirmationLink is not null)
-{
-    <p>
-        This app does not currently have a real email sender registered, see <a href="https://aka.ms/aspaccountconf">these docs</a> for how to configure a real email sender.
-        Normally this would be emailed: <a href="@emailConfirmationLink">Click here to confirm your account</a>
-    </p>
-}
-else
-{
-    <p role="alert">Please check your email to confirm your account.</p>
-}
+<div class="text-center">
+    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+        <svg class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+    </div>
+    <h1 class="mt-4 text-3xl font-bold tracking-tight text-foreground">Check your email</h1>
+    
+    <StatusMessage Message="@statusMessage" />
+    
+    @if (emailConfirmationLink is not null)
+    {
+        <div class="mt-4 rounded-lg border border-border bg-muted/50 p-4">
+            <p class="text-sm text-muted-foreground">
+                <span class="font-medium text-foreground">Development mode:</span> 
+                Email sender not configured.
+            </p>
+            <a href="@emailConfirmationLink" 
+               class="mt-2 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                Confirm your account
+            </a>
+        </div>
+    }
+    else
+    {
+        <p class="mt-2 text-sm text-muted-foreground">
+            We've sent a confirmation link to your email address. Please check your inbox.
+        </p>
+    }
+    
+    <div class="mt-6">
+        <a href="Account/Login" class="text-sm font-medium text-primary hover:text-primary/80">
+            ← Back to login
+        </a>
+    </div>
+</div>
 
 @code {
     private string? emailConfirmationLink;
@@ -58,7 +80,6 @@ else
         }
         else if (EmailSender is IdentityNoOpEmailSender)
         {
-            // Once you add a real email sender, you should remove this code that lets you confirm the account
             var userId = await UserManager.GetUserIdAsync(user);
             var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));

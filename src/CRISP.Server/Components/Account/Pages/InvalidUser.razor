@@ -1,7 +1,22 @@
-﻿@page "/Account/InvalidUser"
+@page "/Account/InvalidUser"
+@layout AccountLayout
 
 <PageTitle>Invalid user</PageTitle>
 
-<h3>Invalid user</h3>
-
-<StatusMessage />
+<div class="text-center">
+    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/15">
+        <svg class="h-6 w-6 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+    </div>
+    <h1 class="mt-4 text-3xl font-bold tracking-tight text-foreground">User not found</h1>
+    <p class="mt-2 text-sm text-muted-foreground">
+        Unable to load user information.
+    </p>
+    <div class="mt-6">
+        <a href="/" 
+           class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            Go to home
+        </a>
+    </div>
+</div>

@@ -1,10 +1,11 @@
-﻿@page "/Account/ResendEmailConfirmation"
+@page "/Account/ResendEmailConfirmation"
+@layout AccountLayout
 
 @using System.ComponentModel.DataAnnotations
 @using System.Text
 @using System.Text.Encodings.Web
-
 @using CRISP.Server.Components.Account
+@using CRISP.Server.Components.Account.Shared
 @using CRISP.Server.Data
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
@@ -16,23 +17,43 @@
 
 <PageTitle>Resend email confirmation</PageTitle>
 
-<h1>Resend email confirmation</h1>
-<h2>Enter your email.</h2>
-<hr />
-<StatusMessage Message="@message" />
-<div class="row">
-    <div class="col-md-4">
-        <EditForm Model="Input" FormName="resend-email-confirmation" OnValidSubmit="OnValidSubmitAsync" method="post">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert" />
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" aria-required="true" placeholder="name@example.com" />
-                <label for="Input.Email" class="form-label">Email</label>
-                <ValidationMessage For="() => Input.Email" class="text-danger" />
+<div class="text-center">
+    <h1 class="text-3xl font-bold tracking-tight text-foreground">Resend confirmation</h1>
+    <p class="mt-2 text-sm text-muted-foreground">
+        Enter your email to receive a new confirmation link
+    </p>
+</div>
+
+<div class="mt-8 space-y-6">
+    <StatusMessage Message="@message" />
+    
+    <EditForm Model="Input" FormName="resend-email-confirmation" OnValidSubmit="OnValidSubmitAsync" method="post" class="space-y-6">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-sm text-destructive" role="alert" />
+        
+        <div>
+            <label for="Input.Email" class="block text-sm font-medium text-foreground">
+                Email address
+            </label>
+            <div class="mt-1">
+                <InputText @bind-Value="Input.Email" id="Input.Email"
+                    class="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    placeholder="name@example.com" />
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Resend</button>
-        </EditForm>
-    </div>
+            <ValidationMessage For="() => Input.Email" class="mt-1 text-sm text-destructive" />
+        </div>
+
+        <button type="submit"
+            class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-colors">
+            Send confirmation link
+        </button>
+    </EditForm>
+
+    <p class="text-center text-sm text-muted-foreground">
+        <a href="Account/Login" class="font-medium text-primary hover:text-primary/80">
+            ← Back to login
+        </a>
+    </p>
 </div>
 
 @code {
