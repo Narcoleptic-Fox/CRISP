@@ -12,10 +12,12 @@
     <PackageReference Include="Aspire.Hosting.AppHost" />
     <PackageReference Include="Aspire.Hosting.PostgreSQL" />
     <PackageReference Include="Aspire.Hosting.Redis" />
+    <PackageReference Include="Aspire.Hosting.NodeJs" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CRISP.Server\CRISP.Server.csproj" />
+    <ProjectReference Include="..\CRISP.Web\CRISP.Web.esproj" />
   </ItemGroup>
 
 </Project>

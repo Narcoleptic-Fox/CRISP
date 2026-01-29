@@ -13,6 +13,12 @@ internal class Program
                                                              .WithReference(database)
                                                              .WaitFor(database);
 
+        IResourceBuilder<NodeAppResource> webApp = builder.AddNpmApp("webApp", "../CRISP.Web")
+                                                          .WithReference(webServer)
+                                                          .WaitFor(webServer)
+                                                          .WithHttpEndpoint(port: 5173, env: "PORT")
+                                                          .WithExternalHttpEndpoints()
+                                                          .PublishAsDockerFile();
 
         builder.Build().Run();
     }

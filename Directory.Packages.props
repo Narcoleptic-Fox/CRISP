@@ -10,6 +10,7 @@
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.4.0" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="9.4.0" />
     <PackageVersion Include="Aspire.Hosting.Redis" Version="9.4.0" />
+    <PackageVersion Include="Aspire.Hosting.NodeJs" Version="9.4.0" />
     <PackageVersion Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.4.0" />
     <!-- ASP.NET Core -->
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.8" />

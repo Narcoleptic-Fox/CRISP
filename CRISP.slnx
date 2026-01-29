@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CRISP.Web/CRISP.Web.esproj" />
+  </Folder>
   <Folder Name="/_SolutionItems/">
     <File Path=".editorconfig" />
     <File Path=".gitignore" />
