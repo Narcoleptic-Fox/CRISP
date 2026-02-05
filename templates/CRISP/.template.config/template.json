@@ -1,0 +1,197 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Narcoleptic Fox LLC",
+  "classifications": [
+    "Web",
+    "API",
+    "CQRS",
+    "Aspire",
+    "Clean Architecture"
+  ],
+  "identity": "NarcolepticFox.CRISP",
+  "groupIdentity": "NarcolepticFox.CRISP",
+  "name": "CRISP - CQRS Pattern Template",
+  "description": "A .NET solution template implementing the CRISP CQRS architectural pattern with Aspire, feature folders, and optional React frontend.",
+  "shortName": "crisp",
+  "tags": {
+    "language": "C#",
+    "type": "solution"
+  },
+  "sourceName": "CRISP",
+  "preferNameDirectory": true,
+  "symbols": {
+    "Framework": {
+      "type": "parameter",
+      "description": "The target framework for the project.",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "net10.0",
+          "description": ".NET 10"
+        },
+        {
+          "choice": "net9.0",
+          "description": ".NET 9"
+        }
+      ],
+      "defaultValue": "net10.0",
+      "replaces": "net10.0"
+    },
+    "IncludeSample": {
+      "type": "parameter",
+      "description": "Include the Todo sample feature demonstrating the CRISP pattern.",
+      "datatype": "bool",
+      "defaultValue": "true"
+    },
+    "Frontend": {
+      "type": "parameter",
+      "description": "The frontend framework to include.",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "react",
+          "description": "React with Vite and TypeScript"
+        },
+        {
+          "choice": "none",
+          "description": "No frontend (API only)"
+        }
+      ],
+      "defaultValue": "react"
+    },
+    "Database": {
+      "type": "parameter",
+      "description": "The database provider to use.",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "postgres",
+          "description": "PostgreSQL"
+        },
+        {
+          "choice": "sqlserver",
+          "description": "SQL Server"
+        },
+        {
+          "choice": "sqlite",
+          "description": "SQLite (for development)"
+        }
+      ],
+      "defaultValue": "postgres"
+    },
+    "IncludeAuth": {
+      "type": "parameter",
+      "description": "Include ASP.NET Core Identity authentication.",
+      "datatype": "bool",
+      "defaultValue": "true"
+    },
+    "IncludeRedis": {
+      "type": "parameter",
+      "description": "Include Redis for distributed caching.",
+      "datatype": "bool",
+      "defaultValue": "true"
+    },
+    "UseAspire": {
+      "type": "parameter",
+      "description": "Use .NET Aspire for orchestration and observability.",
+      "datatype": "bool",
+      "defaultValue": "true"
+    },
+    "UseSqlServer": {
+      "type": "computed",
+      "value": "(Database == \"sqlserver\")"
+    },
+    "UsePostgres": {
+      "type": "computed",
+      "value": "(Database == \"postgres\")"
+    },
+    "UseSqlite": {
+      "type": "computed",
+      "value": "(Database == \"sqlite\")"
+    },
+    "IncludeReact": {
+      "type": "computed",
+      "value": "(Frontend == \"react\")"
+    },
+    "skipRestore": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "Skip the automatic restore of the project on create.",
+      "defaultValue": "false"
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "condition": "(!IncludeSample)",
+          "exclude": [
+            "src/CRISP.Core/Todos/**",
+            "src/CRISP.Server/Features/Todos/**",
+            "src/CRISP.Server/Data/Entities/TodoEntity.cs",
+            "src/CRISP.Server/Data/Configurations/TodoConfiguration.cs",
+            "src/CRISP.Web/src/types/todo.ts",
+            "src/CRISP.Web/src/types/todos.ts",
+            "src/CRISP.Web/src/types/create-todo.ts",
+            "src/CRISP.Web/src/types/update-todo.ts",
+            "src/CRISP.Web/src/types/complete-todo.ts",
+            "src/CRISP.Web/src/types/uncomplete-todo.ts",
+            "src/CRISP.Web/src/types/get-todos.ts"
+          ]
+        },
+        {
+          "condition": "(!IncludeReact)",
+          "exclude": [
+            "src/CRISP.Web/**"
+          ]
+        },
+        {
+          "condition": "(!UseAspire)",
+          "exclude": [
+            "src/CRISP.AppHost/**",
+            "src/CRISP.ServiceDefaults/**"
+          ]
+        },
+        {
+          "condition": "(!IncludeAuth)",
+          "exclude": [
+            "src/CRISP.Server/Components/Account/**",
+            "src/CRISP.Server/Data/ApplicationUser.cs",
+            "src/CRISP.Server/Data/ApplicationRole.cs",
+            "src/CRISP.Core/Identity/**"
+          ]
+        },
+        {
+          "exclude": [
+            ".template.config/**",
+            "templates/**",
+            "**/*.user",
+            "**/.vs/**",
+            "**/bin/**",
+            "**/obj/**",
+            "**/node_modules/**",
+            "**/dist/**"
+          ]
+        }
+      ]
+    }
+  ],
+  "primaryOutputs": [
+    {
+      "path": "CRISP.slnx"
+    }
+  ],
+  "postActions": [
+    {
+      "condition": "(!skipRestore)",
+      "description": "Restore NuGet packages",
+      "manualInstructions": [
+        {
+          "text": "Run 'dotnet restore'"
+        }
+      ],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    }
+  ]
+}

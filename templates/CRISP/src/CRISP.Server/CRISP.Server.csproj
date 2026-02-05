@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<UserSecretsId>aspnet-CRISP-4e9120fb-fbab-4cba-b931-65491410bf6b</UserSecretsId>
+		<!-- Suppress BL0008: SupplyParameterFromForm with initializer warning -->
+		<!-- This is intentional - we use default! to indicate the property will be initialized -->
+		<NoWarn>$(NoWarn);BL0008</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\CRISP.Core\CRISP.Core.csproj" />
+<!--#if (UseAspire)-->
+		<ProjectReference Include="..\CRISP.ServiceDefaults\CRISP.ServiceDefaults.csproj" />
+<!--#endif-->
+		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
+<!--#if (IncludeAuth)-->
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+<!--#endif-->
+<!--#if (UseSqlServer)-->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+<!--#endif-->
+<!--#if (UsePostgres)-->
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+<!--#endif-->
+<!--#if (UseSqlite)-->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+<!--#endif-->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="CRISP.Core.Common" />
+		<Using Include="CRISP.Core.Constants" />
+		<Using Include="CRISP.Core.Exceptions" />
+		<Using Include="CRISP.Core.Extensions" />
+<!--#if (UseAspire)-->
+		<Using Include="CRISP.ServiceDefaults" />
+<!--#endif-->
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Service\" />
+	</ItemGroup>
+</Project>

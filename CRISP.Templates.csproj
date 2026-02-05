@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageType>Template</PackageType>
+    <PackageId>CRISP</PackageId>
+    <Title>CRISP - CQRS Pattern Template</Title>
+    <Version>1.0.0</Version>
+    <Authors>Narcoleptic Fox LLC</Authors>
+    <Company>Narcoleptic Fox LLC</Company>
+    <Description>A .NET solution template implementing the CRISP CQRS architectural pattern with Aspire, feature folders, Entity Framework Core, and optional React frontend.</Description>
+    <PackageTags>dotnet-new;templates;cqrs;clean-architecture;aspire;web;api</PackageTags>
+    <PackageProjectUrl>https://github.com/Narcoleptic-Fox/CRISP</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <!-- <PackageIcon>icon.png</PackageIcon> -->
+    <RepositoryUrl>https://github.com/Narcoleptic-Fox/CRISP</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    
+    <TargetFramework>net10.0</TargetFramework>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="templates\**\*" Exclude="templates\**\bin\**;templates\**\obj\**;templates\**\node_modules\**;templates\**\dist\**;templates\**\.vs\**" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="icon.png" Pack="true" PackagePath="\" Condition="Exists('icon.png')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="**\*" />
+  </ItemGroup>
+
+</Project>

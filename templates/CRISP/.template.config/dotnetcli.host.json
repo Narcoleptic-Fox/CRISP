@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json.schemastore.org/dotnetcli.host",
+  "symbolInfo": {
+    "Framework": {
+      "longName": "framework",
+      "shortName": "f"
+    },
+    "IncludeSample": {
+      "longName": "include-sample",
+      "shortName": "s"
+    },
+    "Frontend": {
+      "longName": "frontend",
+      "shortName": "fe"
+    },
+    "Database": {
+      "longName": "database",
+      "shortName": "db"
+    },
+    "IncludeAuth": {
+      "longName": "auth",
+      "shortName": "a"
+    },
+    "IncludeRedis": {
+      "longName": "redis",
+      "shortName": "r"
+    },
+    "UseAspire": {
+      "longName": "aspire"
+    }
+  }
+}

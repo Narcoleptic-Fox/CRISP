@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/src/">
+<!--#if (IncludeReact)-->
+    <Project Path="src/CRISP.Web/CRISP.Web.esproj" />
+<!--#endif-->
+  </Folder>
+  <Folder Name="/_SolutionItems/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+  </Folder>
+<!--#if (UseAspire)-->
+  <Project Path="src/CRISP.AppHost/CRISP.AppHost.csproj" />
+<!--#endif-->
+  <Project Path="src/CRISP.Core/CRISP.Core.csproj" />
+  <Project Path="src/CRISP.Server/CRISP.Server.csproj" />
+<!--#if (UseAspire)-->
+  <Project Path="src/CRISP.ServiceDefaults/CRISP.ServiceDefaults.csproj" />
+<!--#endif-->
+</Solution>

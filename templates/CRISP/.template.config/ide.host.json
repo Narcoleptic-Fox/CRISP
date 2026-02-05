@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json.schemastore.org/vs-2017.3.host",
+  "order": 100,
+  "symbolInfo": [
+    {
+      "id": "Framework",
+      "name": {
+        "text": "Target Framework"
+      },
+      "isVisible": true
+    },
+    {
+      "id": "IncludeSample",
+      "name": {
+        "text": "Include Sample Feature"
+      },
+      "description": {
+        "text": "Includes a Todo sample feature that demonstrates the CRISP CQRS pattern"
+      },
+      "isVisible": true
+    },
+    {
+      "id": "Frontend",
+      "name": {
+        "text": "Frontend"
+      },
+      "description": {
+        "text": "Choose the frontend framework"
+      },
+      "isVisible": true
+    },
+    {
+      "id": "Database",
+      "name": {
+        "text": "Database Provider"
+      },
+      "description": {
+        "text": "Choose the database provider for Entity Framework Core"
+      },
+      "isVisible": true
+    },
+    {
+      "id": "IncludeAuth",
+      "name": {
+        "text": "Include Authentication"
+      },
+      "description": {
+        "text": "Include ASP.NET Core Identity for user authentication"
+      },
+      "isVisible": true
+    },
+    {
+      "id": "IncludeRedis",
+      "name": {
+        "text": "Include Redis"
+      },
+      "description": {
+        "text": "Include Redis for distributed caching and output caching"
+      },
+      "isVisible": true
+    },
+    {
+      "id": "UseAspire",
+      "name": {
+        "text": "Use .NET Aspire"
+      },
+      "description": {
+        "text": "Include .NET Aspire for orchestration, service discovery, and observability"
+      },
+      "isVisible": true
+    }
+  ]
+}
