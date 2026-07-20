@@ -1,34 +1,61 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<UserSecretsId>aspnet-CRISP-4e9120fb-fbab-4cba-b931-65491410bf6b</UserSecretsId>
-		<!-- Suppress BL0008: SupplyParameterFromForm with initializer warning -->
-		<!-- This is intentional - we use default! to indicate the property will be initialized -->
-		<NoWarn>$(NoWarn);BL0008</NoWarn>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+
+		<UserSecretsId>4cc26860-8c1d-49a3-98fd-37ebc28327e0</UserSecretsId>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+
+		<SpaRoot>..\CRISP.client</SpaRoot>
+		<SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
+		<SpaProxyServerUrl>https://localhost:58733</SpaProxyServerUrl>
+
+		<EFCORE>9.0.15</EFCORE>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\CRISP.Core\CRISP.Core.csproj" />
-		<ProjectReference Include="..\CRISP.ServiceDefaults\CRISP.ServiceDefaults.csproj" />
-		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+	<ItemGroup Label="ASP.NET Core">
+		<PackageReference Include="Asp.Versioning.Http" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+		<PackageReference Include="Microsoft.AspNetCore.SpaProxy" />
+		<PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+		<PackageReference Include="Microsoft.Extensions.ServiceDiscovery" />
+		<PackageReference Include="Microsoft.Identity.Web" />
+		<PackageReference Include="Microsoft.Identity.Web.DownstreamApi" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
+	</ItemGroup>
+
+	<ItemGroup Label="Entity Framework Core">
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
-		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
+	</ItemGroup>
+
+	<ItemGroup Label="Third-Party">
+		<PackageReference Include="AWSSDK.S3" />
+		<PackageReference Include="AWSSDK.SimpleEmailV2" />
+		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+		<PackageReference Include="MimeTypes">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup>
-		<Using Include="CRISP.Core.Common" />
-		<Using Include="CRISP.Core.Constants" />
-		<Using Include="CRISP.Core.Exceptions" />
-		<Using Include="CRISP.Core.Extensions" />
-		<Using Include="CRISP.ServiceDefaults" />
+		<ProjectReference Include="..\CRISP.client\CRISP.Client.esproj">
+			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+		</ProjectReference>
+		<ProjectReference Include="..\CRISP.Core\CRISP.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Service\" />
+		<InternalsVisibleTo Include="CRISP.Server.Tests" />
 	</ItemGroup>
 </Project>

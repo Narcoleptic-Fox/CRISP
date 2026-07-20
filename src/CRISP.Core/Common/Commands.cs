@@ -1,4 +1,4 @@
-﻿namespace CRISP.Core.Common
+namespace CRISP.Core.Common
 {
     /// <summary>
     /// Defines a marker interface for commands that do not return a response.
@@ -115,22 +115,31 @@
     /// This abstract record provides a foundation for implementing specific
     /// modification commands with entity identification.
     /// </remarks>
+    [ExportTsInterface]
     public abstract record ModifyCommand : ICommand
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ModifyCommand"/> record.
+        /// </summary>
         public ModifyCommand() { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ModifyCommand"/> record for the specified entity.
+        /// </summary>
+        /// <param name="id">The unique identifier of the entity to modify.</param>
         public ModifyCommand(Guid id) => Id = id;
 
         /// <summary>
         /// Gets or sets the unique identifier of the entity to modify.
         /// </summary>
         /// <value>
-        /// An integer representing the unique identifier of the entity to be modified.
+        /// A <see cref="Guid"/> representing the unique identifier of the entity to be modified.
         /// </value>
         public Guid Id { get; set; }
     }
 
     /// <summary>
-    /// Defines a contract for services that modify entity creation commands.
+    /// Defines a contract for services that modify existing entities.
     /// </summary>
     /// <typeparam name="TModify">The type of modify command. Must inherit from <see cref="ModifyCommand"/>.</typeparam>
     /// <remarks>
@@ -147,23 +156,33 @@
     /// </summary>
     /// <param name="Id">The unique identifier of the entity to delete.</param>
     /// <remarks>
-    /// Delete commands remove entities permanently from the system. This is different
-    /// from archiving, which maintains the entity but marks it as inactive.
+    /// Delete commands represent a remove operation. Individual handlers determine whether
+    /// that removal is permanent or translated into a domain-specific archival action.
     /// </remarks>
     public sealed record DeleteCommand(Guid Id) : ModifyCommand(Id);
 
     /// <summary>
-    /// Represents a command for archiving an entity instead of permanently deleting it.
+    /// Represents a command for archiving an entity with a business reason.
     /// </summary>
     /// <param name="Id">The unique identifier of the entity to archive.</param>
-    /// <param name="Reason">
-    /// An optional reason for archiving the entity. This can be used for audit trails
-    /// and understanding the context of the archival decision. The default value is <c>null</c>.
-    /// </param>
-    /// <remarks>
-    /// Archive commands mark entities as inactive while preserving them in the system.
-    /// This allows for data retention and potential restoration while removing entities
-    /// from normal operational queries.
-    /// </remarks>
-    public sealed record ArchiveCommand(Guid Id, string? Reason = null) : ModifyCommand(Id);
+    /// <param name="ArchiveReason">The reason the entity is being archived.</param>
+    public sealed record ArchiveCommand(Guid Id, string ArchiveReason) : ModifyCommand(Id);
+
+    /// <summary>
+    /// Validates archive commands before an entity is marked as archived.
+    /// </summary>
+    public sealed class ArchiveCommandValidator : AbstractValidator<ArchiveCommand>
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ArchiveCommandValidator"/> class.
+        /// </summary>
+        public ArchiveCommandValidator()
+        {
+            RuleFor(x => x.Id)
+                .NotEmpty().WithMessage("Entity ID is required.");
+            RuleFor(x => x.ArchiveReason)
+                .NotEmpty().WithMessage("Archive reason is required.")
+                .MaximumLength(500).WithMessage("Archive reason must not exceed 500 characters.");
+        }
+    }
 }
