@@ -409,6 +409,7 @@ appsettings.Production.json
 appsettings.Staging.json
 *.env
 .env.*
+!.env.example
 
 # Azure Functions
 local.settings.json
