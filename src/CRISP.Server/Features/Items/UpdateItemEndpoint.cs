@@ -21,7 +21,7 @@ public static class UpdateItemEndpoint
     /// <returns>The route group builder.</returns>
     public static RouteGroupBuilder Map(this RouteGroupBuilder group)
     {
-        group.MapPut("/", HandleAsync)
+        group.MapPut("/{id:guid}", HandleAsync)
         .WithName(nameof(UpdateItem))
         .Produces(StatusCodes.Status204NoContent)
         .ProducesValidationProblem()
@@ -39,11 +39,15 @@ public static class UpdateItemEndpoint
     /// <param name="cancellationToken">A token that cancels the request.</param>
     /// <returns>A no-content result when the update succeeds.</returns>
     public static async Task<IResult> HandleAsync(
+        [FromRoute] Guid id,
         [FromBody] UpdateItem command,
         [FromServices] IModifyService<UpdateItem> service,
         CancellationToken cancellationToken)
     {
-        await service.Send(command, cancellationToken);
+        // The route is the authority on which item this is. RouteIdBinder has already copied it
+        // onto the command before validation ran; this keeps the handler honest if the filter is
+        // ever removed from the group.
+        await service.Send(command with { Id = id }, cancellationToken);
         return Results.NoContent();
     }
 }

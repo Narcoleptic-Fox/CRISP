@@ -29,6 +29,10 @@ public sealed class ValidationEndpointFilter<T> : IEndpointFilter where T : clas
         if (argument is null)
             return await next(context);
 
+        // Same route-id binding as the non-generic filter, so the two cannot disagree about
+        // whether a caller has to repeat the id in the body.
+        RouteIdBinder.Bind(argument, context.HttpContext.Request.RouteValues!);
+
         var result = await validator.ValidateAsync(argument);
         if (result.IsValid)
             return await next(context);
@@ -72,6 +76,15 @@ public sealed class ValidationEndpointFilter : IEndpointFilter
     {
         if (context.Arguments is null || context.Arguments.Count == 0)
             return await next(context);
+
+        // Identifiers live in the URL, but binding puts them there after validation would have run.
+        // Fill them first so a caller is not asked to repeat in the body what the route already
+        // says — see RouteIdBinder.
+        foreach (var argument in context.Arguments)
+        {
+            if (argument is not null)
+                RouteIdBinder.Bind(argument, context.HttpContext.Request.RouteValues!);
+        }
 
         var validators = context.Arguments.SelectMany(a =>
         {

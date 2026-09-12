@@ -23,7 +23,7 @@ export function useUpdateItem() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (command: UpdateItem) =>
-      apiFetch<void>('/api/v1/Items', {
+      apiFetch<void>(`/api/v1/Items/${command.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(command),
