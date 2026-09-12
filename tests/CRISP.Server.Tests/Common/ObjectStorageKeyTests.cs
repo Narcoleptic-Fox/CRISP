@@ -21,7 +21,7 @@ public class ObjectStorageKeyTests
     [InlineData("   ")]
     public void Normalize_Rejects_BlankKeys(string input)
     {
-        Should.Throw<ArgumentException>(() => ObjectStorageKey.Normalize(input));
+        Should.Throw<RejectedException>(() => ObjectStorageKey.Normalize(input));
     }
 
     [Theory]
@@ -33,7 +33,7 @@ public class ObjectStorageKeyTests
     {
         // Traversal must be rejected after normalization, otherwise a key could
         // escape the configured bucket prefix.
-        Should.Throw<ArgumentException>(() => ObjectStorageKey.Normalize(input));
+        Should.Throw<RejectedException>(() => ObjectStorageKey.Normalize(input));
     }
 
     [Fact]
@@ -41,6 +41,6 @@ public class ObjectStorageKeyTests
     {
         var tooLong = new string('a', 1025);
 
-        Should.Throw<ArgumentException>(() => ObjectStorageKey.Normalize(tooLong));
+        Should.Throw<RejectedException>(() => ObjectStorageKey.Normalize(tooLong));
     }
 }

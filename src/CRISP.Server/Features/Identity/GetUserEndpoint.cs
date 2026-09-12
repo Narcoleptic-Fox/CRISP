@@ -4,6 +4,7 @@ using CRISP.Server.Data;
 using CRISP.Server.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CRISP.Server.Common;
 
 namespace CRISP.Server.Features.Identity;
 
@@ -64,7 +65,7 @@ internal sealed class GetUserService(ApplicationDbContext db) : IQueryService<Ge
     {
         var entity = await _users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == query.Id, cancellationToken: cancellationToken);
         if (entity is null)
-            throw new KeyNotFoundException($"User with ID '{query.Id}' not found.");
+            throw RejectedException.NotFound($"User with ID '{query.Id}' not found.");
 
         return entity.ToUser();
     }

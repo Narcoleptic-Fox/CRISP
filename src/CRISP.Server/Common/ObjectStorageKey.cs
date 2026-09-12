@@ -15,7 +15,7 @@ public static class ObjectStorageKey
     {
         // A storage key must point to a concrete object; blank input would otherwise normalize to an unusable root key.
         if (string.IsNullOrWhiteSpace(objectKey))
-            throw new ArgumentException("Object key is required.", nameof(objectKey));
+            throw RejectedException.BadRequest("Object key is required.");
 
         // Object storage keys use forward slashes as logical separators, so normalize Windows paths into the same form.
         var normalizedKey = objectKey.Trim().Replace('\\', '/');
@@ -32,11 +32,11 @@ public static class ObjectStorageKey
 
         // Reject traversal segments after normalization so a key cannot escape its intended logical folder.
         if (segments.Length == 0 || segments.Any(segment => segment is "." or ".."))
-            throw new ArgumentException("Object key contains an invalid path segment.", nameof(objectKey));
+            throw RejectedException.BadRequest("Object key contains an invalid path segment.");
 
         // S3-compatible providers allow long keys, but 1024 characters is the practical object-key ceiling.
         if (normalizedKey.Length > 1024)
-            throw new ArgumentException("Object key must not exceed 1024 characters.", nameof(objectKey));
+            throw RejectedException.BadRequest("Object key must not exceed 1024 characters.");
 
         // Rejoin validated segments so the returned key is both normalized and free of empty path components.
         return string.Join('/', segments);

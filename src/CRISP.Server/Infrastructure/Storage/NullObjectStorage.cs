@@ -51,7 +51,7 @@ internal sealed class NullObjectStorage : IObjectStorage
             "",
             HttpMethods.Get,
             DateTimeOffset.UtcNow.AddMinutes(request.ExpiresInMinutes),
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)));//throw new InvalidOperationException("Object storage provider is disabled.");
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)));//throw RejectedException.Conflict("Object storage provider is disabled.");
 
     /// <summary>
     /// Throws because objects cannot be deleted when object storage is disabled.
@@ -73,7 +73,7 @@ internal sealed class NullObjectStorage : IObjectStorage
         // Mirrors the real provider, which fails a copy whose source is absent. Callers write their
         // record only after this returns, so the same guarantee holds with storage disabled.
         if (!_objects.TryGetValue(source, out var stored))
-            throw new InvalidOperationException($"No object exists at '{source}' to copy.");
+            throw RejectedException.Conflict($"No object exists at '{source}' to copy.");
 
         _objects[ObjectStorageKey.Normalize(destinationKey)] = stored;
         return Task.CompletedTask;

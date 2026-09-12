@@ -2,6 +2,7 @@ using CRISP.Core.Common;
 using CRISP.Server.Data;
 using CRISP.Server.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using CRISP.Server.Common;
 
 namespace CRISP.Server.Features.Identity;
 
@@ -62,7 +63,7 @@ internal sealed class DeleteUserService(ApplicationDbContext db) : IModifyServic
     {
         var entity = await _users.FindAsync([command.Id], cancellationToken);
         if (entity == null)
-            throw new KeyNotFoundException($"User with ID '{command.Id}' not found.");
+            throw RejectedException.NotFound($"User with ID '{command.Id}' not found.");
 
         _users.Remove(entity);
         await db.SaveChangesAsync(cancellationToken);

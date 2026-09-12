@@ -1,3 +1,4 @@
+using CRISP.Server.Common;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -38,10 +39,14 @@ public sealed class GlobalExceptionHandler(
             Type = $"https://httpstatuses.com/{statusCode}",
         };
 
-        // An expected exception carries a message written for the person who caused it — which name
-        // is already taken, which record is missing — and the client shows it verbatim. Withholding it outside development left the user a bare "Conflict" and no way to
-        // act on it. Anything unmapped keeps its generic title: those messages are internal and are
-        // exactly the ones that leak schema, paths and connection strings.
+        // A RejectedException carries a message written for the person who caused it — which name
+        // is already taken, which record is missing — and the client shows it verbatim. Withholding
+        // it outside development left the user a bare "Conflict" and no way to act on it.
+        //
+        // Everything else keeps its generic title. Framework exceptions are withheld even when they
+        // map to a 4xx: EF Core and LINQ throw InvalidOperationException and friends with text that
+        // names entities, keys and internals, and the type alone cannot tell a service's rejection
+        // from one of those. That is why rejections have their own type.
         if (isExpected || environment.IsDevelopment())
         {
             problemDetails.Detail = exception.Message;
@@ -65,16 +70,18 @@ public sealed class GlobalExceptionHandler(
     /// Maps an exception to its status, title, and whether its message is fit to return.
     /// </summary>
     /// <remarks>
-    /// The four mapped types are how the command services reject a request they understand, and
-    /// their messages are authored as user-facing text. Everything else is a fault: the status is
-    /// reported, the message is not.
+    /// RejectedException is how command services refuse a request they understand, and its message
+    /// is authored as user-facing text. The framework types still map to the status they imply (a
+    /// KeyNotFoundException is a 404 whoever threw it) but are not trusted to carry a message fit
+    /// for the caller. Everything unmapped is a fault: the status is reported, the message is not.
     /// </remarks>
     private static (int StatusCode, string Title, bool IsExpected) MapException(Exception exception) => exception switch
     {
-        ArgumentException => (StatusCodes.Status400BadRequest, "Bad Request", true),
-        UnauthorizedAccessException => (StatusCodes.Status403Forbidden, "Forbidden", true),
-        KeyNotFoundException => (StatusCodes.Status404NotFound, "Not Found", true),
-        InvalidOperationException => (StatusCodes.Status409Conflict, "Conflict", true),
+        RejectedException rejected => (rejected.StatusCode, rejected.Title, true),
+        ArgumentException => (StatusCodes.Status400BadRequest, "Bad Request", false),
+        UnauthorizedAccessException => (StatusCodes.Status403Forbidden, "Forbidden", false),
+        KeyNotFoundException => (StatusCodes.Status404NotFound, "Not Found", false),
+        InvalidOperationException => (StatusCodes.Status409Conflict, "Conflict", false),
         OperationCanceledException => (499, "Client Closed Request", false),
         _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred", false),
     };

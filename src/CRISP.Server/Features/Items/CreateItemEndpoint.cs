@@ -5,6 +5,7 @@ using CRISP.Server.Data.Entities;
 using Humanizer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CRISP.Server.Common;
 
 namespace CRISP.Server.Features.Items;
 
@@ -66,7 +67,7 @@ internal sealed class CreateItemService(ApplicationDbContext db, ILogger<CreateI
     public async ValueTask<Guid> Send(CreateItem command, CancellationToken cancellationToken = default)
     {
         if (await _items.AnyAsync(i => i.Name == command.Name, cancellationToken))
-            throw new InvalidOperationException($"Item with name '{command.Name}' already exists.");
+            throw RejectedException.Conflict($"Item with name '{command.Name}' already exists.");
 
         var entity = new ItemEntity
         {

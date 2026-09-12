@@ -69,7 +69,7 @@ internal sealed class UpdateUserService(
     {
         var entity = await _users.FirstOrDefaultAsync(u => u.Id == command.Id, cancellationToken: cancellationToken);
         if (entity is null)
-            throw new KeyNotFoundException($"User with ID '{command.Id}' not found.");
+            throw RejectedException.NotFound($"User with ID '{command.Id}' not found.");
 
         var previousUsername = entity.Username;
 

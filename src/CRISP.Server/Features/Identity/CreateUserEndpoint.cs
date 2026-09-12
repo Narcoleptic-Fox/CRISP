@@ -6,6 +6,7 @@ using FluentValidation;
 using Humanizer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CRISP.Server.Common;
 
 namespace CRISP.Server.Features.Identity;
 
@@ -69,11 +70,11 @@ internal sealed class CreateUserService(ApplicationDbContext db, ILogger<CreateU
     {
         var entity = await _users.FirstOrDefaultAsync(u => u.Username == command.Username, cancellationToken: cancellationToken);
         if (entity is not null)
-            throw new InvalidOperationException($"User with username '{command.Username}' already exists.");
+            throw RejectedException.Conflict($"User with username '{command.Username}' already exists.");
 
         entity = await _users.FirstOrDefaultAsync(u => u.Email == command.Email, cancellationToken);
         if (entity is not null)
-            throw new InvalidOperationException($"User with email '{command.Email}' already exists.");
+            throw RejectedException.Conflict($"User with email '{command.Email}' already exists.");
 
         entity = new UserEntity
         {

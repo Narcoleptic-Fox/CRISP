@@ -4,6 +4,7 @@ using CRISP.Server.Data;
 using CRISP.Server.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CRISP.Server.Common;
 
 namespace CRISP.Server.Features.Items;
 
@@ -64,7 +65,7 @@ internal sealed class GetItemService(ApplicationDbContext db) : IQueryService<Ge
         // Owned file metadata is included automatically with the owner.
         var entity = await _items.AsNoTracking().FirstOrDefaultAsync(i => i.Id == query.Id, cancellationToken);
         if (entity is null)
-            throw new KeyNotFoundException($"Item with ID '{query.Id}' not found.");
+            throw RejectedException.NotFound($"Item with ID '{query.Id}' not found.");
         return entity.ToItem();
     }
 }

@@ -31,6 +31,15 @@ start. Dated entries; delete what stops being true.
   `_claude-crisp` skill describes. Full review and 10-step plan:
   `docs/reviews/2026-09-12-production-consolidation.md`.
 
+## Decisions made
+
+- 2026-09-12 **Error signalling = option B**: `CRISP.Server.Common.RejectedException` (factories
+  `BadRequest/Forbidden/NotFound/Conflict`) is the only exception whose message reaches the client
+  outside development. Framework exceptions still map to a status, `Detail` dev-only. Reason: EF
+  Core and LINQ throw `InvalidOperationException`/`KeyNotFoundException` with entity and key names.
+  Services throw `RejectedException.X(...)`, never `new InvalidOperationException(...)` for a
+  user-facing rejection. Update the crisp-architecture skill rule when it lands in the repo (step 8).
+
 ## Decisions pending (Brock's call, see review section 5)
 
 Endpoint contract · route-id binding · Aspire default · auth stack · drop Blazor · MySQL option ·

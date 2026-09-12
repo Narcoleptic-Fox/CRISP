@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using CRISP.Server.Common;
 
 namespace CRISP.Server.Tests.Common;
@@ -62,7 +63,8 @@ public class ScratchKeysTests
     {
         // Normalization throws rather than quietly resolving, so a traversal attempt is a bad
         // request rather than a key that silently means something else.
-        Should.Throw<ArgumentException>(() => ScratchKeys.BelongTo(key, Owner));
+        Should.Throw<RejectedException>(() => ScratchKeys.BelongTo(key, Owner))
+            .StatusCode.ShouldBe(StatusCodes.Status400BadRequest);
     }
 
     // Leading and duplicated separators normalize away, so the same key written loosely is still

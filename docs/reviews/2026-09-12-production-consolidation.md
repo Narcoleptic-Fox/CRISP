@@ -121,6 +121,7 @@ These all hang off the same two seams, which proves the seams are right:
 | Database | Postgres default, SQL Server option | MySQL (Microting provider 10.0.10) on 4/5, SQLite on Compass | Add `mysql` as an option, keep `postgres` default unless NF standardises on MySQL. Note webapp-starter is still on Pomelo 9.0.0; everyone else moved |
 | Tests | xunit 2.9.2 + EF InMemory + Moq + FluentAssertions | xUnit v3 `mtp-v2` 4.0.0 + Testcontainers.MySql + Respawn + Shouldly + AutoFixture.Xunit3; `IntegrationTestFixture` + `*ServerApplicationFactory` + `FakeServices` | Production stack. The skill's rule "never EF in-memory" exists because of bugs the in-memory provider hid. The 55 tests committed today are all in-memory |
 | Permissions | `Permissions` enum, `(char)` packed claim, `PermissionAuthorizationHandler` with DB fallback | Coarse `Viewer/Editor/Admin` roles everywhere; Nucleus adds `Permission` + `PermissionRole` + `RolePermissions.Resolve` with comma-packed claim | Two tiers: coarse roles as the default (what 5/5 use), Nucleus's fine-grained model as an opt-in layer. Replace char packing either way |
+| Error signalling | Throw framework exceptions; handler maps type → status | Same, plus WAR's `IsExpected` echoing framework messages | **Decided (B):** one `RejectedException` with `BadRequest/Forbidden/NotFound/Conflict` factories is the only type whose message reaches the client. No hierarchy. The skill rule "no custom exception types" becomes "one `RejectedException`, no hierarchy" |
 | Events | `IEventDispatcher` + `LocalEventDispatcher` (synchronous, in the request) | `IEventPublisher` → bounded `Channel` → `EventWorker` `BackgroundService`, fresh scope per event, retry with backoff | Production. Synchronous dispatch inside the request is the thing the bus was built to avoid |
 
 ## 6. `origin/modernization_update` is the baseline
@@ -139,7 +140,7 @@ plan are therefore already done on that branch. What it still lacks:
 | 4 | `MapStaticAssets()` removed | yes | Comment was copied from ACM and still talks about "both SPAs" and `UseClientApps`; rewrite it |
 | 5 | Output caching | **done** 170e395 | `app.UseOutputCache()` present, `builder.Services.AddOutputCache()` **missing**. Throws at startup. The branch was never booted |
 | 6 | `IQueryableExtensions` namespace | yes | |
-| 7 | `GlobalExceptionHandler.IsExpected` | **done** 917fe88 | |
+| 7 | `GlobalExceptionHandler.IsExpected` | **done** 917fe88, then **revised**: only `RejectedException` messages are returned; framework types keep their status but `Detail` is dev-only (EF/LINQ throw the same types with entity and key names). Decision B, Brock 2026-09-12 | |
 | 8 | `RouteIdBinder` | **done** 8dc7bcb | |
 | 9 | `AuditLogInterceptor.Describe()` | **done** 7a9222d | |
 | 10 | `SecurityHeadersMiddleware` rebuild | **done** 6ea86af | has `camera=(self)` + `'wasm-unsafe-eval'` only; no storage-origin derivation, no `worker-src`, no `Csp:ConnectSources` |

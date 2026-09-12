@@ -72,10 +72,10 @@ internal sealed class UpdateItemService(
     {
         var entity = await _items.FirstOrDefaultAsync(i => i.Id == command.Id, cancellationToken);
         if (entity is null)
-            throw new KeyNotFoundException($"Item with ID '{command.Id}' not found.");
+            throw RejectedException.NotFound($"Item with ID '{command.Id}' not found.");
 
         if (await _items.AnyAsync(i => i.Id != command.Id && i.Name == command.Name, cancellationToken))
-            throw new InvalidOperationException($"Item with name '{command.Name}' already exists.");
+            throw RejectedException.Conflict($"Item with name '{command.Name}' already exists.");
 
         var previousName = entity.Name;
 

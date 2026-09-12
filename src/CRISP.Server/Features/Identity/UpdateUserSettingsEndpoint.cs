@@ -70,11 +70,11 @@ internal sealed class UpdateUserSettingsService(
     {
         var email = currentUser.Email;
         if (string.IsNullOrEmpty(email))
-            throw new UnauthorizedAccessException("No authenticated identity to update settings for.");
+            throw RejectedException.Forbidden("No authenticated identity to update settings for.");
 
         var entity = await _users.FirstOrDefaultAsync(u => u.Email == email, cancellationToken: cancellationToken);
         if (entity is null)
-            throw new KeyNotFoundException($"No application account exists for '{email}'.");
+            throw RejectedException.NotFound($"No application account exists for '{email}'.");
 
         entity.Settings = new UserSettings
         {

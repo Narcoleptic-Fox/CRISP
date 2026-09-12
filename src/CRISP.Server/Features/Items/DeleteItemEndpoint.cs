@@ -3,6 +3,7 @@ using CRISP.Server.Data;
 using CRISP.Server.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CRISP.Server.Common;
 
 namespace CRISP.Server.Features.Items;
 
@@ -63,7 +64,7 @@ internal sealed class DeleteItemService(ApplicationDbContext db, ILogger<DeleteI
     {
         var entity = await _items.FirstOrDefaultAsync(i => i.Id == command.Id, cancellationToken);
         if (entity is null)
-            throw new KeyNotFoundException($"Item with ID '{command.Id}' not found.");
+            throw RejectedException.NotFound($"Item with ID '{command.Id}' not found.");
 
         _items.Remove(entity);
         await db.SaveChangesAsync(cancellationToken);
