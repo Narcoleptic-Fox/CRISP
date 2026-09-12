@@ -55,6 +55,9 @@ public class Program
             });
         });
 
+        // 5b. SECURITY HEADERS (per-deployment CSP origins and Permissions-Policy grants)
+        builder.Services.AddSecurityHeaders(builder.Configuration);
+
         // 6. EXCEPTION HANDLING (ProblemDetails + IExceptionHandler)
         builder.Services.AddProblemDetails();
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
