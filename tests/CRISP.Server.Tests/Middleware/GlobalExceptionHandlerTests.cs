@@ -59,7 +59,7 @@ public class GlobalExceptionHandlerTests
         var problem = await Handle(exception, "Production");
 
         problem.GetProperty("status").GetInt32().ShouldBe(expectedStatus);
-        Detail(problem).ShouldContain("the reason");
+        Detail(problem).ShouldNotBeNull().ShouldContain("the reason");
     }
 
     // An unmapped exception is a fault, and its message is the one that leaks schema and paths.

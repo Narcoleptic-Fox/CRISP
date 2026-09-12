@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using CRISP.Server.Data.Entities;
+using System.Collections;
 using System.Text;
 using System.Text.Json;
 
@@ -176,12 +177,31 @@ namespace CRISP.Server.Data.Interceptors
                         continue;
 
                     string propertyName = property.Metadata.Name;
-                    string oldValue = property.OriginalValue?.ToString() ?? "null";
-                    string newValue = property.CurrentValue?.ToString() ?? "null";
+                    string oldValue = Describe(property.OriginalValue);
+                    string newValue = Describe(property.CurrentValue);
                     changeBuilder.AppendLine($"{propertyName}: '{oldValue}' → '{newValue}'");
                 }
             }
             return changeBuilder.ToString().TrimEnd(Environment.NewLine.ToCharArray());
         }
+
+        /// <summary>
+        /// Renders a property value for the activity log.
+        /// </summary>
+        /// <remarks>
+        /// Collections need their own arm. A property stored through a value converter is still the
+        /// CLR collection here — a <c>List&lt;string&gt;</c> behind a JSON converter, say — and
+        /// <c>List&lt;T&gt;.ToString()</c> is the type name, so every edit used to read
+        /// "System.Collections.Generic.List`1[System.String]" instead of the values. Byte arrays are
+        /// counted rather than listed: they are the one collection whose contents are noise.
+        /// </remarks>
+        internal static string Describe(object? value) => value switch
+        {
+            null => "null",
+            string text => text,
+            byte[] bytes => $"{bytes.Length} bytes",
+            IEnumerable items => string.Join(", ", items.Cast<object?>().Select(item => item?.ToString() ?? "null")),
+            _ => value.ToString() ?? "null",
+        };
     }
 }
