@@ -36,10 +36,10 @@ public static class GetActivityEndpoint
                        orderby e.Timestamp descending
                        select e;
 
-        var messages = entities.ProjectToSystemMessage()
+        var messages = await entities.ProjectToSystemMessage()
                                .Skip((page ?? 0) * (pageSize ?? defaultPageSize))
                                .Take(pageSize ?? defaultPageSize)
-                               .ToList();
+                               .ToListAsync(cancellationToken);
 
         return Results.Ok(messages);
     }

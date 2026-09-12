@@ -5,6 +5,7 @@ namespace CRISP.Core.Identity;
 /// <summary>
 /// Represents a paged user search query with optional identity-specific filters.
 /// </summary>
+[ExportTsInterface]
 public sealed record GetUsers : PagedQuery<User>
 {
     /// <summary>
