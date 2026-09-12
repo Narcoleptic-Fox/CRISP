@@ -1,6 +1,6 @@
-using ACM.Core.Common;
+using CRISP.Core.Common;
 
-namespace ACM.Core.Tests;
+namespace CRISP.Core.Tests;
 
 public sealed class CommandValidatorTests
 {

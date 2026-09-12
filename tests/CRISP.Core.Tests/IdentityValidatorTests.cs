@@ -1,6 +1,6 @@
-using ACM.Core.Identity;
+using CRISP.Core.Identity;
 
-namespace ACM.Core.Tests;
+namespace CRISP.Core.Tests;
 
 public sealed class IdentityValidatorTests
 {
@@ -9,7 +9,7 @@ public sealed class IdentityValidatorTests
     {
         var command = new CreateUser
         {
-            Username = "acm.admin",
+            Username = "apptemplate.admin",
             Email = "admin@example.com",
             Role = Roles.Admin,
             IsActive = true,
@@ -24,7 +24,7 @@ public sealed class IdentityValidatorTests
     {
         var command = new CreateUser
         {
-            Username = "acm.admin",
+            Username = "apptemplate.admin",
             Email = "not-an-email",
             Role = Roles.Admin,
             IsActive = true,
@@ -41,7 +41,7 @@ public sealed class IdentityValidatorTests
     {
         var command = new CreateUser
         {
-            Username = "acm.admin",
+            Username = "apptemplate.admin",
             Email = "admin@example.com",
             Role = (Roles)999,
             IsActive = true,
@@ -58,7 +58,7 @@ public sealed class IdentityValidatorTests
     {
         var command = new UpdateUser
         {
-            Username = "acm.editor",
+            Username = "apptemplate.editor",
             Email = "editor@example.com",
             Role = Roles.Editor,
             IsActive = true,

@@ -1,6 +1,7 @@
-using ACM.Core.Common;
+using CRISP.Core.Common;
+using CRISP.Core.Extensions;
 
-namespace ACM.Core.Tests;
+namespace CRISP.Core.Tests;
 
 public sealed class QueryableExtensionsTests
 {

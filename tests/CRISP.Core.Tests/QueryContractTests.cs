@@ -1,16 +1,16 @@
-using ACM.Core.Assets;
-using ACM.Core.Common;
-using ACM.Core.Constants;
-using ACM.Core.Identity;
+using CRISP.Core.Common;
+using CRISP.Core.Constants;
+using CRISP.Core.Identity;
+using CRISP.Core.Items;
 
-namespace ACM.Core.Tests;
+namespace CRISP.Core.Tests;
 
 public sealed class QueryContractTests
 {
     [Fact]
     public void PagedQuery_WithNullPagingValues_UsesDefaultValues()
     {
-        var query = new GetCalibrationAssets
+        var query = new GetItems
         {
             Page = null,
             PageSize = null,
@@ -22,23 +22,17 @@ public sealed class QueryContractTests
     }
 
     [Fact]
-    public void GetAssetsToQueryString_WithFilters_EncodesSdkQueryContract()
+    public void GetItemsToQueryString_WithPagingSortingAndIds_EncodesBaseContract()
     {
         var firstId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
         var secondId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
-        var calibrationStart = new DateTimeOffset(2026, 5, 8, 12, 30, 0, TimeSpan.Zero);
-        var query = new GetCalibrationAssets
+        var query = new GetItems
         {
             Page = 2,
             PageSize = 25,
-            SortBy = nameof(Asset.Name),
+            SortBy = nameof(Item.Name),
             SortDescending = true,
             Ids = [firstId, secondId],
-            Name = "Gauge A/B",
-            Instrument = "Pressure & Flow",
-            CalibrationStartDate = calibrationStart,
-            IsRetired = false,
-            CalibrationStatus = CalibrationStatus.Overdue,
         };
 
         string queryString = query.ToQueryString();
@@ -48,11 +42,6 @@ public sealed class QueryContractTests
         queryString.ShouldContain("sortBy=Name", Case.Sensitive);
         queryString.ShouldContain("sortDescending=True", Case.Sensitive);
         queryString.ShouldContain($"ids={firstId},{secondId}", Case.Sensitive);
-        queryString.ShouldContain("Name=Gauge%20A%2FB", Case.Sensitive);
-        queryString.ShouldContain("Instrument=Pressure%20%26%20Flow", Case.Sensitive);
-        queryString.ShouldContain($"CalibrationStartDate={Uri.EscapeDataString(calibrationStart.ToString("o"))}", Case.Sensitive);
-        queryString.ShouldContain("IsRetired=false", Case.Sensitive);
-        queryString.ShouldContain("CalibrationStatus=Overdue", Case.Sensitive);
     }
 
     [Fact]
@@ -77,7 +66,7 @@ public sealed class QueryContractTests
     [Fact]
     public void PagedResponse_DefaultItems_IsEmptyCollection()
     {
-        var response = new PagedResponse<Asset>();
+        var response = new PagedResponse<Item>();
 
         response.Items.ShouldBeEmpty();
         response.TotalCount.ShouldBe(0);

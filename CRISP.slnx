@@ -8,7 +8,7 @@
     <Project Path="src/CRISP.Server/CRISP.Server.csproj" />
   </Folder>
   <Folder Name="/tests/">
-
+    <Project Path="tests/CRISP.Core.Tests/CRISP.Core.Tests.csproj" />
   </Folder>
   <Folder Name="/_solutionitems/">
     <File Path=".dockerignore" />
