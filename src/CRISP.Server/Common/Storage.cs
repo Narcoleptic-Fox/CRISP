@@ -31,9 +31,40 @@ public interface IObjectStorage
     /// <returns>A task that completes when the object has been deleted.</returns>
     Task DeleteAsync(string objectKey, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Copies an object within the configured bucket.
+    /// </summary>
+    /// <param name="sourceKey">The key to copy from.</param>
+    /// <param name="destinationKey">The key to copy to.</param>
+    /// <param name="cancellationToken">A token that cancels the operation.</param>
+    /// <returns>A task that completes when the object has been copied.</returns>
+    /// <remarks>
+    /// The copy is what makes an attachment record trustworthy: it is performed by the server and
+    /// fails if the source is not there, so a record written after it cannot describe bytes that do
+    /// not exist. Callers must therefore await this before persisting anything that refers to the
+    /// destination.
+    /// </remarks>
+    Task CopyAsync(string sourceKey, string destinationKey, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reads an object's stored metadata.
+    /// </summary>
+    /// <param name="objectKey">The provider object key to inspect.</param>
+    /// <param name="cancellationToken">A token that cancels the operation.</param>
+    /// <returns>The object's metadata, or <c>null</c> when no such object exists.</returns>
+    Task<StoredObject?> GetObjectMetadataAsync(string objectKey, CancellationToken cancellationToken = default);
+
     Task<string> UploadAsync(string objectKey, Stream content, string contentType, CancellationToken cancellationToken = default);
     Task<byte[]> DownloadAsync(string objectKey, CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+/// What storage itself reports about an object, as opposed to what a client claimed when asking to
+/// upload it.
+/// </summary>
+/// <param name="SizeBytes">The stored size in bytes.</param>
+/// <param name="ContentType">The stored MIME content type.</param>
+public sealed record StoredObject(long SizeBytes, string ContentType);
 
 /// <summary>
 /// Represents the provider-facing request for creating an object upload URL.

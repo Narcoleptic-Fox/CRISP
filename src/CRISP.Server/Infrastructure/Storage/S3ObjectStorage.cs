@@ -106,6 +106,75 @@ internal sealed class S3ObjectStorage(IOptions<ObjectStorageOptions> options, IL
         logger.LogInformation("Deleted object {ObjectKey} from bucket {BucketName}.", normalizedKey, _options.BucketName);
     }
 
+    /// <summary>
+    /// Copies an object within the bucket.
+    /// </summary>
+    /// <param name="sourceKey">The key to copy from.</param>
+    /// <param name="destinationKey">The key to copy to.</param>
+    /// <param name="cancellationToken">A token that cancels the operation.</param>
+    /// <returns>A task that completes when the copy has finished.</returns>
+    /// <remarks>
+    /// S3 performs this server-side, so the bytes never travel through this process however large
+    /// the file is. Single-part copy is sufficient because every document slot caps its files well
+    /// below the 5 GB ceiling above which S3 requires multipart copy.
+    /// </remarks>
+    public async Task CopyAsync(string sourceKey, string destinationKey, CancellationToken cancellationToken = default)
+    {
+        var source = ObjectStorageKey.Normalize(sourceKey);
+        var destination = ObjectStorageKey.Normalize(destinationKey);
+        using var client = CreateClient();
+
+        try
+        {
+            await client.CopyObjectAsync(new CopyObjectRequest
+            {
+                SourceBucket = _options.BucketName,
+                SourceKey = source,
+                DestinationBucket = _options.BucketName,
+                DestinationKey = destination
+            }, cancellationToken);
+
+            logger.LogInformation(
+                "Copied object {SourceKey} to {DestinationKey} in bucket {BucketName}.",
+                source, destination, _options.BucketName);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,
+                "Failed to copy object {SourceKey} to {DestinationKey} in bucket {BucketName}.",
+                source, destination, _options.BucketName);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Reads an object's stored metadata.
+    /// </summary>
+    /// <param name="objectKey">The provider object key to inspect.</param>
+    /// <param name="cancellationToken">A token that cancels the operation.</param>
+    /// <returns>The object's metadata, or <c>null</c> when it does not exist.</returns>
+    /// <remarks>
+    /// A missing object is an ordinary answer here — the caller is asking whether an upload it does
+    /// not control actually happened — so it comes back as null rather than an exception.
+    /// </remarks>
+    public async Task<StoredObject?> GetObjectMetadataAsync(string objectKey, CancellationToken cancellationToken = default)
+    {
+        var normalizedKey = ObjectStorageKey.Normalize(objectKey);
+        using var client = CreateClient();
+
+        try
+        {
+            var metadata = await client.GetObjectMetadataAsync(
+                _options.BucketName, normalizedKey, cancellationToken);
+
+            return new StoredObject(metadata.ContentLength, metadata.Headers.ContentType ?? string.Empty);
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+    }
+
     // RFC 5987 / 6266: filename* uses percent-encoded UTF-8 so non-ASCII names
     // survive; filename= keeps a sanitized ASCII fallback for legacy clients.
     private static string BuildContentDisposition(string fileName)
