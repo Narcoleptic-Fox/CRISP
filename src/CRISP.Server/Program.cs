@@ -35,6 +35,9 @@ public class Program
         // 4. RATE LIMITING (chained: per-IP + per-user)
         builder.Services.AddApiRateLimiting(builder.Configuration);
 
+        // 4b. FORWARDED HEADERS (inert until RateLimiting:TrustedProxyNetworks names a proxy)
+        builder.Services.AddForwardedHeaders(builder.Configuration);
+
         // 5. CORS (restrictive)
         builder.Services.AddCors(options =>
         {
@@ -133,6 +136,11 @@ public class Program
         // serves the built SPA; MapFallbackToFile below hands client-side routes to index.html.
         // MIDDLEWARE PIPELINE (order matters!)
         // Per Microsoft docs: https://learn.microsoft.com/aspnet/core/fundamentals/middleware#middleware-order
+        // 0. Forwarded headers (first, so everything below sees the real client address rather than
+        //    the load balancer's — request logging and the per-IP rate limiter both depend on it).
+        //    Inert until RateLimiting:TrustedProxyNetworks names a proxy worth believing.
+        app.UseForwardedHeaders();
+
         // 1. Correlation ID (outermost - ensures trace ID is set before anything else)
         app.UseCorrelationId();
 
