@@ -5,9 +5,13 @@ start. Dated entries; delete what stops being true.
 
 ## Current state (2026-09-12)
 
-- **Active branch: `modernize`** (from `origin/modernization_update`). Step 1 of the plan is done:
-  builds, boots against MySQL, 25 Core tests green (sabotage-verified). Next: step 3 (remaining
-  findings #7 #8 #9 #10 #11 #12 #13), then Migrator + Server.Tests, then templates/.
+- **Active branch: `modernize`** (from `origin/modernization_update`). Steps 1, 2, 3 done
+  2026-09-12: boots against MySQL, 25 Core + 94 Server unit tests green, every fix
+  sabotage-verified. Next: step 4 (Migrator + migrations), step 5 (Testcontainers integration
+  tests, port the 55 from `feat/authz-eventing-tests`), then `templates/`.
+- `SecurityHeaders:ConnectSources` and `SecurityHeaders:AllowCamera` are the new config knobs
+  (replacing WAR's `Csp:ConnectSources` and the hardcoded `camera=(self)`). `PUT /Items/{id}`
+  is the sample's update shape; `RouteIdBinder` fills `Id` before validation.
 - Local dev needs a MySQL: `docker run -d --name crisp-mysql -e MYSQL_ROOT_PASSWORD=password
   -e MYSQL_DATABASE=crisp -p 3307:3306 mysql:8.4` and the gitignored
   `src/CRISP.Server/appsettings.Development.json` with

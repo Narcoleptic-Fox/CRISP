@@ -137,15 +137,15 @@ plan are therefore already done on that branch. What it still lacks:
 | 2 | `SystemMessage.Timestamp` + split content | yes | |
 | 3 | Self-signed TLS on ALB leg | yes | |
 | 4 | `MapStaticAssets()` removed | yes | Comment was copied from ACM and still talks about "both SPAs" and `UseClientApps`; rewrite it |
-| 5 | Output caching | **half** | `app.UseOutputCache()` present, `builder.Services.AddOutputCache()` **missing**. Throws at startup. The branch was never booted |
+| 5 | Output caching | **done** 170e395 | `app.UseOutputCache()` present, `builder.Services.AddOutputCache()` **missing**. Throws at startup. The branch was never booted |
 | 6 | `IQueryableExtensions` namespace | yes | |
-| 7 | `GlobalExceptionHandler.IsExpected` | no | |
-| 8 | `RouteIdBinder` | no | |
-| 9 | `AuditLogInterceptor.Describe()` | no | |
-| 10 | `SecurityHeadersMiddleware` rebuild | partial | has `camera=(self)` + `'wasm-unsafe-eval'` only; no storage-origin derivation, no `worker-src`, no `Csp:ConnectSources` |
-| 11 | Rate limiter exempts authenticated | no | |
-| 12 | `AddForwardedHeaders` | no | |
-| 13 | `IObjectStorage` Copy/Metadata + `ScratchKeys` | partial | `DownloadAsync` only |
+| 7 | `GlobalExceptionHandler.IsExpected` | **done** 917fe88 | |
+| 8 | `RouteIdBinder` | **done** 8dc7bcb | |
+| 9 | `AuditLogInterceptor.Describe()` | **done** 7a9222d | |
+| 10 | `SecurityHeadersMiddleware` rebuild | **done** 6ea86af | has `camera=(self)` + `'wasm-unsafe-eval'` only; no storage-origin derivation, no `worker-src`, no `Csp:ConnectSources` |
+| 11 | Rate limiter exempts authenticated | **done** 82ab0d6 | |
+| 12 | `AddForwardedHeaders` | **done** c027c89 | |
+| 13 | `IObjectStorage` Copy/Metadata + `ScratchKeys` | **done** 7be9975 | `DownloadAsync` only |
 | 14 | `ValidateOnStart()` on options | yes | Email, Events, Storage |
 | 15 | Permission claim format | n/a | Branch has coarse `Role` only, no `Permissions` enum; the char-packing is gone with it |
 | 16 | `BaseStateMachine` | no | |
@@ -173,11 +173,11 @@ Branch off `origin/modernization_update`, not `master`. `master`'s `src/` is the
 shape and is superseded; its `templates/`, `docs/`, `.editorconfig`, `Directory.Build.props` and
 today's `tests/CRISP.Server.Tests` are what gets carried forward.
 
-1. **Boot it.** `dotnet build` + `dotnet run` the branch as-is. Fix `AddOutputCache()` (#5) and
+1. **Boot it.** ✅ 2026-09-12 (`f81bb94`..`e192974`). `dotnet build` + `dotnet run` the branch as-is. Fix `AddOutputCache()` (#5) and
    anything else that only shows up when it runs. A branch that has never started is a comment.
-2. **Restore the sample slice** as `Item` from webapp-starter (it is the one the skill documents)
+2. **Restore the sample slice** ✅ `f4eae99` as `Item` from webapp-starter (it is the one the skill documents)
    and re-add `Features/Audit`. Decide `GetActivityEndpoint` vs `GetMessagesEndpoint`; keep one.
-3. **Apply the remaining section 3 findings**, one commit each, each with a test that fails
+3. **Apply the remaining section 3 findings** ✅ 2026-09-12 (#16 and #17 still pending behind options), one commit each, each with a test that fails
    when the fix is reverted: #7, #8, #9, #10 (full), #11, #12, #13. #16 and #17 go behind
    options.
 4. **Add `Migrator`** and `ApplicationDbContextFactory` from webapp-starter. Regenerate
@@ -198,7 +198,7 @@ today's `tests/CRISP.Server.Tests` are what gets carried forward.
 8. **Bring `_claude-crisp/skills/crisp-architecture` into the repo** (`.claude/skills/`) and
    point its `templates/` at the real files so the skill cannot drift from the code. Same for
    `best_practices/crisp.md` → `docs/`.
-9. **Version bumps** from the matrix: `Asp.Versioning.Http` 10.2.2, `Microsoft.Identity.Web`
+9. **Version bumps** from the matrix (EF Core 10.0.11 + Microting done in `9efed51`): `Asp.Versioning.Http` 10.2.2, `Microsoft.Identity.Web`
    4.14.2, `AWSSDK.*` 4.0.102.x, `Testcontainers.MySql` 4.14.0, `xunit.v3.mtp-v2` 4.0.0,
    `Humanizer.Core` 3.0.10, `Microting.EntityFrameworkCore.MySql` 10.0.10 (replacing Pomelo
    9.0.0), OpenTelemetry 1.17.0.
