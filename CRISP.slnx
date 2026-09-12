@@ -5,6 +5,7 @@
       <Deploy />
     </Project>
     <Project Path="src/CRISP.Core/CRISP.Core.csproj" Id="730ecaee-f126-4402-b89f-bdb06cc5b44f" />
+    <Project Path="src/CRISP.Migrator/CRISP.Migrator.csproj" />
     <Project Path="src/CRISP.Server/CRISP.Server.csproj" />
   </Folder>
   <Folder Name="/tests/">

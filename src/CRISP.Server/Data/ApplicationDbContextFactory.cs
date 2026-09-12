@@ -18,8 +18,8 @@ public sealed class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Ap
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseMySql(
-                "server=localhost;port=3306;database=apptemplate;uid=root;pwd=password;",
-                new MySqlServerVersion(new Version(8, 0, 36)))
+                "server=127.0.0.1;port=3306;database=crisp;uid=root;pwd=password;",
+                new MySqlServerVersion(new Version(8, 4, 0)))
             .Options;
 
         return new ApplicationDbContext(options);
