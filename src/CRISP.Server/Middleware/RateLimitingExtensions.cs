@@ -56,14 +56,15 @@ public static class RateLimitingExtensions
                 // Layer 1: Per-IP protection
                 PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                 {
-                    var remoteIp = httpContext.Connection.RemoteIpAddress;
+                    var partitionKey = ResolvePerIpPartitionKey(
+                        httpContext.Connection.RemoteIpAddress,
+                        httpContext.User.Identity?.IsAuthenticated == true);
 
-                    // Skip rate limiting for loopback in development
-                    if (remoteIp is not null && IPAddress.IsLoopback(remoteIp))
-                        return RateLimitPartition.GetNoLimiter("loopback");
+                    if (partitionKey is null)
+                        return RateLimitPartition.GetNoLimiter("unlimited");
 
                     return RateLimitPartition.GetFixedWindowLimiter(
-                        partitionKey: remoteIp?.ToString() ?? "unknown",
+                        partitionKey: partitionKey,
                         factory: _ => new FixedWindowRateLimiterOptions
                         {
                             PermitLimit = globalPermitLimit,
@@ -110,5 +111,33 @@ public static class RateLimitingExtensions
         });
 
         return services;
+    }
+
+    /// <summary>
+    /// The per-IP partition a request belongs to, or <c>null</c> when Layer 1 should not limit it.
+    ///
+    /// Pure, and separate from the limiter wiring, so the rule can be tested without a server.
+    ///
+    /// Two requests are exempt:
+    /// <list type="bullet">
+    /// <item>Loopback, so local development is never throttled.</item>
+    /// <item>Anything already authenticated. Once we know who someone is, identity is a strictly
+    /// better partition key than an address, and Layer 2 governs them per-user. Keeping the per-IP
+    /// window on authenticated traffic pools everyone behind one corporate NAT — or, before
+    /// forwarded headers were honoured, every user behind the load balancer — into a single bucket,
+    /// so the second user to do anything heavy hit the limit the first one spent.</item>
+    /// </list>
+    ///
+    /// Anonymous traffic keeps the per-IP window, which is the pre-auth abuse guard it was for.
+    /// </summary>
+    /// <param name="remoteIp">The connecting address, after forwarded headers have been applied.</param>
+    /// <param name="isAuthenticated">Whether the request carries an established identity.</param>
+    /// <returns>The partition key, or <c>null</c> for no limit.</returns>
+    public static string? ResolvePerIpPartitionKey(IPAddress? remoteIp, bool isAuthenticated)
+    {
+        if (remoteIp is not null && IPAddress.IsLoopback(remoteIp)) return null;
+        if (isAuthenticated) return null;
+
+        return remoteIp?.ToString() ?? "unknown";
     }
 }
