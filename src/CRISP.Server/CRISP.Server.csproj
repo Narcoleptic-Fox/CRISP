@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
@@ -8,7 +8,13 @@
 		<UserSecretsId>4cc26860-8c1d-49a3-98fd-37ebc28327e0</UserSecretsId>
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 
-		<SpaRoot>..\CRISP.client</SpaRoot>
+		<!-- The SPA is served by Vite in development (SpaProxy) and copied into wwwroot/ by the
+		     Dockerfile in deployment. This project owns no static web assets of its own, and with the
+		     feature on, the generated manifest makes startup require a wwwroot/ directory that does not
+		     exist in a fresh checkout. -->
+		<StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
+
+		<SpaRoot>..\CRISP.Client</SpaRoot>
 		<SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
 		<SpaProxyServerUrl>https://localhost:58733</SpaProxyServerUrl>
 
@@ -49,7 +55,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\CRISP.client\CRISP.Client.esproj">
+		<ProjectReference Include="..\CRISP.Client\CRISP.Client.esproj">
 			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
 		</ProjectReference>
 		<ProjectReference Include="..\CRISP.Core\CRISP.Core.csproj" />

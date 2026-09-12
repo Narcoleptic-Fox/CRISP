@@ -63,6 +63,7 @@ public class Program
             options.EnableForHttps = true;
         });
         builder.Services.AddSingleton(TimeProvider.System);
+        builder.Services.AddOutputCache(); // required by app.UseOutputCache() in the pipeline
         builder.Services.AddEmailInfrastructure(builder.Configuration);
         builder.Services.AddObjectStorageInfrastructure(builder.Configuration);
         builder.Services.AddEventInfrastructure(builder.Configuration);
@@ -125,12 +126,11 @@ public class Program
         app.UseDefaultFiles();
         app.UseStaticFiles();
 
-        // No app.MapStaticAssets() here on purpose: this server owns no wwwroot assets of its own —
-        // both SPAs are served from physical wwwroot/{inventory,calibration} by UseClientApps. Static
-        // web assets are disabled in the csproj (two client apps collide at BasePath '/' on publish),
-        // so the endpoints manifest MapStaticAssets needs isn't generated. Re-adding it throws at
-        // startup: "static resources manifest file ... was not found".
-
+        // No app.MapStaticAssets() here on purpose: the SPA is built by Vite and copied into
+        // wwwroot/ by the Dockerfile, so it is never part of this project's compile-time static
+        // web assets and no endpoints manifest is generated. Adding MapStaticAssets throws at
+        // startup: "static resources manifest file ... was not found". UseStaticFiles above
+        // serves the built SPA; MapFallbackToFile below hands client-side routes to index.html.
         // MIDDLEWARE PIPELINE (order matters!)
         // Per Microsoft docs: https://learn.microsoft.com/aspnet/core/fundamentals/middleware#middleware-order
         // 1. Correlation ID (outermost - ensures trace ID is set before anything else)
@@ -184,6 +184,13 @@ public class Program
             .WithName("HealthCheck");
 
         app.MapHealthChecks("/healthz").AllowAnonymous();
+
+        // The OpenAPI document (with the security schemes from SecuritySchemeTransformer) is only
+        // served in development; deployed, the API surface is the client's business, not the public's.
+        if (app.Environment.IsDevelopment())
+        {
+            app.MapOpenApi();
+        }
 
         app.MapFallbackToFile("/index.html");
 
