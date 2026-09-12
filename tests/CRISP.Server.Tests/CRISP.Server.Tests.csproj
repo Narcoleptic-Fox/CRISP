@@ -14,7 +14,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Respawn" />
     <PackageReference Include="Shouldly" />
+    <PackageReference Include="Testcontainers.MySql" />
     <PackageReference Include="xunit.v3.mtp-v2" />
   </ItemGroup>
 
