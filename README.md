@@ -60,21 +60,26 @@ projects. Adding a feature means copying it and renaming; see `docs/` for the pa
 
 ## Running locally
 
+`appsettings.Development.json` names the database password as `${DBPASS}` rather than carrying it;
+the server and the Migrator expand `${NAME}` tokens from environment variables when they read the
+connection string, and fail with the variable's name if it is missing.
+
 ```bash
+export DBPASS=password        # PowerShell: $env:DBPASS = 'password'
 <!--#if (UsePostgres)-->
-docker run -d --name crisp-postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=crisp -p 5432:5432 postgres:16
-# src/CRISP.Server/appsettings.Development.json → ConnectionStrings:default = Host=127.0.0.1;Port=5432;Database=crisp;Username=postgres;Password=password;
-DATABASE_HOST=127.0.0.1 DATABASE_NAME=crisp DATABASE_USER=postgres DATABASE_PASSWORD=password dotnet run --project src/CRISP.Migrator
+docker run -d --name crisp-postgres -e POSTGRES_PASSWORD="$DBPASS" -e POSTGRES_DB=crisp -p 5432:5432 postgres:16
+# src/CRISP.Server/appsettings.Development.json already points at 127.0.0.1:5432/crisp as postgres with Password=${DBPASS}
+DATABASE_HOST=127.0.0.1 DATABASE_NAME=crisp DATABASE_USER=postgres DATABASE_PASSWORD=$DBPASS dotnet run --project src/CRISP.Migrator
 <!--#endif-->
 <!--#if (UseMySql)-->
-docker run -d --name crisp-mysql -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=crisp -p 3306:3306 mysql:8.4
-# src/CRISP.Server/appsettings.Development.json → ConnectionStrings:default = server=127.0.0.1;port=3306;database=crisp;uid=root;pwd=password;
-DATABASE_HOST=127.0.0.1 DATABASE_PORT=3306 DATABASE_NAME=crisp DATABASE_USER=root DATABASE_PASSWORD=password dotnet run --project src/CRISP.Migrator
+docker run -d --name crisp-mysql -e MYSQL_ROOT_PASSWORD="$DBPASS" -e MYSQL_DATABASE=crisp -p 3306:3306 mysql:8.4
+# src/CRISP.Server/appsettings.Development.json already points at 127.0.0.1:3306/crisp as root with pwd=${DBPASS}
+DATABASE_HOST=127.0.0.1 DATABASE_PORT=3306 DATABASE_NAME=crisp DATABASE_USER=root DATABASE_PASSWORD=$DBPASS dotnet run --project src/CRISP.Migrator
 <!--#endif-->
 <!--#if (UseSqlServer)-->
-docker run -d --name crisp-sqlserver -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD='Password1!' -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest
-# src/CRISP.Server/appsettings.Development.json → ConnectionStrings:default = Server=127.0.0.1,1433;Database=crisp;User Id=sa;Password=Password1!;TrustServerCertificate=true;
-DATABASE_HOST=127.0.0.1 DATABASE_PORT=1433 DATABASE_NAME=crisp DATABASE_USER=sa DATABASE_PASSWORD='Password1!' dotnet run --project src/CRISP.Migrator
+docker run -d --name crisp-sqlserver -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD="$DBPASS" -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest
+# src/CRISP.Server/appsettings.Development.json already points at 127.0.0.1,1433/crisp as sa with Password=${DBPASS}
+DATABASE_HOST=127.0.0.1 DATABASE_PORT=1433 DATABASE_NAME=crisp DATABASE_USER=sa DATABASE_PASSWORD=$DBPASS dotnet run --project src/CRISP.Migrator
 <!--#endif-->
 <!--#if (UseSqlite)-->
 # src/CRISP.Server/appsettings.Development.json → ConnectionStrings:default = Data Source=crisp.db

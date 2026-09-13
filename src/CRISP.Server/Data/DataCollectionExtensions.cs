@@ -7,8 +7,9 @@ public static class DataCollectionExtensions
 {
     public static IServiceCollection AddDatabaseInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("default")
-            ?? throw new InvalidOperationException("Connection string 'default' not found.");
+        var connectionString = ConnectionStringExpansion.Expand(
+            configuration.GetConnectionString("default")
+                ?? throw new InvalidOperationException("Connection string 'default' not found."));
 
         // Provider-specific work that should happen once (MySQL probes the server version here)
         // happens now, not per context.

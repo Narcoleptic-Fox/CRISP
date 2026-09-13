@@ -99,7 +99,7 @@ internal static class Program
         var explicitConnectionString = configuration.GetConnectionString("default");
         if (!string.IsNullOrWhiteSpace(explicitConnectionString))
             return new Target(
-                explicitConnectionString,
+                ConnectionStringExpansion.Expand(explicitConnectionString),
                 "ConnectionStrings:default",
                 Host: null,
                 Port: 0

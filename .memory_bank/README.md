@@ -13,9 +13,11 @@ start. Dated entries; delete what stops being true.
   forbids. Stripping them is a history rewrite; Brock has not said yes. Commits after that have no
   trailer.
 - **Defaults:** `--database postgres` (Brock 2026-09-12), `--auth entra`, `--frontend react`,
-  `--include-sample true`, `--aspire false`. Local dev: this box has a native PostgreSQL 16 service
-  on 5432 with an unknown password; use a container on another port and
-  `ConnectionStrings__default` to override `appsettings.Development.json`.
+  `--include-sample true`, `--aspire false`. Local dev: `appsettings.Development.json` carries
+  `Password=${DBPASS}`; the server and Migrator expand `${NAME}` from the environment
+  (`ConnectionStringExpansion`). Brock keeps his native PostgreSQL 16 (port 5432) password in the
+  `DBPASS` user environment variable; never print it. A container on another port works with
+  `ConnectionStrings__default` (tokens allowed there too).
 - **Single-source rules** (review section 9): no `//#else` / no live negative branches; file
   alternatives are `*.<variant>.*` renamed in by the engine; never a marker inside JSX or JSON.
 - **The repo root IS the template** (`.template.config/template.json`, `CRISP.Templates.csproj`).
