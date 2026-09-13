@@ -117,18 +117,13 @@ jobs:
       # The Migrator must at least start and apply the schema to an empty database: a migration
       # that does not apply is exactly what this repo exists to catch before a deploy does.
       # Provider values arrive through GITHUB_ENV from guarded steps: a step list may repeat,
-      # an env: mapping may not.
-#if (UsePostgres)
+      # an env: mapping may not. A generated solution keeps one step; this repository runs all
+      # four and the last assignment wins, so PostgreSQL, the provider it compiles, is last.
+#if (UseSqlite)
       - run: |
-          echo "DATABASE_PORT=5432" >> "$GITHUB_ENV"
-          echo "DATABASE_USER=postgres" >> "$GITHUB_ENV"
-          echo "DATABASE_PASSWORD=postgres" >> "$GITHUB_ENV"
-#endif
-#if (UseMySql)
-      - run: |
-          echo "DATABASE_PORT=3306" >> "$GITHUB_ENV"
-          echo "DATABASE_USER=root" >> "$GITHUB_ENV"
-          echo "DATABASE_PASSWORD=root" >> "$GITHUB_ENV"
+          echo "DATABASE_PORT=0" >> "$GITHUB_ENV"
+          echo "DATABASE_USER=none" >> "$GITHUB_ENV"
+          echo "DATABASE_PASSWORD=none" >> "$GITHUB_ENV"
 #endif
 #if (UseSqlServer)
       - run: |
@@ -136,11 +131,17 @@ jobs:
           echo "DATABASE_USER=sa" >> "$GITHUB_ENV"
           echo "DATABASE_PASSWORD=Password1!" >> "$GITHUB_ENV"
 #endif
-#if (UseSqlite)
+#if (UseMySql)
       - run: |
-          echo "DATABASE_PORT=0" >> "$GITHUB_ENV"
-          echo "DATABASE_USER=none" >> "$GITHUB_ENV"
-          echo "DATABASE_PASSWORD=none" >> "$GITHUB_ENV"
+          echo "DATABASE_PORT=3306" >> "$GITHUB_ENV"
+          echo "DATABASE_USER=root" >> "$GITHUB_ENV"
+          echo "DATABASE_PASSWORD=root" >> "$GITHUB_ENV"
+#endif
+#if (UsePostgres)
+      - run: |
+          echo "DATABASE_PORT=5432" >> "$GITHUB_ENV"
+          echo "DATABASE_USER=postgres" >> "$GITHUB_ENV"
+          echo "DATABASE_PASSWORD=postgres" >> "$GITHUB_ENV"
 #endif
       - name: Migrator applies the schema
         env:
