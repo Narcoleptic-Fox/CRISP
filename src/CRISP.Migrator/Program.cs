@@ -116,9 +116,9 @@ internal static class Program
         )
             return null;
 
-        var port = (uint)Env.GetInt("DATABASE_PORT", 3306);
+        var port = (uint)Env.GetInt("DATABASE_PORT", 5432);
         return new Target(
-            $"server={host};port={port};database={name};uid={user};pwd={password};",
+            DatabaseProvider.BuildConnectionString(host, port, name, user, password),
             $"{host}:{port}/{name}",
             host,
             port
@@ -169,8 +169,7 @@ internal static class Program
         var password = Env.GetString("DATABASE_PASSWORD");
         target = target with
         {
-            ConnectionString =
-                $"server=127.0.0.1;port={localPort};database={name};uid={user};pwd={password};SslMode=None;",
+            ConnectionString = DatabaseProvider.BuildConnectionString("127.0.0.1", localPort, name, user, password),
             Description = $"{target.Description} via {bastionHost}",
         };
 

@@ -19,6 +19,25 @@ jobs:
     name: Build and test (.NET)
     runs-on: ubuntu-latest
 
+#if (UsePostgres)
+    services:
+      # The integration suite reads CRISP_TEST_POSTGRES_CONNECTION_STRING and skips Testcontainers
+      # when it is set. The fixture refuses any database not named crisp_tests.
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: crisp_tests
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+#endif
+#if (UseMySql)
     services:
       # The integration suite reads CRISP_TEST_MYSQL_CONNECTION_STRING and skips Testcontainers
       # when it is set. The fixture refuses any database not named crisp_tests.
@@ -34,6 +53,24 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
+#endif
+#if (UseSqlServer)
+    services:
+      # The integration suite reads CRISP_TEST_SQLSERVER_CONNECTION_STRING and skips Testcontainers
+      # when it is set. The fixture refuses any database not named crisp_tests.
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: Password1!
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'Password1!' -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+#endif
 
     steps:
       - uses: actions/checkout@v4
@@ -66,9 +103,17 @@ jobs:
       - name: Core tests
         run: dotnet test --project tests/CRISP.Core.Tests/CRISP.Core.Tests.csproj --no-build --configuration Release
 
-      - name: Server tests (unit + integration against the MySQL service)
+      - name: Server tests (unit + integration)
         env:
+#if (UsePostgres)
+          CRISP_TEST_POSTGRES_CONNECTION_STRING: Host=127.0.0.1;Port=5432;Database=crisp_tests;Username=postgres;Password=postgres;
+#endif
+#if (UseMySql)
           CRISP_TEST_MYSQL_CONNECTION_STRING: server=127.0.0.1;port=3306;database=crisp_tests;uid=root;pwd=root;
+#endif
+#if (UseSqlServer)
+          CRISP_TEST_SQLSERVER_CONNECTION_STRING: Server=127.0.0.1,1433;Database=crisp_tests;User Id=sa;Password=Password1!;TrustServerCertificate=true;
+#endif
         run: dotnet test --project tests/CRISP.Server.Tests/CRISP.Server.Tests.csproj --no-build --configuration Release
 
       # The Migrator must at least start and apply the schema to an empty database: a migration
@@ -76,8 +121,25 @@ jobs:
       - name: Migrator applies the schema
         env:
           DATABASE_HOST: 127.0.0.1
+#if (UsePostgres)
+          DATABASE_PORT: "5432"
+          DATABASE_USER: postgres
+          DATABASE_PASSWORD: postgres
+#endif
+#if (UseMySql)
           DATABASE_PORT: "3306"
-          DATABASE_NAME: crisp_tests
           DATABASE_USER: root
           DATABASE_PASSWORD: root
+#endif
+#if (UseSqlServer)
+          DATABASE_PORT: "1433"
+          DATABASE_USER: sa
+          DATABASE_PASSWORD: Password1!
+#endif
+#if (UseSqlite)
+          DATABASE_PORT: "0"
+          DATABASE_USER: none
+          DATABASE_PASSWORD: none
+#endif
+          DATABASE_NAME: crisp_tests
         run: dotnet run --project src/CRISP.Migrator --no-build --configuration Release

@@ -18,6 +18,12 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     /// Applies entity configuration classes from the server assembly.
     /// </summary>
     /// <param name="modelBuilder">The model builder used by EF Core.</param>
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+        DatabaseProvider.ConfigureConventions(configurationBuilder);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

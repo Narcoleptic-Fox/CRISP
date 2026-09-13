@@ -37,7 +37,7 @@ lives under `CRISP.Server/{Data,Middleware,Infrastructure,Features}`.
 | [validation-and-errors.md](validation-and-errors.md) | FluentValidation + `ValidationEndpointFilter` + `RouteIdBinder`; `RejectedException` and the `GlobalExceptionHandler` status map |
 | [events.md](events.md) | In-process event bus — `BaseEvent`, `IEventPublisher`, `IEventHandler<T>`, `EventWorker` |
 | [storage-auth-types.md](storage-auth-types.md) | Presigned-URL storage and scratch keys, dual-scheme auth and roles, security headers and CSP derivation, TypeGen, pipeline order |
-| [testing.md](testing.md) | xUnit v3 / MTP, Testcontainers MySQL + Respawn, the `X-Test-User` scheme, how to run |
+| [testing.md](testing.md) | xUnit v3 / MTP, Testcontainers + Respawn, the `X-Test-User` scheme, how to run |
 | [reviews/](reviews/) | Dated decision records. Start with the 2026-09-12 production consolidation review for why things are the way they are. |
 
 ## Adding a feature
@@ -71,5 +71,5 @@ lives under `CRISP.Server/{Data,Middleware,Infrastructure,Features}`.
   Development; framework exceptions map to a status but their text stays in the log.
 - **Never hand-set audit or soft-delete fields.** The interceptors own them on `SaveChanges`.
 - **Side effects go through the event bus**, not inline in the write handler.
-- **Tests never use the EF in-memory provider.** Testcontainers MySQL + Respawn, real migrations.
+- **Tests never use the EF in-memory provider.** Testcontainers + Respawn, real migrations.
 - **The server never migrates at startup.** The Migrator does, as a deliberate step.

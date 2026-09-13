@@ -30,14 +30,14 @@ public sealed class ItemValidatorTests
 }
 ```
 
-## Server.Tests — handlers, middleware, and real-MySQL integration
+## Server.Tests — handlers, middleware, and real-database integration
 
 Unit tests for the middleware and helpers (`RouteIdBinder`, `GlobalExceptionHandler`,
 `SecurityHeadersMiddleware`, rate-limit partitioning, forwarded headers, scratch keys, audit
-`Describe`) plus **integration tests against real MySQL**.
+`Describe`) plus **integration tests against the real database**.
 
-`IntegrationTestFixture` (one per collection) starts a `mysql:8.4` Testcontainer, or uses
-`CRISP_TEST_MYSQL_CONNECTION_STRING` when set (CI does this with a service container). It applies
+`IntegrationTestFixture` (one per collection) starts a Testcontainer for the configured provider (PostgreSQL 16 by default), or uses
+`CRISP_TEST_<PROVIDER>_CONNECTION_STRING` when set (CI does this with a service container). It applies
 the **real migrations** — never `EnsureCreated`, which would hide a migration that disagrees with
 the model — and resets state between tests with **Respawn** (ignoring `__EFMigrationsHistory`).
 It refuses any database not named `crisp_tests`, because Respawn truncates every table it finds.
@@ -69,9 +69,9 @@ support is enabled via `<TestingPlatformDotnetTestSupport>true`:
 
 ```powershell
 dotnet test --project tests/CRISP.Core.Tests/CRISP.Core.Tests.csproj
-dotnet test --project tests/CRISP.Server.Tests/CRISP.Server.Tests.csproj   # needs Docker or CRISP_TEST_MYSQL_CONNECTION_STRING
+dotnet test --project tests/CRISP.Server.Tests/CRISP.Server.Tests.csproj   # needs Docker or CRISP_TEST_POSTGRES_CONNECTION_STRING
 ```
 
 Test project packages: `xunit.v3.mtp-v2` (4.x — assembly parallelism is set with
 `[assembly: Parallelization(Mode = ParallelMode.None)]` because the integration tests share one
-database), `Testcontainers.MySql`, `Respawn`, `Shouldly`, `Microsoft.AspNetCore.Mvc.Testing`.
+database), `Testcontainers.PostgreSql` (or the package for the chosen provider), `Respawn`, `Shouldly`, `Microsoft.AspNetCore.Mvc.Testing`.

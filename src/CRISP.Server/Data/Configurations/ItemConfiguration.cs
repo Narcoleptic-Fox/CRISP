@@ -48,11 +48,7 @@ public class ItemConfiguration : BaseAuditableConfiguration<ItemEntity>
             fileBuilder.Property(f => f.Id).ValueGeneratedNever();
 
             fileBuilder.Property(f => f.OriginalFileName).IsRequired().HasMaxLength(255);
-            fileBuilder.Property(f => f.ObjectKey)
-                .IsRequired()
-                .HasMaxLength(1024)
-                .HasColumnType("varchar(1024)")
-                .HasCharSet("latin1");
+            DatabaseProvider.ObjectKeyColumn(fileBuilder.Property(f => f.ObjectKey).IsRequired());
             fileBuilder.Property(f => f.ContentType).IsRequired().HasMaxLength(255);
             fileBuilder.Property(f => f.UploadedBy).IsRequired().HasMaxLength(100);
 

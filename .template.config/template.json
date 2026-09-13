@@ -54,11 +54,11 @@
       "choices": [
         {
           "choice": "mysql",
-          "description": "MySQL 8.4 (Microting.EntityFrameworkCore.MySql). Ships with the InitialCreate migration."
+          "description": "MySQL 8.4 (Microting.EntityFrameworkCore.MySql). Migration generated on first use."
         },
         {
           "choice": "postgres",
-          "description": "PostgreSQL 16 (Npgsql). Migration generated on first use."
+          "description": "PostgreSQL 16 (Npgsql). Ships with the InitialCreate migration."
         },
         {
           "choice": "sqlserver",
@@ -69,7 +69,7 @@
           "description": "SQLite file database. No container; integration tests recreate the file."
         }
       ],
-      "defaultValue": "mysql"
+      "defaultValue": "postgres"
     },
     "UseMySql": {
       "type": "computed",
@@ -143,13 +143,88 @@
             "src/CRISP.Server/Data/Entities/ItemEntity.cs",
             "src/CRISP.Server/Data/Configurations/ItemConfiguration.cs",
             "src/CRISP.Server/Events/ItemEvents.cs",
-            "src/CRISP.Server/Data/Migrations/**",
             "src/CRISP.Client/src/features/items/**",
             "src/CRISP.Client/src/features/storage/useUploadFile.ts",
             "src/CRISP.Client/src/routes/items.tsx",
             "src/CRISP.Client/src/routes/item-detail.tsx",
             "tests/CRISP.Core.Tests/ItemValidatorTests.cs",
             "tests/CRISP.Server.Tests/Integration/ItemEndpointTests.cs"
+          ]
+        },
+        {
+          "condition": "(!UsePostgres)",
+          "exclude": [
+            "src/CRISP.Server/appsettings.Development.json"
+          ]
+        },
+        {
+          "condition": "(UseSqlite)",
+          "rename": {
+            "src/CRISP.Server/appsettings.Development.sqlite.json": "src/CRISP.Server/appsettings.Development.json"
+          }
+        },
+        {
+          "condition": "(!UseSqlite)",
+          "exclude": [
+            "src/CRISP.Server/appsettings.Development.sqlite.json"
+          ]
+        },
+        {
+          "condition": "(UseSqlServer)",
+          "rename": {
+            "src/CRISP.Server/appsettings.Development.sqlserver.json": "src/CRISP.Server/appsettings.Development.json"
+          }
+        },
+        {
+          "condition": "(!UseSqlServer)",
+          "exclude": [
+            "src/CRISP.Server/appsettings.Development.sqlserver.json"
+          ]
+        },
+        {
+          "condition": "(UseMySql)",
+          "rename": {
+            "src/CRISP.Server/appsettings.Development.mysql.json": "src/CRISP.Server/appsettings.Development.json"
+          }
+        },
+        {
+          "condition": "(!UseMySql)",
+          "exclude": [
+            "src/CRISP.Server/appsettings.Development.mysql.json"
+          ]
+        },
+        {
+          "condition": "(!IncludeSample || !UsePostgres)",
+          "exclude": [
+            "src/CRISP.Server/Data/Migrations/**"
+          ]
+        },
+        {
+          "condition": "(!UseMySql)",
+          "exclude": [
+            "src/CRISP.Server/Data/Providers/MySql/**",
+            "tests/CRISP.Server.Tests/TestSupport/Providers/MySql/**"
+          ]
+        },
+        {
+          "condition": "(!UsePostgres)",
+          "exclude": [
+            "src/CRISP.Server/Data/Providers/Postgres/**",
+            "tests/CRISP.Server.Tests/TestSupport/Providers/Postgres/**"
+          ]
+        },
+        {
+          "condition": "(!UseSqlServer)",
+          "exclude": [
+            "src/CRISP.Server/Data/Providers/SqlServer/**",
+            "tests/CRISP.Server.Tests/TestSupport/Providers/SqlServer/**"
+          ]
+        },
+        {
+          "condition": "(!UseSqlite)",
+          "exclude": [
+            "src/CRISP.Server/Data/Providers/Sqlite/**",
+            "tests/CRISP.Server.Tests/TestSupport/Providers/Sqlite/**"
           ]
         },
         {
@@ -170,8 +245,7 @@
             "**/dist/**",
             "**/.env",
             "**/.env.local",
-            "src/CRISP.Client/src/api/**",
-            "**/appsettings.Development.json"
+            "src/CRISP.Client/src/api/**"
           ]
         }
       ]
@@ -286,6 +360,29 @@
             ],
             "endif": [
               "//#endif"
+            ],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    },
+    "**/*.props": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "<!--#if"
+            ],
+            "else": [
+              "<!--#else"
+            ],
+            "elseif": [
+              "<!--#elseif"
+            ],
+            "endif": [
+              "<!--#endif"
             ],
             "trim": true,
             "wholeLine": true

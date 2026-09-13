@@ -17,11 +17,22 @@
     <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
   </ItemGroup>
   <ItemGroup Label="Database">
-    <PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.11" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.11" />
+    <PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.12" />
+<!--#if (UseMySql)-->
     <!-- Microting is the Pomelo fork that targets EF Core 10; Pomelo itself stopped at 9. -->
     <PackageVersion Include="Microting.EntityFrameworkCore.MySql" Version="10.0.10" />
+<!--#endif-->
+<!--#if (UsePostgres)-->
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+<!--#endif-->
+<!--#if (UseSqlServer)-->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
+<!--#endif-->
+<!--#if (UseSqlite)-->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
+<!--#endif-->
   </ItemGroup>
   <ItemGroup Label="Third-Party">
     <PackageVersion Include="AWSSDK.S3" Version="4.0.102.1" />
@@ -39,7 +50,15 @@
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.11" />
     <PackageVersion Include="Respawn" Version="7.0.0" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
+<!--#if (UseMySql)-->
     <PackageVersion Include="Testcontainers.MySql" Version="4.14.0" />
+<!--#endif-->
+<!--#if (UsePostgres)-->
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.14.0" />
+<!--#endif-->
+<!--#if (UseSqlServer)-->
+    <PackageVersion Include="Testcontainers.MsSql" Version="4.14.0" />
+<!--#endif-->
     <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.0" />
   </ItemGroup>
 </Project>

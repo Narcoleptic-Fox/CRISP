@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
 using CRISP.Server.Data.Interceptors;
+using Microsoft.EntityFrameworkCore;
 
 namespace CRISP.Server.Data;
 
@@ -10,16 +10,13 @@ public static class DataCollectionExtensions
         var connectionString = configuration.GetConnectionString("default")
             ?? throw new InvalidOperationException("Connection string 'default' not found.");
 
-        // Detect the server version ONCE at startup and reuse it for every DbContext. Calling
-        // ServerVersion.AutoDetect inside the per-context options lambda opened a fresh probe
-        // connection on every context creation (i.e. every request); under restart churn or load
-        // those synchronous probes exhaust the connection pool and make context creation — and
-        // therefore every DB-backed request — hang indefinitely.
-        var serverVersion = ServerVersion.AutoDetect(connectionString);
+        // Provider-specific work that should happen once (MySQL probes the server version here)
+        // happens now, not per context.
+        var configure = DatabaseProvider.CreateConfigurator(connectionString);
 
         services.AddDbContext<ApplicationDbContext>((provider, options) =>
         {
-            options.UseMySql(connectionString, serverVersion);
+            configure(options);
             options.AddInterceptors(
                 provider.GetRequiredService<SoftDeleteInterceptor>(),
                 provider.GetRequiredService<AuditLogInterceptor>());

@@ -34,38 +34,16 @@ public sealed class TemplateSmokeTests : IDisposable
     /// </summary>
     public static TheoryData<Variant> Variants() =>
         [
-            new Variant(
-                "SampleApp",
-                Frontend: "react",
-                IncludeSample: true,
-                Database: "mysql",
-                Auth: "entra",
-                Aspire: false
-            ),
-            new Variant(
-                "ApiOnly",
-                Frontend: "none",
-                IncludeSample: true,
-                Database: "mysql",
-                Auth: "entra",
-                Aspire: false
-            ),
-            new Variant(
-                "Blank",
-                Frontend: "react",
-                IncludeSample: false,
-                Database: "mysql",
-                Auth: "entra",
-                Aspire: false
-            ),
-            new Variant(
-                "Bare",
-                Frontend: "none",
-                IncludeSample: false,
-                Database: "mysql",
-                Auth: "entra",
-                Aspire: false
-            ),
+            // Defaults, and each frontend/sample state against them.
+            new Variant("SampleApp", Frontend: "react", IncludeSample: true, Database: "postgres", Auth: "entra", Aspire: false),
+            new Variant("ApiOnly", Frontend: "none", IncludeSample: true, Database: "postgres", Auth: "entra", Aspire: false),
+            new Variant("Blank", Frontend: "react", IncludeSample: false, Database: "postgres", Auth: "entra", Aspire: false),
+            new Variant("Bare", Frontend: "none", IncludeSample: false, Database: "postgres", Auth: "entra", Aspire: false),
+            // Each other provider, with its own integration suite run against a real instance: the
+            // provider class, the scaffolded migration and the test database are only proven there.
+            new Variant("OnMySql", Frontend: "none", IncludeSample: true, Database: "mysql", Auth: "entra", Aspire: false, RunServerTests: true),
+            new Variant("OnSqlServer", Frontend: "none", IncludeSample: true, Database: "sqlserver", Auth: "entra", Aspire: false, RunServerTests: true),
+            new Variant("OnSqlite", Frontend: "none", IncludeSample: true, Database: "sqlite", Auth: "entra", Aspire: false, RunServerTests: true),
         ];
 
     public sealed record Variant(
@@ -74,7 +52,8 @@ public sealed class TemplateSmokeTests : IDisposable
         bool IncludeSample,
         string Database,
         string Auth,
-        bool Aspire
+        bool Aspire,
+        bool RunServerTests = false
     )
     {
         public bool React => Frontend == "react";
@@ -192,7 +171,7 @@ public sealed class TemplateSmokeTests : IDisposable
             await Run("npm", "ci --no-audit --no-fund", client);
         }
 
-        if (!variant.IncludeSample || variant.Database != "mysql")
+        if (!variant.IncludeSample || variant.Database != "postgres")
         {
             // No migration ships for this combination. The generated solution must be able to make
             // its own from the design-time factory, with no database running.
@@ -210,12 +189,23 @@ public sealed class TemplateSmokeTests : IDisposable
                 .ShouldNotBeEmpty();
         }
 
+        // --database: exactly one provider folder survives, on both sides.
+        foreach (var provider in new[] { "MySql", "Postgres", "SqlServer", "Sqlite" })
+        {
+            var expected = string.Equals(provider, variant.Database, StringComparison.OrdinalIgnoreCase);
+            Directory.Exists(Path.Combine(server, "Data", "Providers", provider)).ShouldBe(expected, $"server provider folder {provider}");
+            Directory.Exists(Path.Combine(output, "tests", $"{name}.Server.Tests", "TestSupport", "Providers", provider)).ShouldBe(expected, $"test provider folder {provider}");
+        }
+
         await Run("dotnet", $"build {name}.slnx --nologo -v q", output);
-        await Run(
-            "dotnet",
-            $"test --project tests/{name}.Core.Tests/{name}.Core.Tests.csproj --no-build",
-            output
-        );
+        await Run("dotnet", $"test --project tests/{name}.Core.Tests/{name}.Core.Tests.csproj --no-build", output);
+
+        if (variant.RunServerTests)
+        {
+            // Needs Docker (Testcontainers) for every provider but SQLite. This is the only place the
+            // non-default providers' runtime behaviour is exercised.
+            await Run("dotnet", $"test --project tests/{name}.Server.Tests/{name}.Server.Tests.csproj --no-build", output);
+        }
 
         if (variant.React)
         {

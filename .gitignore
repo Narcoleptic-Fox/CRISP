@@ -405,6 +405,8 @@ artifacts/
 
 # Environment specific files
 appsettings.Development.json
+# The template ships the server's with local development defaults only; no secrets live there.
+!src/CRISP.Server/appsettings.Development*.json
 appsettings.Production.json
 appsettings.Staging.json
 *.env

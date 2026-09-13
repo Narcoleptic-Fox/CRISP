@@ -17,7 +17,15 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Respawn" />
     <PackageReference Include="Shouldly" />
+<!--#if (UseMySql)-->
     <PackageReference Include="Testcontainers.MySql" />
+<!--#endif-->
+<!--#if (UsePostgres)-->
+    <PackageReference Include="Testcontainers.PostgreSql" />
+<!--#endif-->
+<!--#if (UseSqlServer)-->
+    <PackageReference Include="Testcontainers.MsSql" />
+<!--#endif-->
     <PackageReference Include="xunit.v3.mtp-v2" />
   </ItemGroup>
 
@@ -29,5 +37,12 @@
     <Using Include="Shouldly" />
     <Using Include="Xunit" />
   </ItemGroup>
+
+<!--#if (IsTemplateRepository)-->
+  <!-- One TestDatabase is compiled per solution; see CRISP.Server.csproj for the same rule. -->
+  <ItemGroup>
+    <Compile Remove="TestSupport\Providers\MySql\**;TestSupport\Providers\SqlServer\**;TestSupport\Providers\Sqlite\**" />
+  </ItemGroup>
+<!--#endif-->
 
 </Project>

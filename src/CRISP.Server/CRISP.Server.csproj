@@ -44,7 +44,18 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+<!--#if (UseMySql)-->
 		<PackageReference Include="Microting.EntityFrameworkCore.MySql" />
+<!--#endif-->
+<!--#if (UsePostgres)-->
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+<!--#endif-->
+<!--#if (UseSqlServer)-->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+<!--#endif-->
+<!--#if (UseSqlite)-->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+<!--#endif-->
 	</ItemGroup>
 
 	<ItemGroup Label="Third-Party">
@@ -69,4 +80,13 @@
 	<ItemGroup>
 		<InternalsVisibleTo Include="CRISP.Server.Tests" />
 	</ItemGroup>
+
+<!--#if (IsTemplateRepository)-->
+	<!-- One DatabaseProvider is compiled per solution. The template repository builds as PostgreSQL and
+	     keeps the other providers' sources out of this compilation; a generated solution receives
+	     only the folder for its database choice, so these lines are stripped from it. -->
+	<ItemGroup>
+		<Compile Remove="Data\Providers\MySql\**;Data\Providers\SqlServer\**;Data\Providers\Sqlite\**" />
+	</ItemGroup>
+<!--#endif-->
 </Project>

@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace CRISP.Server.Tests.TestSupport;
 
@@ -20,37 +21,56 @@ namespace CRISP.Server.Tests.TestSupport;
 public sealed class CrispServerApplicationFactory(string connectionString)
     : WebApplicationFactory<Program>
 {
+    /// <summary>
+    /// Configuration the server must see while it registers services, not after.
+    /// </summary>
+    /// <remarks>
+    /// ConfigureAppConfiguration inside ConfigureWebHost is applied after Program has run its
+    /// registration, and AddDatabaseInfrastructure reads the connection string there. It worked
+    /// by accident in the template repository because a gitignored appsettings.Development.json
+    /// supplied one; a fresh checkout has no such file. Host configuration is in place before
+    /// WebApplication.CreateBuilder returns, so Program sees these values.
+    /// </remarks>
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        builder.ConfigureHostConfiguration(configuration =>
+            configuration.AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    ["ConnectionStrings:default"] = connectionString,
+                    ["Email:Provider"] = "None",
+                    ["ObjectStorage:Provider"] = "None",
+                    // The suite makes hundreds of requests a minute as a handful of users; the
+                    // production limits (50 global, 100 per user) trip mid-run against a fast database.
+                    // Rate limiting has its own unit tests; here it must stay out of the way.
+                    ["RateLimiting:GlobalPermitLimitPerMinute"] = "1000000",
+                    ["RateLimiting:AuthenticatedPermitLimitPerMinute"] = "1000000",
+                    ["RateLimiting:AnonymousPermitLimitPerMinute"] = "1000000",
+                }
+            )
+        );
+        return base.CreateHost(builder);
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
-
-        builder.ConfigureAppConfiguration(
-            (_, configurationBuilder) =>
-            {
-                configurationBuilder.AddInMemoryCollection(
-                    new Dictionary<string, string?>
-                    {
-                        ["ConnectionStrings:default"] = connectionString,
-                        ["Email:Provider"] = "None",
-                        ["ObjectStorage:Provider"] = "None",
-                    }
-                );
-            }
-        );
 
         builder.ConfigureTestServices(services =>
         {
             AddTestUserAuthentication(services);
 
-            // AddDatabaseInfrastructure probed the server version at registration against whatever
-            // connection string the configuration had then; re-register against the test database.
+            // Program registered the context against the same test connection string (host
+            // configuration above), but through the provider's one-time configurator; re-register so
+            // the test host owns the registration outright and the interceptors are the real ones.
             services.RemoveAll<ApplicationDbContext>();
             services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
 
+            var configure = DatabaseProvider.CreateConfigurator(connectionString);
             services.AddDbContext<ApplicationDbContext>(
                 (provider, options) =>
                 {
-                    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+                    configure(options);
                     options.AddInterceptors(
                         provider.GetRequiredService<SoftDeleteInterceptor>(),
                         provider.GetRequiredService<AuditLogInterceptor>()
