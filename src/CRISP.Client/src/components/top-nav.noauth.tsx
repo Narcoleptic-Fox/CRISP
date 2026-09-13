@@ -68,8 +68,8 @@ export function TopNav() {
         </Sheet>
 
         <NavLink to="/" aria-label="CRISP home" className="flex shrink-0 items-center">
-          <img src={logoDark} alt="CRISP" className="h-8 w-auto dark:hidden" />
-          <img src={logoDark} alt="CRISP" className="hidden h-8 w-auto dark:block" />
+          <img src={logoDark} alt="" className="h-8 w-auto" />
+          <span className="ml-2 text-lg font-semibold tracking-tight">CRISP</span>
         </NavLink>
 
         <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">

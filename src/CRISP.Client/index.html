@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CRISP</title>
   <style>
@@ -23,8 +24,8 @@
       align-items: center;
       justify-content: center;
       gap: 1.5rem;
-      background: #ededed;
-      color: #1b1534;
+      background: #f8fafc;
+      color: #0f172a;
     }
 
     #initial-loader .logo-dark {
@@ -35,8 +36,8 @@
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      border: 3px solid rgba(27, 21, 52, 0.15);
-      border-top-color: #4d217a;
+      border: 3px solid rgba(6, 84, 101, 0.15);
+      border-top-color: #065465;
       animation: initial-spin 0.8s linear infinite;
     }
 
@@ -48,8 +49,8 @@
 
     @media (prefers-color-scheme: dark) {
       #initial-loader {
-        background-image: radial-gradient(78.46% 78.46% at 88.53% 84.13%, #4d217a 0%, #1b1534 100%);
-        background-color: #1b1534;
+        background-image: radial-gradient(78.46% 78.46% at 88.53% 84.13%, #0b3a45 0%, #0f172a 100%);
+        background-color: #0f172a;
         color: #ffffff;
       }
 
@@ -72,8 +73,8 @@
 <body>
   <div id="root">
     <div id="initial-loader" aria-live="polite" aria-busy="true">
-      <img class="logo-light" src="/logo.svg" alt="CRISP" width="180" height="62" />
-      <img class="logo-dark" src="/logo_white.svg" alt="CRISP" width="180" height="62" />
+      <img class="logo-light" src="/logo.svg" alt="CRISP" width="85" height="62" />
+      <img class="logo-dark" src="/logo_white.svg" alt="CRISP" width="85" height="62" />
       <div class="spinner" aria-hidden="true"></div>
     </div>
   </div>

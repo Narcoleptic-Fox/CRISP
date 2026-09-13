@@ -8,29 +8,30 @@
 :root {
   color-scheme: light dark;
 
-  --background: #ededed;
-  --foreground: #1b1534;
+  /* Narcoleptic Fox palette: deep teal primary, rust for fox CTAs, lilac accent, slate ground. */
+  --background: #f8fafc;
+  --foreground: #0f172a;
 
   --card: #ffffff;
-  --card-foreground: #000000;
+  --card-foreground: #0f172a;
 
   --popover: #ffffff;
-  --popover-foreground: #000000;
+  --popover-foreground: #0f172a;
 
-  --primary: #4d217a;
+  --primary: #065465;
   --primary-foreground: #ffffff;
 
-  --secondary: #1b1534;
+  --secondary: #0f172a;
   --secondary-foreground: #ffffff;
 
-  --tertiary: #009999;
+  --tertiary: #b7410e;
   --tertiary-foreground: #ffffff;
 
-  --muted: #f5f5f5;
-  --muted-foreground: #737373;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
 
-  --accent: #4d217a;
-  --accent-foreground: #ffffff;
+  --accent: #e0eef0;
+  --accent-foreground: #065465;
 
   --destructive: #da1e28;
   --destructive-foreground: #ffffff;
@@ -38,55 +39,56 @@
   --success: #43a047;
   --success-foreground: #ffffff;
 
-  --border: #d9d9d9;
-  --input: #d9d9d9;
-  --ring: #4d217a;
+  --border: #cbd5e1;
+  --input: #cbd5e1;
+  --ring: #065465;
 
-  --chart-1: #4d217a;
-  --chart-2: #1b1534;
-  --chart-3: #009999;
-  --chart-4: #9900e6;
+  --chart-1: #065465;
+  --chart-2: #b7410e;
+  --chart-3: #c8a2c8;
+  --chart-4: #e2725b;
   --chart-5: #43a047;
 
   --radius: 0.25rem;
 
-  --sidebar: #4d217a;
+  --sidebar: #065465;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #009999;
+  --sidebar-primary: #b7410e;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #3f1b64;
+  --sidebar-accent: #054452;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #66308f;
-  --sidebar-ring: #009999;
+  --sidebar-border: #087a8c;
+  --sidebar-ring: #e2725b;
 
-  --appbar: #1b1534;
+  --appbar: #0f172a;
   --appbar-foreground: #ffffff;
 }
 
 .dark {
-  --background: #1b1534;
-  --foreground: #ffffff;
+  --background: #0f172a;
+  --foreground: #c0c0c0;
 
-  --card: #ffffff;
-  --card-foreground: #29203c;
+  --card: #1e293b;
+  --card-foreground: #e2e8f0;
 
-  --popover: #ffffff;
-  --popover-foreground: #29203c;
+  --popover: #1e293b;
+  --popover-foreground: #e2e8f0;
 
-  --primary: #ae56ff;
-  --primary-foreground: #1b1534;
+  /* #065465 is unreadable on a dark ground; the logo-gradient teal carries the brand instead. */
+  --primary: #14b8a6;
+  --primary-foreground: #0f172a;
 
-  --secondary: #cf9bff;
-  --secondary-foreground: #1b1534;
+  --secondary: #c0c0c0;
+  --secondary-foreground: #0f172a;
 
-  --tertiary: #ffffff;
-  --tertiary-foreground: #1b1534;
+  --tertiary: #e2725b;
+  --tertiary-foreground: #0f172a;
 
-  --muted: #322749;
-  --muted-foreground: #5a5a5a;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
 
-  --accent: #8a00e5;
-  --accent-foreground: #ffffff;
+  --accent: #164e5a;
+  --accent-foreground: #e8f4f2;
 
   --destructive: #cf3030;
   --destructive-foreground: #ffffff;
@@ -94,31 +96,31 @@
   --success: #388e3c;
   --success-foreground: #ffffff;
 
-  --border: #392d53;
-  --input: #392d53;
-  --ring: #8a00e5;
+  --border: #334155;
+  --input: #334155;
+  --ring: #14b8a6;
 
-  --chart-1: #8a00e5;
-  --chart-2: #ae56ff;
-  --chart-3: #cf9bff;
-  --chart-4: #ffffff;
+  --chart-1: #14b8a6;
+  --chart-2: #e2725b;
+  --chart-3: #c8a2c8;
+  --chart-4: #c0c0c0;
   --chart-5: #388e3c;
 
-  --sidebar: #1b1534;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #8a00e5;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #29203c;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #392d53;
-  --sidebar-ring: #8a00e5;
+  --sidebar: #0f172a;
+  --sidebar-foreground: #c0c0c0;
+  --sidebar-primary: #14b8a6;
+  --sidebar-primary-foreground: #0f172a;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #e8f4f2;
+  --sidebar-border: #334155;
+  --sidebar-ring: #14b8a6;
 
-  --appbar: #1b1534;
+  --appbar: #0f172a;
   --appbar-foreground: #ffffff;
 }
 
 .dark body {
-  background-image: radial-gradient(78.46% 78.46% at 88.53% 84.13%, #4d217a 0%, #1b1534 100%);
+  background-image: radial-gradient(78.46% 78.46% at 88.53% 84.13%, #0b3a45 0%, #0f172a 100%);
   background-attachment: fixed;
 }
 
