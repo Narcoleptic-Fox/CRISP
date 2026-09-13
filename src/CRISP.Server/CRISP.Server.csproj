@@ -75,6 +75,9 @@
 		</ProjectReference>
 <!--#endif-->
 		<ProjectReference Include="..\CRISP.Core\CRISP.Core.csproj" />
+<!--#if (UseAspire)-->
+		<ProjectReference Include="..\CRISP.ServiceDefaults\CRISP.ServiceDefaults.csproj" />
+<!--#endif-->
 	</ItemGroup>
 
 	<ItemGroup>

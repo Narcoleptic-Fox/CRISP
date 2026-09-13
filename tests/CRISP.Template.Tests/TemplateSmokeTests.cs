@@ -41,6 +41,8 @@ public sealed class TemplateSmokeTests : IDisposable
             new Variant("Bare", Frontend: "none", IncludeSample: false, Database: "postgres", Auth: "entra", Aspire: false),
             // Each other provider, with its own integration suite run against a real instance: the
             // provider class, the scaffolded migration and the test database are only proven there.
+            // Aspire adds two projects and a wiring line in Program; a build is the check.
+            new Variant("WithAspire", Frontend: "react", IncludeSample: true, Database: "postgres", Auth: "entra", Aspire: true),
             new Variant("OnMySql", Frontend: "none", IncludeSample: true, Database: "mysql", Auth: "entra", Aspire: false, RunServerTests: true),
             new Variant("OnSqlServer", Frontend: "none", IncludeSample: true, Database: "sqlserver", Auth: "entra", Aspire: false, RunServerTests: true),
             new Variant("OnSqlite", Frontend: "none", IncludeSample: true, Database: "sqlite", Auth: "entra", Aspire: false, RunServerTests: true),
@@ -196,6 +198,11 @@ public sealed class TemplateSmokeTests : IDisposable
             Directory.Exists(Path.Combine(server, "Data", "Providers", provider)).ShouldBe(expected, $"server provider folder {provider}");
             Directory.Exists(Path.Combine(output, "tests", $"{name}.Server.Tests", "TestSupport", "Providers", provider)).ShouldBe(expected, $"test provider folder {provider}");
         }
+
+        // --aspire
+        Directory.Exists(Path.Combine(output, "src", $"{name}.AppHost")).ShouldBe(variant.Aspire);
+        Directory.Exists(Path.Combine(output, "src", $"{name}.ServiceDefaults")).ShouldBe(variant.Aspire);
+        (await File.ReadAllTextAsync(Path.Combine(server, "Program.cs"))).Contains("AddServiceDefaults").ShouldBe(variant.Aspire);
 
         await Run("dotnet", $"build {name}.slnx --nologo -v q", output);
         await Run("dotnet", $"test --project tests/{name}.Core.Tests/{name}.Core.Tests.csproj --no-build", output);

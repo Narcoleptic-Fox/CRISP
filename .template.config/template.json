@@ -136,6 +136,55 @@
           ]
         },
         {
+          "condition": "(!UseAspire)",
+          "exclude": [
+            "src/CRISP.AppHost/**",
+            "src/CRISP.ServiceDefaults/**"
+          ]
+        },
+        {
+          "condition": "(!UsePostgres)",
+          "exclude": [
+            "src/CRISP.AppHost/Program.cs"
+          ]
+        },
+        {
+          "condition": "(UseSqlite)",
+          "rename": {
+            "src/CRISP.AppHost/Program.sqlite.cs": "src/CRISP.AppHost/Program.cs"
+          }
+        },
+        {
+          "condition": "(!UseSqlite)",
+          "exclude": [
+            "src/CRISP.AppHost/Program.sqlite.cs"
+          ]
+        },
+        {
+          "condition": "(UseSqlServer)",
+          "rename": {
+            "src/CRISP.AppHost/Program.sqlserver.cs": "src/CRISP.AppHost/Program.cs"
+          }
+        },
+        {
+          "condition": "(!UseSqlServer)",
+          "exclude": [
+            "src/CRISP.AppHost/Program.sqlserver.cs"
+          ]
+        },
+        {
+          "condition": "(UseMySql)",
+          "rename": {
+            "src/CRISP.AppHost/Program.mysql.cs": "src/CRISP.AppHost/Program.cs"
+          }
+        },
+        {
+          "condition": "(!UseMySql)",
+          "exclude": [
+            "src/CRISP.AppHost/Program.mysql.cs"
+          ]
+        },
+        {
           "condition": "(!IncludeSample)",
           "exclude": [
             "src/CRISP.Core/Items/**",

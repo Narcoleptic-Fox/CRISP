@@ -11,6 +11,9 @@ using CRISP.Server.Infrastructure.Email;
 using CRISP.Server.Infrastructure.Events;
 using CRISP.Server.Infrastructure.Storage;
 using CRISP.Server.Middleware;
+//#if (UseAspire)
+using CRISP.ServiceDefaults;
+//#endif
 using System.Reflection;
 
 namespace CRISP.Server;
@@ -22,6 +25,11 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+//#if (UseAspire)
+        // Service discovery, resilient HttpClient defaults, OpenTelemetry and the liveness probe the
+        // Aspire dashboard expects. See CRISP.ServiceDefaults.
+        builder.AddServiceDefaults();
+//#endif
 
         // 1. DATABASE
         builder.Services.AddDatabaseInfrastructure(builder.Configuration);
@@ -195,6 +203,9 @@ public class Program
             .WithName("HealthCheck");
 
         app.MapHealthChecks("/healthz").AllowAnonymous();
+//#if (UseAspire)
+        app.MapDefaultEndpoints();
+//#endif
 
         // The OpenAPI document (with the security schemes from SecuritySchemeTransformer) is only
         // served in development; deployed, the API surface is the client's business, not the public's.

@@ -24,8 +24,11 @@ graph TD
 | `CRISP.Client` | React SPA. Consumes types generated from Core on every Core build. |
 | `CRISP.Migrator` | Applies EF Core migrations deliberately, never at server startup. Direct connection or SSH bastion. |
 
-There is no separate Infrastructure or ServiceDefaults project and no Aspire. Cross-cutting code
-lives under `CRISP.Server/{Data,Middleware,Infrastructure,Features}`.
+There is no separate Infrastructure project; cross-cutting code lives under
+`CRISP.Server/{Data,Middleware,Infrastructure,Features}`. `--aspire` adds an AppHost (database
+container, Migrator, server and client with the dashboard) and ServiceDefaults (telemetry, service
+discovery, resilience) as a development convenience; deployment stays the Dockerfile plus the
+Migrator.
 
 ## Read by topic
 
