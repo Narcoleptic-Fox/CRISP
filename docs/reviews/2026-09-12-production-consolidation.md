@@ -216,14 +216,45 @@ today's `tests/CRISP.Server.Tests` are what gets carried forward.
 - Modern_Scorpion entirely.
 - Whether WAR's `RouteIdBinder` has a test that fails when removed. Check before adopting.
 
-## 9. Deferred on purpose (2026-09-12)
+## 9. Deferred on 2026-09-12, delivered on 2026-09-13
 
-| Item | Why not now | What it would take |
-| --- | --- | --- |
-| `--include-sample false` | The client's router, nav, dashboard and upload hook are all Item-coupled; the real workflow is copy-the-slice-then-delete, which the skill describes | `//#if (IncludeSample)` in `routes/index.tsx`, `top-nav.tsx`, a neutral `dashboard.tsx`, exclude `features/items`, `features/storage/useUploadFile.ts`, `routes/item*`, the Item server files, the migration; a third template smoke variant |
-| `--database postgres\|sqlserver\|sqlite` | 5/5 production apps are MySQL; nothing else is verified here | Provider-conditional `DataCollectionExtensions`, per-provider migrations, Testcontainers variants, `SqliteForeignKeyInterceptor` (#17) |
-| `--auth identity\|none` | 5/5 are Entra + API key | Master's Identity code is the old shape (Blazor account pages); would need rewriting as a feature |
-| `--aspire` | 0/5 use it | AppHost + ServiceDefaults as opt-in projects |
-| #16 `BaseStateMachine` over Stateless | Two of five use it; belongs with a sample that has a lifecycle | Port Nucleus's base + `StateTransitionException` → `RejectedException.Conflict`, give the sample a status |
-| Client tests | `vitest run --passWithNoTests` passes with zero tests: a check that cannot fail | Component tests for the Item routes |
-| `Microsoft.VisualStudio.Azure.Containers.Tools.Targets`, `AutoFixture.Xunit3`, `coverlet.collector` | Pinned but unused | Remove or use |
+Brock asked for the four options the same evening. All four shipped (`a29d13d` `46ee7de` `3bea907`
+`d845f8c`), each verified by the template smoke matrix, which grew from 4 to 10 variants and runs
+the three non-default providers' and the no-auth variant's full Server suites against real engines.
+
+| Option | Values | Default | How the live repo stays single-source |
+| --- | --- | --- | --- |
+| `--include-sample` | bool | `true` | Whole-file exclusions plus no-else `//#if` in the router, nav and dashboard; the dashboard body moved to `items-overview.tsx` |
+| `--database` | `postgres` `mysql` `sqlserver` `sqlite` | **`postgres`** (Brock, 2026-09-12) | One `DatabaseProvider` / `TestDatabase` class per provider in its own folder; template-only `Compile Remove` keeps the live repo on Postgres; `appsettings.Development.<provider>.json` and `AppHost/Program.<provider>.cs` renamed into place |
+| `--auth` | `entra` `none` | `entra` | Whole-file exclusions; `*.noauth.*` client files renamed into place; `uploadedBy = "System"` without a principal |
+| `--aspire` | bool | `false` | AppHost + ServiceDefaults excluded unless chosen; `AddServiceDefaults()` / `MapDefaultEndpoints()` guarded |
+
+Three rules for a single-source template, learned by breaking each one:
+
+1. **No `//#else`, no `//#if (!X)` with a live alternative.** Both branches compile in the repo.
+   Declare unconditionally, assign conditionally.
+2. **Alternatives that cannot share a file** (a second `Program`, a second `main.tsx`, a second
+   `appsettings.Development.json`) **live beside the original under another name and are renamed
+   in by the engine.** The live repo compiles or type-checks them but never runs them.
+3. **A marker inside JSX or JSON is content, not a comment.** Conditionals go outside.
+
+Bugs fixed along the way that production still carries:
+
+| Where | What |
+| --- | --- |
+| Test factory (all five production apps) | `ConfigureAppConfiguration` in `ConfigureWebHost` runs after `Program` has registered services; the connection string only worked because a gitignored `appsettings.Development.json` supplied one. `ConfigureHostConfiguration` in `CreateHost` is the early hook |
+| Test factory | Production rate limits trip once the suite runs inside a minute. Lifted for tests |
+| Client `useCurrentUser` | Treated "unprovisioned" as 404; the server sends 403 with `code: unprovisioned` |
+| SQLite | `ORDER BY DateTimeOffset` refused (fleet lesson); stored as UTC ticks via a provider convention |
+
+Still deferred: #16 `BaseStateMachine` (belongs with a sample that has a lifecycle) and client tests
+(`vitest --passWithNoTests` is a check that cannot fail).
+
+## 10. Retracted
+
+- 2026-09-12, this document's first version, said `StorageFeature` left upload, download and delete
+  anonymous. Each endpoint carries its own policy (`Policies.WriteAccess` / `ReadAccess`). Wrong
+  reading; no change was shipped.
+- A commit message on `modernize` briefly claimed `UseSetting` suppresses `ConfigureTestServices`.
+  It does not; a regex of mine had deleted the block. The surviving code comment says only what was
+  verified.

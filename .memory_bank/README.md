@@ -5,11 +5,19 @@ start. Dated entries; delete what stops being true.
 
 ## Current state (2026-09-12)
 
-- **Active branch: `modernize`** (from `origin/modernization_update`), 26 commits, **not pushed**.
-  Plan steps 1-9 done 2026-09-12; step 10 (merge to `master`, tag, publish the nupkg) is Brock's
-  call. Final state: 0 warnings, 25 Core + 118 Server tests green, 2 template smoke variants
-  green, every fix sabotage-verified. `feat/authz-eventing-tests` is obsolete (its tests were
-  superseded, not ported); delete after merge.
+- **Active branch: `modernize`** (from `origin/modernization_update`), **not pushed**. All plan
+  steps done plus the four options (2026-09-13). Step 10 (merge to `master`, tag, publish the
+  nupkg) is Brock's call. Final state: 0 warnings, 25 Core + 118 Server tests green, 10-variant
+  template smoke matrix green (19m47s; needs Docker). `feat/authz-eventing-tests` deleted.
+- **The 26 commits up to `1f1b64d` carry a `Claude-Session:` trailer** that Brock's CLAUDE.md
+  forbids. Stripping them is a history rewrite; Brock has not said yes. Commits after that have no
+  trailer.
+- **Defaults:** `--database postgres` (Brock 2026-09-12), `--auth entra`, `--frontend react`,
+  `--include-sample true`, `--aspire false`. Local dev: this box has a native PostgreSQL 16 service
+  on 5432 with an unknown password; use a container on another port and
+  `ConnectionStrings__default` to override `appsettings.Development.json`.
+- **Single-source rules** (review section 9): no `//#else` / no live negative branches; file
+  alternatives are `*.<variant>.*` renamed in by the engine; never a marker inside JSX or JSON.
 - **The repo root IS the template** (`.template.config/template.json`, `CRISP.Templates.csproj`).
   No `templates/` mirror. Options: `--frontend react|none`, `--skip-restore`. Anything
   template-repo-only (`tests/CRISP.Template.Tests`, `ci-template.yml`, README sections) is
