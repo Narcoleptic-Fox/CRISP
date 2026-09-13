@@ -5,10 +5,14 @@ start. Dated entries; delete what stops being true.
 
 ## Current state (2026-09-12)
 
-- **Active branch: `modernize`** (from `origin/modernization_update`). Steps 1, 2, 3 done
-  2026-09-12: boots against MySQL, 25 Core + 94 Server unit tests green, every fix
-  sabotage-verified. Next: step 4 (Migrator + migrations), step 5 (Testcontainers integration
-  tests, port the 55 from `feat/authz-eventing-tests`), then `templates/`.
+- **Active branch: `modernize`** (from `origin/modernization_update`). Steps 1-5 done 2026-09-12:
+  boots, Migrator applies InitialCreate, 25 Core + 118 Server tests green (21 of them integration
+  on Testcontainers MySQL), every fix sabotage-verified. Next: step 6 (`templates/` +
+  `template.json` options), step 7 (carry docs/.editorconfig/Directory.Build.props from master),
+  step 8 (skill into repo), step 9 (remaining version bumps incl. Microsoft.OpenApi NU1903).
+- Integration tests need Docker (Testcontainers `mysql:8.4`) or `CRISP_TEST_MYSQL_CONNECTION_STRING`
+  pointing at a database literally named `crisp_tests` (the fixture refuses anything else; Respawn
+  truncates every table). Auth in tests: `X-Test-User: <email>` header → real enricher.
 - `SecurityHeaders:ConnectSources` and `SecurityHeaders:AllowCamera` are the new config knobs
   (replacing WAR's `Csp:ConnectSources` and the hardcoded `camera=(self)`). `PUT /Items/{id}`
   is the sample's update shape; `RouteIdBinder` fills `Id` before validation.

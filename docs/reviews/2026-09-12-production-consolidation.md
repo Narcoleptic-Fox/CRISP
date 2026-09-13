@@ -181,9 +181,11 @@ today's `tests/CRISP.Server.Tests` are what gets carried forward.
 3. **Apply the remaining section 3 findings** ✅ 2026-09-12 (#16 and #17 still pending behind options), one commit each, each with a test that fails
    when the fix is reverted: #7, #8, #9, #10 (full), #11, #12, #13. #16 and #17 go behind
    options.
-4. **Add `Migrator`** and `ApplicationDbContextFactory` from webapp-starter. Regenerate
+4. **Add `Migrator`** ✅ `eab5fbd` and `ApplicationDbContextFactory` from webapp-starter. Regenerate
    migrations for the chosen default provider.
-5. **Add `Server.Tests`** on the production stack (`IntegrationTestFixture` +
+5. **Add `Server.Tests`** ✅ `ffd5c92` (21 integration + 97 unit; the 55 in-memory tests were not
+   ported file-by-file: their Todo/Identity behaviour is covered by the new Item/Identity suites
+   against MySQL, and the authz/eventing tests went with the code they tested) on the production stack (`IntegrationTestFixture` +
    `ServerApplicationFactory` + `FakeServices` from webapp-starter/ACM, Testcontainers + Respawn).
    Port the 55 in-memory tests from `feat/authz-eventing-tests` where they still apply
    (Identity and Todo→Item endpoint tests; drop the `PermissionAuthorizationHandler` and
