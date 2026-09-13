@@ -48,6 +48,7 @@ jobs:
           key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj') }}
           restore-keys: nuget-${{ runner.os }}-
 
+#if (IncludeReact)
       # The Server references the Client esproj, and the JavaScript SDK needs node_modules to
       # exist before it will evaluate the project.
       - uses: actions/setup-node@v4
@@ -57,6 +58,7 @@ jobs:
           cache-dependency-path: src/CRISP.Client/package-lock.json
       - run: npm ci --no-audit --no-fund
         working-directory: src/CRISP.Client
+#endif
 
       - run: dotnet restore CRISP.slnx
       - run: dotnet build CRISP.slnx --no-restore --configuration Release
@@ -79,23 +81,3 @@ jobs:
           DATABASE_USER: root
           DATABASE_PASSWORD: root
         run: dotnet run --project src/CRISP.Migrator --no-build --configuration Release
-
-  client:
-    name: Build and test (client)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: global.json
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: src/CRISP.Client/.nvmrc
-          cache: npm
-          cache-dependency-path: src/CRISP.Client/package-lock.json
-      - run: npm ci --no-audit --no-fund
-        working-directory: src/CRISP.Client
-      # TypeGen emits src/api from Core; the client does not compile without it.
-      - run: dotnet build src/CRISP.Core/CRISP.Core.csproj --configuration Release
-      - run: npm run check
-        working-directory: src/CRISP.Client

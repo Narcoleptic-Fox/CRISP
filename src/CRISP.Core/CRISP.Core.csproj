@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
@@ -32,6 +32,8 @@
 		<Using Include="TypeGen.Core.TypeAnnotations" />
 	</ItemGroup>
 
+<!--#if (IncludeReact)-->
+	<!-- TypeScript contracts are generated into the client on every Core build. -->
 	<Target Name="GenerateTypeScriptClientTypes" AfterTargets="Build">
 		<Exec
 			Command="dotnet &quot;$(PkgTypeGen)/tools/TypeGen.Cli.dll&quot; generate -p &quot;$(MSBuildProjectDirectory)&quot;" />
@@ -67,13 +69,13 @@
 
 	<Target Name="FormatGeneratedTypeScript" AfterTargets="PatchTypeGenMarkerTypes"
 		Condition="'$(SkipTypeGenFormat)' != 'true'">
-		<!-- Generated types land in CRISP.Client/api (see the WriteLinesToFile paths above). They
-		lived
-		     under CRISP.Client/src/api before the shared-client refactor, and this glob was left behind —
-		     prettier matched nothing, so TypeGen output silently went unformatted. -->
-		<Exec Command="npx --no-install prettier --write &quot;api/**/*.ts&quot;"
+		<!-- Generated types land in CRISP.Client/src/api (see tgconfig.json and the WriteLinesToFile
+		     paths above); the glob below has to match that folder or prettier silently formats nothing. -->
+		<Exec Command="npx --no-install prettier --write &quot;src/api/**/*.ts&quot;"
 			WorkingDirectory="$(MSBuildProjectDirectory)\..\CRISP.Client"
 			ContinueOnError="true"
 			IgnoreExitCode="true" />
 	</Target>
+<!--#endif-->
+
 </Project>

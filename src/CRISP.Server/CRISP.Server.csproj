@@ -14,9 +14,11 @@
 		     exist in a fresh checkout. -->
 		<StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
 
+<!--#if (IncludeReact)-->
 		<SpaRoot>..\CRISP.Client</SpaRoot>
 		<SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
 		<SpaProxyServerUrl>https://localhost:58733</SpaProxyServerUrl>
+<!--#endif-->
 
 	</PropertyGroup>
 
@@ -25,7 +27,9 @@
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+<!--#if (IncludeReact)-->
 		<PackageReference Include="Microsoft.AspNetCore.SpaProxy" />
+<!--#endif-->
 		<PackageReference Include="Microsoft.Extensions.Http.Resilience" />
 		<PackageReference Include="Microsoft.Extensions.ServiceDiscovery" />
 		<PackageReference Include="Microsoft.Identity.Web" />
@@ -54,9 +58,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+<!--#if (IncludeReact)-->
 		<ProjectReference Include="..\CRISP.Client\CRISP.Client.esproj">
 			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
 		</ProjectReference>
+<!--#endif-->
 		<ProjectReference Include="..\CRISP.Core\CRISP.Core.csproj" />
 	</ItemGroup>
 

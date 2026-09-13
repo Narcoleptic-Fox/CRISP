@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Narcoleptic Fox LLC",
+  "classifications": ["Web", "API", "CQRS", "Vertical Slice", "React"],
+  "identity": "NarcolepticFox.CRISP",
+  "groupIdentity": "NarcolepticFox.CRISP",
+  "name": "CRISP - vertical-slice CQRS web application",
+  "description": "ASP.NET Core minimal-API server with explicit command/query contracts and direct service injection (no mediator), EF Core on MySQL with an out-of-band Migrator, Entra JWT + API-key authentication, an in-process event bus, presigned-URL object storage, and a React + Vite client consuming TypeGen-generated contracts. Ships a worked Item slice to copy.",
+  "shortName": "crisp",
+  "tags": {
+    "language": "C#",
+    "type": "solution"
+  },
+  "sourceName": "CRISP",
+  "preferNameDirectory": true,
+  "symbols": {
+    "Frontend": {
+      "type": "parameter",
+      "description": "The client to include.",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "react",
+          "description": "React 19 + Vite + Tailwind 4 + shadcn, typed from Core via TypeGen"
+        },
+        { "choice": "none", "description": "No client (API only)" }
+      ],
+      "defaultValue": "react"
+    },
+    "IncludeReact": {
+      "type": "computed",
+      "value": "(Frontend == \"react\")"
+    },
+    "IsTemplateRepository": {
+      "type": "computed",
+      "value": "false",
+      "description": "Always false in generated output: guards the parts of the solution that only make sense in the template repository itself."
+    },
+    "skipRestore": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "Skip the automatic restore of the project on create.",
+      "defaultValue": "false"
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "condition": "(!IncludeReact)",
+          "exclude": ["src/CRISP.Client/**", ".github/workflows/ci-client.yml"]
+        },
+        {
+          "exclude": [
+            ".template.config/**",
+            "CRISP.Templates.csproj",
+            "tests/CRISP.Template.Tests/**",
+            ".github/workflows/ci-template.yml",
+            ".git/**",
+            ".memory_bank/**",
+            "docs/reviews/**",
+            "TestResults/**",
+            "**/*.user",
+            "**/.vs/**",
+            "**/bin/**",
+            "**/obj/**",
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/.env",
+            "**/.env.local",
+            "src/CRISP.Client/src/api/**",
+            "**/appsettings.Development.json"
+          ]
+        }
+      ]
+    }
+  ],
+  "SpecialCustomOperations": {
+    "**/*.md": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": ["<!--#if"],
+            "else": ["<!--#else"],
+            "elseif": ["<!--#elseif"],
+            "endif": ["<!--#endif"],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    },
+    "**/*.slnx": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": ["<!--#if"],
+            "else": ["<!--#else"],
+            "elseif": ["<!--#elseif"],
+            "endif": ["<!--#endif"],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    },
+    "**/*.yml": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": ["#if"],
+            "else": ["#else"],
+            "elseif": ["#elseif"],
+            "endif": ["#endif"],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    }
+  },
+  "primaryOutputs": [{ "path": "CRISP.slnx" }],
+  "postActions": [
+    {
+      "condition": "(!skipRestore)",
+      "description": "Restore NuGet packages",
+      "manualInstructions": [{ "text": "Run 'dotnet restore'" }],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    }
+  ]
+}
