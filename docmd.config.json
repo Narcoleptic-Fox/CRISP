@@ -1,0 +1,49 @@
+{
+  "title": "CRISP",
+  "description": "A vertical-slice, CQRS-flavoured ASP.NET Core solution template: architecture, domain guides, operations, library reference and design notes.",
+  "url": "https://narcoleptic-fox.github.io/CRISP",
+  "base": "/CRISP/",
+  "src": "docs",
+  "out": "site",
+  "engine": "js",
+  "logo": {
+    "light": "/assets/images/logo.svg",
+    "dark": "/assets/images/logo.svg",
+    "alt": "Narcoleptic Fox"
+  },
+  "favicon": "/assets/images/logo.svg",
+  "layout": {
+    "spa": true,
+    "header": { "enabled": true },
+    "sidebar": { "collapsible": true, "defaultCollapsed": false },
+    "optionsMenu": {
+      "position": "sidebar-top",
+      "components": { "search": true, "themeSwitch": true }
+    },
+    "footer": {
+      "style": "minimal",
+      "content": "Narcoleptic Fox · CRISP",
+      "branding": true
+    }
+  },
+  "theme": {
+    "name": "default",
+    "appearance": "system",
+    "codeHighlight": true,
+    "customCss": ["/assets/css/brand.css"]
+  },
+  "markdown": { "breaks": false },
+  "minify": true,
+  "autoTitleFromH1": true,
+  "copyCode": true,
+  "pageNavigation": true,
+  "plugins": {
+    "git": { "commitHistory": true, "maxCommits": 5 },
+    "seo": {
+      "defaultDescription": "CRISP: a vertical-slice CQRS template for ASP.NET Core and React."
+    },
+    "mermaid": { "theme": "default" },
+    "search": {},
+    "./tools/docs/nav-gen.mjs": {}
+  }
+}

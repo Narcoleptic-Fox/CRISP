@@ -1,4 +1,10 @@
-# In-Process Events
+---
+title: Events
+description: The in-process event bus: BaseEvent, IEventPublisher, IEventHandler and the EventWorker that drains the channel.
+nav_order: 5
+---
+
+# Events
 
 A lightweight, channel-based, in-process bus for decoupling side effects from the write that
 triggers them. Contracts live in `Server/Common`; event records live in `Server/Events`.

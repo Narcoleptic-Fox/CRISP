@@ -1,4 +1,10 @@
-# Models vs Entities
+---
+title: Models and entities
+description: Why CRISP keeps an immutable Core model and a mutable Server entity per concept, how they map, and what the interceptors own.
+nav_order: 3
+---
+
+# Models and entities
 
 CRISP keeps **two types per concept** and maps explicitly between them — intentional, not
 redundant:

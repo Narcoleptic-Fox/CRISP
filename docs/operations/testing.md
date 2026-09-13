@@ -1,4 +1,10 @@
-# Testing Strategy
+---
+title: Testing
+description: The three test projects, what each one proves, how the integration suite gets a real database, and how to run them.
+nav_order: 4
+---
+
+# Testing
 
 The stack is **xUnit v3 on Microsoft.Testing.Platform (MTP)** — not MSTest, not classic
 xUnit, and **never EF `UseInMemoryDatabase`**. Two test projects mirror the two source

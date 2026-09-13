@@ -27,14 +27,18 @@ the docs; it does not carry copies of either, so it cannot drift from them.
 
 | Need | Read |
 | --- | --- |
-| Overview, project split, feature checklist, the rules | `docs/index.md` |
-| CQRS primitives | `docs/contracts.md`, `src/CRISP.Core/Common/` |
-| Slice anatomy, `IFeature`, keyed `DeleteCommand`, `PUT /{id}` | `docs/vertical-slice.md`, `src/CRISP.Server/Features/Items/` |
-| Model ↔ entity, interceptors | `docs/models-and-entities.md`, `src/CRISP.Server/Data/` |
-| Validation filter, `RouteIdBinder`, `RejectedException`, status map | `docs/validation-and-errors.md`, `src/CRISP.Server/Middleware/`, `src/CRISP.Server/Common/RejectedException.cs` |
-| Event bus | `docs/events.md`, `src/CRISP.Server/Infrastructure/Events/` |
-| Storage, auth, CSP, pipeline order | `docs/storage-auth-types.md`, `src/CRISP.Server/Program.cs` |
-| Tests and how to run them | `docs/testing.md`, `tests/CRISP.Server.Tests/Integration/ItemEndpointTests.cs` |
+| The rules, project split, pipeline order | `docs/architecture/index.md` |
+| CQRS primitives | `docs/architecture/contracts.md`, `src/CRISP.Core/Common/` |
+| Slice anatomy, `IFeature`, keyed `DeleteCommand`, `PUT /{id}` | `docs/architecture/vertical-slice.md`, `src/CRISP.Server/Features/Items/` |
+| Model ↔ entity, interceptors | `docs/architecture/models-and-entities.md`, `src/CRISP.Server/Data/` |
+| Validation filter, `RouteIdBinder`, `RejectedException`, status map | `docs/architecture/validation-and-errors.md`, `src/CRISP.Server/Middleware/`, `src/CRISP.Server/Common/RejectedException.cs` |
+| Event bus | `docs/architecture/events.md`, `src/CRISP.Server/Infrastructure/Events/` |
+| Auth, storage, CSP and rate limiting, providers | `docs/architecture/{authentication,storage,security-headers,database-providers}.md` |
+| What the sample business area does and refuses | `docs/domain/items.md` |
+| Tests and how to run them | `docs/operations/testing.md`, `tests/CRISP.Server.Tests/Integration/ItemEndpointTests.cs` |
+| Config keys, migrations, CI, Dockerfile | `docs/operations/` |
+| Why a package is in the stack | `docs/reference/` |
+| Why a decision was made (dated, never updated) | `docs/design/` |
 
 ## The worked example — files to copy
 

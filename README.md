@@ -55,7 +55,8 @@ CRISP/
 `Item` is the slice to copy: `src/CRISP.Core/Items/` (contracts + validators),
 `src/CRISP.Server/Features/Items/` (one file per operation, endpoint and service together),
 `ItemEntity` + `ItemConfiguration`, `ItemEvents` + `ItemRenamedLogger`, and its tests in both test
-projects. Adding a feature means copying it and renaming; see `docs/` for the pattern in full.
+projects. Adding a feature means copying it and renaming; the docs site (`npm run docs:dev` at the
+root, or `docs/` as plain Markdown) has the pattern in full.
 <!--#endif-->
 
 ## Running locally
@@ -95,8 +96,8 @@ dotnet test --project tests/CRISP.Server.Tests/CRISP.Server.Tests.csproj   # nee
 This repository is the `dotnet new crisp` template. It is the shape five production applications
 converged on, and where their fixes are consolidated. The repository root **is** the template content (`.template.config/template.json`); there is no
 mirrored copy to keep in sync. `tests/CRISP.Template.Tests` instantiates every option combination
-and builds the result — run it before publishing, and read
-`docs/reviews/2026-09-12-production-consolidation.md` for why things are the way they are.
+and builds the result — run it before publishing, and read `docs/design/` for why things are the
+way they are.
 
 ```bash
 dotnet test --project tests/CRISP.Template.Tests/CRISP.Template.Tests.csproj

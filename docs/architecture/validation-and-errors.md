@@ -1,4 +1,10 @@
-# Validation & Error Handling
+---
+title: Validation and errors
+description: FluentValidation through the group-level filter, RouteIdBinder, RejectedException and the GlobalExceptionHandler status map.
+nav_order: 4
+---
+
+# Validation and errors
 
 ## Validation — FluentValidation only
 

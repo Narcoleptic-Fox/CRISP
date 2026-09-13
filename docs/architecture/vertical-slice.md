@@ -1,4 +1,10 @@
-# Anatomy of a Vertical Slice
+---
+title: Anatomy of a vertical slice
+description: One feature end to end: Core records, co-located endpoint and service files, IFeature registration, route-id updates and per-entity activity.
+nav_order: 2
+---
+
+# Anatomy of a vertical slice
 
 `Item` is the worked example. **Copy it and rename throughout** when adding a feature. A slice
 

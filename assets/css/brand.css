@@ -1,0 +1,92 @@
+/* Narcoleptic Fox brand overlay for the CRISP documentation site (shared Narcoleptic Fox palette).
+ *
+ * Palette is the post-shadcn-v4 brand. Upstream source of truth is
+ * ~/workspace/companysite/tailwind.config.js (theme.extend.colors.brand); the
+ * Mousing "Design System (as shipped)" note records why the app and the brand
+ * surface diverge. If those move, this file is stale — it is a COPY of the
+ * palette, because CSS cannot import from a Tailwind config.
+ *
+ *   teal   #065465  teal-light #087a8c  teal-bright #14b8a6   (marks, logo, primary)
+ *   rust   #b7410e  terracotta #e2725b                        (brand accent / CTA)
+ *   silver #c0c0c0  lilac      #c8a2c8                        (secondaries)
+ *
+ * Brand teal is deliberately DARK (#065465). It reads well on white and is nearly
+ * invisible on the dark background, so dark mode uses the logo-gradient teal
+ * (#14b8a6) instead. Do not "unify" these two into one variable — they are the
+ * same brand color solving two different contrast problems.
+ */
+
+@font-face {
+  font-family: 'Raleway Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('../fonts/raleway-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --brand-teal: #065465;
+  --brand-teal-light: #087a8c;
+  --brand-teal-bright: #14b8a6;
+  --brand-rust: #b7410e;
+  --brand-terracotta: #e2725b;
+  --brand-silver: #c0c0c0;
+  --brand-lilac: #c8a2c8;
+
+  --font-family-sans: 'Raleway Variable', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, sans-serif;
+
+  --link-color: var(--brand-teal);
+  --link-color-hover: var(--brand-teal-light);
+  --text-heading: #0d2b33;
+  --glow-color: rgba(6, 84, 101, 0.10);
+  --glow-color-strong: rgba(6, 84, 101, 0.20);
+
+  --sidebar-link-active-bg: rgba(6, 84, 101, 0.09);
+  --sidebar-link-active-text: var(--brand-teal);
+  --border-color-hover: var(--brand-teal-light);
+  --callout-color: var(--brand-teal);
+}
+
+:root[data-theme='dark'] {
+  /* #065465 is unreadable on a dark ground — use the logo-gradient teal. */
+  --link-color: var(--brand-teal-bright);
+  --link-color-hover: #5eead4;
+  --text-heading: #e8f4f2;
+  --glow-color: rgba(20, 184, 166, 0.12);
+  --glow-color-strong: rgba(20, 184, 166, 0.24);
+
+  --sidebar-link-active-bg: rgba(20, 184, 166, 0.14);
+  --sidebar-link-active-text: var(--brand-teal-bright);
+  --border-color-hover: var(--brand-teal-bright);
+  --callout-color: var(--brand-teal-bright);
+}
+
+/* Headings carry the brand weight; Raleway is light by default and reads thin. */
+.content-area h1,
+.content-area h2,
+.content-area h3 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* These docs use "> blockquote" for the line you're meant to walk away with.
+ * Rust is the brand's accent and, conveniently, the color of a thing that bit us. */
+.content-area blockquote {
+  border-left: 3px solid var(--brand-rust);
+  background: rgba(183, 65, 14, 0.04);
+  border-radius: 0 6px 6px 0;
+}
+:root[data-theme='dark'] .content-area blockquote {
+  border-left-color: var(--brand-terracotta);
+  background: rgba(226, 114, 91, 0.07);
+}
+
+.logo-link img {
+  height: 30px;
+  width: auto;
+}
+

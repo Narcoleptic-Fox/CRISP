@@ -1,4 +1,10 @@
-# Core Contracts (CQRS Primitives)
+---
+title: Core contracts
+description: The CQRS primitives in CRISP.Core/Common that every command, query and model inherits from.
+nav_order: 1
+---
+
+# Core contracts
 
 All live in `CRISP.Core/Common`. These are the real interface names — use them, do not
 invent `ICreateEndpoint<T>` or similar. Feature records inherit from these bases.

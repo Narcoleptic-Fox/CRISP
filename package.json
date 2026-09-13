@@ -1,0 +1,14 @@
+{
+  "name": "crisp-docs",
+  "private": true,
+  "description": "Documentation site for CRISP, built with docmd. The sidebar is generated from the docs/ tree.",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "docmd dev",
+    "docs:build": "docmd build && node tools/docs/check-nav.mjs",
+    "docs:check-nav": "node tools/docs/check-nav.mjs"
+  },
+  "dependencies": {
+    "@docmd/core": "^0.8.13"
+  }
+}
