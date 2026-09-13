@@ -1,20 +1,29 @@
 using CRISP.Core.Common;
 using CRISP.Core.Constants;
+//#if (IncludeAuth)
 using CRISP.Core.Identity;
-using CRISP.Core.Items;
+
+//#endif
 
 namespace CRISP.Core.Tests;
 
+/// <summary>
+/// Pins the wire shape of the shared query contracts. Uses a local model rather than a feature's
+/// so the tests hold whatever features a generated solution keeps.
+/// </summary>
 public sealed class QueryContractTests
 {
+    private sealed record Widget : BaseModel
+    {
+        public string Name { get; init; } = default!;
+    }
+
+    private sealed record GetWidgets : PagedQuery<Widget>;
+
     [Fact]
     public void PagedQuery_WithNullPagingValues_UsesDefaultValues()
     {
-        var query = new GetItems
-        {
-            Page = null,
-            PageSize = null,
-        };
+        var query = new GetWidgets { Page = null, PageSize = null };
 
         query.GetPageOrDefault().ShouldBe(Query.Page);
         query.GetPageSizeOrDefault().ShouldBe(Query.PageSize);
@@ -22,15 +31,15 @@ public sealed class QueryContractTests
     }
 
     [Fact]
-    public void GetItemsToQueryString_WithPagingSortingAndIds_EncodesBaseContract()
+    public void PagedQueryToQueryString_WithPagingSortingAndIds_EncodesBaseContract()
     {
         var firstId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
         var secondId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
-        var query = new GetItems
+        var query = new GetWidgets
         {
             Page = 2,
             PageSize = 25,
-            SortBy = nameof(Item.Name),
+            SortBy = nameof(Widget.Name),
             SortDescending = true,
             Ids = [firstId, secondId],
         };
@@ -44,6 +53,7 @@ public sealed class QueryContractTests
         queryString.ShouldContain($"ids={firstId},{secondId}", Case.Sensitive);
     }
 
+    //#if (IncludeAuth)
     [Fact]
     public void GetUsersToQueryString_WithFilters_EncodesIdentityFilters()
     {
@@ -63,10 +73,12 @@ public sealed class QueryContractTests
         queryString.ShouldContain("isActive=True", Case.Sensitive);
     }
 
+    //#endif
+
     [Fact]
     public void PagedResponse_DefaultItems_IsEmptyCollection()
     {
-        var response = new PagedResponse<Item>();
+        var response = new PagedResponse<Widget>();
 
         response.Items.ShouldBeEmpty();
         response.TotalCount.ShouldBe(0);

@@ -16,6 +16,7 @@ dotnet new crisp --name MyApi --frontend none  # API only
 | Option | Values | Default |
 |---|---|---|
 | `--frontend` | `react`, `none` | `react` |
+| `--include-sample` | `true`, `false` | `true` |
 | `--skip-restore` | | `false` |
 <!--#endif-->
 
@@ -45,12 +46,14 @@ CRISP/
 | Files | Presigned-URL upload/download against S3-compatible storage; user-scoped scratch keys; `None` provider for local work |
 | Headers | OWASP security headers; the SPA Content-Security-Policy is derived from the configured storage origin plus `SecurityHeaders:ConnectSources` |
 
+<!--#if (IncludeSample)-->
 ## The worked example
 
 `Item` is the slice to copy: `src/CRISP.Core/Items/` (contracts + validators),
 `src/CRISP.Server/Features/Items/` (one file per operation, endpoint and service together),
 `ItemEntity` + `ItemConfiguration`, `ItemEvents` + `ItemRenamedLogger`, and its tests in both test
 projects. Adding a feature means copying it and renaming; see `docs/` for the pattern in full.
+<!--#endif-->
 
 ## Running locally
 

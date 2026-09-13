@@ -2,8 +2,10 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { DashboardPage } from './dashboard'
 import { NoAccessPage } from './no-access'
 import { SettingsPage } from './settings'
+//#if (IncludeSample)
 import { ItemsPage } from './items'
 import { ItemDetailPage } from './item-detail'
+//#endif
 import { UsersPage } from './users'
 import { ProtectedRoute } from './protected-route'
 
@@ -16,6 +18,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+  //#if (IncludeSample)
   {
     path: '/items',
     element: (
@@ -32,6 +35,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+  //#endif
   {
     path: '/users',
     element: (

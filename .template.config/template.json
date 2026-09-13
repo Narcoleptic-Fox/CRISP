@@ -1,7 +1,14 @@
 {
   "$schema": "http://json.schemastore.org/template",
   "author": "Narcoleptic Fox LLC",
-  "classifications": ["Web", "API", "CQRS", "Vertical Slice", "React"],
+  "classifications": [
+    "Web",
+    "API",
+    "CQRS",
+    "Vertical Slice",
+    "React",
+    "Aspire"
+  ],
   "identity": "NarcolepticFox.CRISP",
   "groupIdentity": "NarcolepticFox.CRISP",
   "name": "CRISP - vertical-slice CQRS web application",
@@ -23,13 +30,88 @@
           "choice": "react",
           "description": "React 19 + Vite + Tailwind 4 + shadcn, typed from Core via TypeGen"
         },
-        { "choice": "none", "description": "No client (API only)" }
+        {
+          "choice": "none",
+          "description": "No client (API only)"
+        }
       ],
       "defaultValue": "react"
     },
     "IncludeReact": {
       "type": "computed",
       "value": "(Frontend == \"react\")"
+    },
+    "IncludeSample": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "true",
+      "description": "Include the worked Item slice (contracts, entity, endpoints, client pages, tests). Without it the solution has no domain feature and no migration yet: run `dotnet ef migrations add InitialCreate --project src/CRISP.Server` after adding your first entity."
+    },
+    "Database": {
+      "type": "parameter",
+      "description": "The relational database provider.",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "mysql",
+          "description": "MySQL 8.4 (Microting.EntityFrameworkCore.MySql). Ships with the InitialCreate migration."
+        },
+        {
+          "choice": "postgres",
+          "description": "PostgreSQL 16 (Npgsql). Migration generated on first use."
+        },
+        {
+          "choice": "sqlserver",
+          "description": "SQL Server 2022. Migration generated on first use."
+        },
+        {
+          "choice": "sqlite",
+          "description": "SQLite file database. No container; integration tests recreate the file."
+        }
+      ],
+      "defaultValue": "mysql"
+    },
+    "UseMySql": {
+      "type": "computed",
+      "value": "(Database == \"mysql\")"
+    },
+    "UsePostgres": {
+      "type": "computed",
+      "value": "(Database == \"postgres\")"
+    },
+    "UseSqlServer": {
+      "type": "computed",
+      "value": "(Database == \"sqlserver\")"
+    },
+    "UseSqlite": {
+      "type": "computed",
+      "value": "(Database == \"sqlite\")"
+    },
+    "Auth": {
+      "type": "parameter",
+      "description": "Authentication and authorization.",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "entra",
+          "description": "Entra ID JWT bearer + API key, Viewer/Editor/Admin roles from the Users table, MSAL in the client"
+        },
+        {
+          "choice": "none",
+          "description": "No authentication: every endpoint is anonymous, no Users or ApiKeys, no sign-in in the client. For internal tools and prototypes."
+        }
+      ],
+      "defaultValue": "entra"
+    },
+    "IncludeAuth": {
+      "type": "computed",
+      "value": "(Auth == \"entra\")"
+    },
+    "UseAspire": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add a .NET Aspire AppHost that runs the database container, the server and the client together, plus ServiceDefaults for telemetry and health."
     },
     "IsTemplateRepository": {
       "type": "computed",
@@ -39,8 +121,8 @@
     "skipRestore": {
       "type": "parameter",
       "datatype": "bool",
-      "description": "Skip the automatic restore of the project on create.",
-      "defaultValue": "false"
+      "defaultValue": "false",
+      "description": "Skip the automatic restore of the project on create."
     }
   },
   "sources": [
@@ -48,7 +130,27 @@
       "modifiers": [
         {
           "condition": "(!IncludeReact)",
-          "exclude": ["src/CRISP.Client/**", ".github/workflows/ci-client.yml"]
+          "exclude": [
+            "src/CRISP.Client/**",
+            ".github/workflows/ci-client.yml"
+          ]
+        },
+        {
+          "condition": "(!IncludeSample)",
+          "exclude": [
+            "src/CRISP.Core/Items/**",
+            "src/CRISP.Server/Features/Items/**",
+            "src/CRISP.Server/Data/Entities/ItemEntity.cs",
+            "src/CRISP.Server/Data/Configurations/ItemConfiguration.cs",
+            "src/CRISP.Server/Events/ItemEvents.cs",
+            "src/CRISP.Server/Data/Migrations/**",
+            "src/CRISP.Client/src/features/items/**",
+            "src/CRISP.Client/src/features/storage/useUploadFile.ts",
+            "src/CRISP.Client/src/routes/items.tsx",
+            "src/CRISP.Client/src/routes/item-detail.tsx",
+            "tests/CRISP.Core.Tests/ItemValidatorTests.cs",
+            "tests/CRISP.Server.Tests/Integration/ItemEndpointTests.cs"
+          ]
         },
         {
           "exclude": [
@@ -81,10 +183,18 @@
         {
           "type": "conditional",
           "configuration": {
-            "if": ["<!--#if"],
-            "else": ["<!--#else"],
-            "elseif": ["<!--#elseif"],
-            "endif": ["<!--#endif"],
+            "if": [
+              "<!--#if"
+            ],
+            "else": [
+              "<!--#else"
+            ],
+            "elseif": [
+              "<!--#elseif"
+            ],
+            "endif": [
+              "<!--#endif"
+            ],
             "trim": true,
             "wholeLine": true
           }
@@ -96,10 +206,18 @@
         {
           "type": "conditional",
           "configuration": {
-            "if": ["<!--#if"],
-            "else": ["<!--#else"],
-            "elseif": ["<!--#elseif"],
-            "endif": ["<!--#endif"],
+            "if": [
+              "<!--#if"
+            ],
+            "else": [
+              "<!--#else"
+            ],
+            "elseif": [
+              "<!--#elseif"
+            ],
+            "endif": [
+              "<!--#endif"
+            ],
             "trim": true,
             "wholeLine": true
           }
@@ -111,10 +229,64 @@
         {
           "type": "conditional",
           "configuration": {
-            "if": ["#if"],
-            "else": ["#else"],
-            "elseif": ["#elseif"],
-            "endif": ["#endif"],
+            "if": [
+              "#if"
+            ],
+            "else": [
+              "#else"
+            ],
+            "elseif": [
+              "#elseif"
+            ],
+            "endif": [
+              "#endif"
+            ],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    },
+    "**/*.ts": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "//#if"
+            ],
+            "else": [
+              "//#else"
+            ],
+            "elseif": [
+              "//#elseif"
+            ],
+            "endif": [
+              "//#endif"
+            ],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    },
+    "**/*.tsx": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "//#if"
+            ],
+            "else": [
+              "//#else"
+            ],
+            "elseif": [
+              "//#elseif"
+            ],
+            "endif": [
+              "//#endif"
+            ],
             "trim": true,
             "wholeLine": true
           }
@@ -122,12 +294,20 @@
       ]
     }
   },
-  "primaryOutputs": [{ "path": "CRISP.slnx" }],
+  "primaryOutputs": [
+    {
+      "path": "CRISP.slnx"
+    }
+  ],
   "postActions": [
     {
       "condition": "(!skipRestore)",
       "description": "Restore NuGet packages",
-      "manualInstructions": [{ "text": "Run 'dotnet restore'" }],
+      "manualInstructions": [
+        {
+          "text": "Run 'dotnet restore'"
+        }
+      ],
       "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
       "continueOnError": true
     }

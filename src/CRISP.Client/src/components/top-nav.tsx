@@ -21,7 +21,9 @@ import { UserMenu } from './user-menu'
 
 const baseNavItems = [
   { to: '/', label: 'Dashboard', end: true, adminOnly: false },
+  //#if (IncludeSample)
   { to: '/items', label: 'Items', end: false, adminOnly: false },
+  //#endif
   { to: '/users', label: 'Users', end: false, adminOnly: true },
 ] as const
 

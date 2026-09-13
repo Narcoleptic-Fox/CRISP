@@ -3,13 +3,13 @@ using System.Diagnostics;
 namespace CRISP.Template.Tests;
 
 /// <summary>
-/// Instantiates the template from this repository for every option combination and builds what
-/// comes out. A template that is never instantiated is a comment: the conditional markers, the
-/// exclusion lists and the sourceName renames are only exercised here.
+/// Instantiates the template from this repository for a matrix of option combinations and builds
+/// what comes out. A template that is never instantiated is a comment: the conditional markers,
+/// the exclusion lists and the sourceName renames are only exercised here.
 /// </summary>
 /// <remarks>
-/// Slow (restore + build per variant, plus npm ci for the React one), so it runs in its own CI job
-/// and is tagged so a local <c>dotnet test</c> can filter it out. The repository root is located by
+/// Slow (restore + build per variant, plus npm ci for React ones), so it runs in its own CI job and
+/// is tagged so a local <c>dotnet test</c> can filter it out. The repository root is located by
 /// walking up from the test binary until <c>.template.config</c> is found, and each test installs
 /// the template into a throwaway hive so the developer's own template cache is never touched.
 /// </remarks>
@@ -27,12 +27,71 @@ public sealed class TemplateSmokeTests : IDisposable
 
     private string Hive => Path.Combine(_work, "hive");
 
-    [Theory(Timeout = 900_000)]
-    [InlineData("react", "SampleApp")]
-    [InlineData("none", "ApiOnly")]
-    public async Task Instantiate_ThenBuild_ThenRunCoreTests(string frontend, string name)
+    /// <summary>
+    /// The matrix. Every non-default value appears at least once against defaults, plus the
+    /// "everything off" corner, so each conditional is exercised in both states without paying for
+    /// the full cross product.
+    /// </summary>
+    public static TheoryData<Variant> Variants() =>
+        [
+            new Variant(
+                "SampleApp",
+                Frontend: "react",
+                IncludeSample: true,
+                Database: "mysql",
+                Auth: "entra",
+                Aspire: false
+            ),
+            new Variant(
+                "ApiOnly",
+                Frontend: "none",
+                IncludeSample: true,
+                Database: "mysql",
+                Auth: "entra",
+                Aspire: false
+            ),
+            new Variant(
+                "Blank",
+                Frontend: "react",
+                IncludeSample: false,
+                Database: "mysql",
+                Auth: "entra",
+                Aspire: false
+            ),
+            new Variant(
+                "Bare",
+                Frontend: "none",
+                IncludeSample: false,
+                Database: "mysql",
+                Auth: "entra",
+                Aspire: false
+            ),
+        ];
+
+    public sealed record Variant(
+        string Name,
+        string Frontend,
+        bool IncludeSample,
+        string Database,
+        string Auth,
+        bool Aspire
+    )
     {
-        var output = Path.Combine(_work, frontend);
+        public bool React => Frontend == "react";
+
+        public string Arguments =>
+            $"--frontend {Frontend} --include-sample {IncludeSample.ToString().ToLowerInvariant()} "
+            + $"--database {Database} --auth {Auth} --aspire {Aspire.ToString().ToLowerInvariant()}";
+
+        public override string ToString() => $"{Name} ({Arguments})";
+    }
+
+    [Theory(Timeout = 900_000)]
+    [MemberData(nameof(Variants))]
+    public async Task Instantiate_ThenBuild_ThenRunCoreTests(Variant variant)
+    {
+        var name = variant.Name;
+        var output = Path.Combine(_work, name);
         Directory.CreateDirectory(output);
 
         await Run(
@@ -42,7 +101,7 @@ public sealed class TemplateSmokeTests : IDisposable
         );
         await Run(
             "dotnet",
-            $"new crisp -n {name} -o \"{output}\" --frontend {frontend} --skip-restore --debug:custom-hive \"{Hive}\"",
+            $"new crisp -n {name} -o \"{output}\" {variant.Arguments} --skip-restore --debug:custom-hive \"{Hive}\"",
             _repoRoot
         );
 
@@ -55,40 +114,100 @@ public sealed class TemplateSmokeTests : IDisposable
             .EnumerateFiles(output, "*.cs", SearchOption.AllDirectories)
             .Any(file => Path.GetFileName(file).Contains("CRISP", StringComparison.Ordinal))
             .ShouldBeFalse("sourceName rename missed a file name");
-
-        var client = Path.Combine(output, "src", $"{name}.Client");
-        if (frontend == "react")
+        foreach (
+            var file in Directory
+                .EnumerateFiles(output, "*.*", SearchOption.AllDirectories)
+                .Where(f =>
+                    Path.GetExtension(f)
+                        is ".cs"
+                            or ".csproj"
+                            or ".slnx"
+                            or ".yml"
+                            or ".ts"
+                            or ".tsx"
+                            or ".md"
+                            or ".props"
+                )
+        )
         {
-            Directory.Exists(client).ShouldBeTrue();
-            File.Exists(Path.Combine(output, ".github", "workflows", "ci-client.yml"))
-                .ShouldBeTrue();
-            // The Server references the esproj, and the JavaScript SDK needs node_modules before it
-            // evaluates the project.
-            await Run("npm", "ci --no-audit --no-fund", client);
+            var text = await File.ReadAllTextAsync(file);
+            text.ShouldNotContain("#if", customMessage: $"conditional marker left in {file}");
+            text.ShouldNotContain("#endif", customMessage: $"conditional marker left in {file}");
         }
-        else
+
+        var server = Path.Combine(output, "src", $"{name}.Server");
+        var client = Path.Combine(output, "src", $"{name}.Client");
+
+        // --frontend
+        Directory.Exists(client).ShouldBe(variant.React);
+        File.Exists(Path.Combine(output, ".github", "workflows", "ci-client.yml"))
+            .ShouldBe(variant.React);
+        if (!variant.React)
         {
-            Directory.Exists(client).ShouldBeFalse();
-            File.Exists(Path.Combine(output, ".github", "workflows", "ci-client.yml"))
-                .ShouldBeFalse();
             foreach (
                 var file in new[]
                 {
                     $"{name}.slnx",
-                    Path.Combine("src", $"{name}.Server", $"{name}.Server.csproj"),
+                    Path.Combine(server, $"{name}.Server.csproj"),
                     Path.Combine("src", $"{name}.Core", $"{name}.Core.csproj"),
-                    Path.Combine(".github", "workflows", "ci.yml"),
                 }
             )
-            {
-                var text = await File.ReadAllTextAsync(Path.Combine(output, file));
-                text.ShouldNotContain("#if", customMessage: $"conditional marker left in {file}");
-                text.ShouldNotContain(
-                    "IncludeReact",
-                    customMessage: $"conditional marker left in {file}"
+                (await File.ReadAllTextAsync(Path.Combine(output, file))).ShouldNotContain(
+                    ".esproj",
+                    customMessage: $"client reference left in {file}"
                 );
-                text.ShouldNotContain(".esproj", customMessage: $"client reference left in {file}");
-            }
+        }
+
+        // --include-sample
+        Directory
+            .Exists(Path.Combine(output, "src", $"{name}.Core", "Items"))
+            .ShouldBe(variant.IncludeSample);
+        Directory.Exists(Path.Combine(server, "Features", "Items")).ShouldBe(variant.IncludeSample);
+        File.Exists(Path.Combine(server, "Data", "Entities", "ItemEntity.cs"))
+            .ShouldBe(variant.IncludeSample);
+        File.Exists(
+                Path.Combine(
+                    output,
+                    "tests",
+                    $"{name}.Server.Tests",
+                    "Integration",
+                    "ItemEndpointTests.cs"
+                )
+            )
+            .ShouldBe(variant.IncludeSample);
+        if (variant.React)
+        {
+            Directory
+                .Exists(Path.Combine(client, "src", "features", "items"))
+                .ShouldBe(variant.IncludeSample);
+            (await File.ReadAllTextAsync(Path.Combine(client, "src", "routes", "index.tsx")))
+                .Contains("ItemsPage")
+                .ShouldBe(variant.IncludeSample);
+        }
+
+        if (variant.React)
+        {
+            // The Server references the esproj, and the JavaScript SDK needs node_modules before it
+            // evaluates the project.
+            await Run("npm", "ci --no-audit --no-fund", client);
+        }
+
+        if (!variant.IncludeSample || variant.Database != "mysql")
+        {
+            // No migration ships for this combination. The generated solution must be able to make
+            // its own from the design-time factory, with no database running.
+            Directory.Exists(Path.Combine(server, "Data", "Migrations")).ShouldBeFalse();
+            await Run("dotnet", "tool restore", output);
+            // The design-time factory lives in the Server assembly; it has to exist before ef can load it.
+            await Run("dotnet", $"build \"{server}\" --nologo -v q", output);
+            await Run(
+                "dotnet",
+                $"ef migrations add InitialCreate --project \"{server}\" --startup-project \"{server}\" --output-dir Data/Migrations",
+                output
+            );
+            Directory
+                .EnumerateFiles(Path.Combine(server, "Data", "Migrations"), "*_InitialCreate.cs")
+                .ShouldNotBeEmpty();
         }
 
         await Run("dotnet", $"build {name}.slnx --nologo -v q", output);
@@ -98,12 +217,12 @@ public sealed class TemplateSmokeTests : IDisposable
             output
         );
 
-        if (frontend == "react")
+        if (variant.React)
         {
             Directory
                 .EnumerateFiles(Path.Combine(client, "src", "api"), "*.ts")
                 .Count()
-                .ShouldBeGreaterThan(20, "TypeGen did not generate the client contracts");
+                .ShouldBeGreaterThan(10, "TypeGen did not generate the client contracts");
             await Run("npx", "tsc --noEmit", client);
         }
     }

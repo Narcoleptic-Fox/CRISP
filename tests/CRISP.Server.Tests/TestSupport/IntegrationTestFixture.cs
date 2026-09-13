@@ -39,7 +39,17 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
         db.Database.SetCommandTimeout(TimeSpan.FromSeconds(30));
 
         // The migrations are the schema. EnsureCreated would hide a migration that does not match
-        // the model, which is exactly the kind of drift an integration suite exists to catch.
+        // the model, which is exactly the kind of drift an integration suite exists to catch. A
+        // solution generated without the sample (or for a provider other than MySQL) ships no
+        // migration yet; say so rather than silently creating a schema no deploy will ever see.
+        if (!db.Database.GetMigrations().Any())
+        {
+            throw new InvalidOperationException(
+                "No EF Core migrations found. Run `dotnet ef migrations add InitialCreate --project src/CRISP.Server` "
+                + "(the design-time factory needs no database) and build again before running the integration tests."
+            );
+        }
+
         await db.Database.MigrateAsync(setupTimeout.Token);
 
         await using var dbConnection = db.Database.GetDbConnection();
