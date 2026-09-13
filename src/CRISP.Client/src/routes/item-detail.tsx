@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
@@ -78,7 +78,11 @@ export function ItemDetailPage() {
 
   return (
     <div className="space-y-3">
-      <DetailHeader item={item} onEdit={() => setEditOpen(true)} onDelete={() => setDeleteOpen(true)} />
+      <DetailHeader
+        item={item}
+        onEdit={() => setEditOpen(true)}
+        onDelete={() => setDeleteOpen(true)}
+      />
 
       <div className="grid gap-3 lg:grid-cols-2">
         <SummaryCard item={item} />
@@ -336,9 +340,13 @@ function UploadFilesDialog({
   const inputRef = useRef<HTMLInputElement>(null)
   const upload = useUploadItemFiles()
 
-  useEffect(() => {
-    if (open) setFiles([])
-  }, [open])
+  // Picked-but-unsent files belong to one opening of the dialog. Clearing them as it closes (rather
+  // than syncing state in an effect when it opens) means the next opening starts empty without a
+  // render-then-setState cascade.
+  const handleOpenChange = (next: boolean) => {
+    if (!next) setFiles([])
+    onOpenChange(next)
+  }
 
   const addFiles = (list: FileList | null) => {
     if (!list || list.length === 0) return
@@ -354,7 +362,7 @@ function UploadFilesDialog({
       {
         onSuccess: () => {
           toast.success(`Uploaded ${files.length} file(s)`)
-          onOpenChange(false)
+          handleOpenChange(false)
         },
         onError: (error) => toast.error(extractErrorMessage(error, 'Upload failed')),
       },
@@ -362,7 +370,7 @@ function UploadFilesDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Upload files</DialogTitle>
@@ -384,7 +392,9 @@ function UploadFilesDialog({
             }}
             className={cn(
               'flex w-full flex-col items-center gap-2 rounded-md border border-dashed p-6 transition-colors',
-              isDragging ? 'border-primary bg-primary/5' : 'border-input bg-muted/30 hover:bg-muted/50',
+              isDragging
+                ? 'border-primary bg-primary/5'
+                : 'border-input bg-muted/30 hover:bg-muted/50',
             )}
           >
             <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-full">

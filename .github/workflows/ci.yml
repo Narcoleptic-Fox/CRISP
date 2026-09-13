@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: [master, modernize]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_NOLOGO: true
+  NUGET_XMLDOC_MODE: skip
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
+jobs:
+  server:
+    name: Build and test (.NET)
+    runs-on: ubuntu-latest
+
+    services:
+      # The integration suite reads CRISP_TEST_MYSQL_CONNECTION_STRING and skips Testcontainers
+      # when it is set. The fixture refuses any database not named crisp_tests.
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: crisp_tests
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -uroot -proot --silent"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      # The Server references the Client esproj, and the JavaScript SDK needs node_modules to
+      # exist before it will evaluate the project.
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/CRISP.Client/.nvmrc
+          cache: npm
+          cache-dependency-path: src/CRISP.Client/package-lock.json
+      - run: npm ci --no-audit --no-fund
+        working-directory: src/CRISP.Client
+
+      - run: dotnet restore CRISP.slnx
+      - run: dotnet build CRISP.slnx --no-restore --configuration Release
+
+      - name: Core tests
+        run: dotnet test --project tests/CRISP.Core.Tests/CRISP.Core.Tests.csproj --no-build --configuration Release
+
+      - name: Server tests (unit + integration against the MySQL service)
+        env:
+          CRISP_TEST_MYSQL_CONNECTION_STRING: server=127.0.0.1;port=3306;database=crisp_tests;uid=root;pwd=root;
+        run: dotnet test --project tests/CRISP.Server.Tests/CRISP.Server.Tests.csproj --no-build --configuration Release
+
+      # The Migrator must at least start and apply the schema to an empty database: a migration
+      # that does not apply is exactly what this repo exists to catch before a deploy does.
+      - name: Migrator applies the schema
+        env:
+          DATABASE_HOST: 127.0.0.1
+          DATABASE_PORT: "3306"
+          DATABASE_NAME: crisp_tests
+          DATABASE_USER: root
+          DATABASE_PASSWORD: root
+        run: dotnet run --project src/CRISP.Migrator --no-build --configuration Release
+
+  client:
+    name: Build and test (client)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/CRISP.Client/.nvmrc
+          cache: npm
+          cache-dependency-path: src/CRISP.Client/package-lock.json
+      - run: npm ci --no-audit --no-fund
+        working-directory: src/CRISP.Client
+      # TypeGen emits src/api from Core; the client does not compile without it.
+      - run: dotnet build src/CRISP.Core/CRISP.Core.csproj --configuration Release
+      - run: npm run check
+        working-directory: src/CRISP.Client

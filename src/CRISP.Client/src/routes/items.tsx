@@ -113,7 +113,9 @@ export function ItemsPage() {
           </div>
 
           {error ? (
-            <p className="text-destructive text-sm">Could not load items. Please refresh the page.</p>
+            <p className="text-destructive text-sm">
+              Could not load items. Please refresh the page.
+            </p>
           ) : (
             <Table containerClassName="h-[60vh] rounded-md border">
               <TableHeader className="bg-card sticky top-0 z-10 shadow-[inset_0_-1px_0_var(--color-border)]">
