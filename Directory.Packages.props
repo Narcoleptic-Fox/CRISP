@@ -74,5 +74,9 @@
     <PackageVersion Include="Testcontainers.MsSql" Version="4.14.0" />
 <!--#endif-->
     <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.0" />
+<!--#if (IsTemplateRepository)-->
+    <!-- Template smoke tests only: strict YAML parse of generated workflows (GitHub rejects duplicate keys). -->
+    <PackageVersion Include="YamlDotNet" Version="18.1.0" />
+<!--#endif-->
   </ItemGroup>
 </Project>

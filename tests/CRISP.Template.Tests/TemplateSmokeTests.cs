@@ -16,6 +16,9 @@ namespace CRISP.Template.Tests;
 [Trait("Category", "Template")]
 public sealed class TemplateSmokeTests : IDisposable
 {
+    private static readonly YamlDotNet.Serialization.IDeserializer WorkflowYaml =
+        new YamlDotNet.Serialization.DeserializerBuilder().WithDuplicateKeyChecking().Build();
+
     private static readonly TimeSpan CommandTimeout = TimeSpan.FromMinutes(10);
 
     private readonly string _repoRoot = FindRepoRoot();
@@ -71,6 +74,22 @@ public sealed class TemplateSmokeTests : IDisposable
         public override string ToString() => $"{Name} ({Arguments})";
     }
 
+    // The repository's own workflows are the template's, with every provider block live at once.
+    [Fact]
+    public async Task RepositoryWorkflows_AreValidYaml()
+    {
+        var workflows = Directory.EnumerateFiles(Path.Combine(_repoRoot, ".github", "workflows"), "*.yml").ToList();
+        workflows.ShouldNotBeEmpty();
+        foreach (var workflow in workflows)
+        {
+            var yaml = await File.ReadAllTextAsync(workflow, TestContext.Current.CancellationToken);
+            Should.NotThrow(
+                () => WorkflowYaml.Deserialize<Dictionary<object, object>>(yaml),
+                $"{workflow} is not valid workflow YAML"
+            );
+        }
+    }
+
     [Theory(Timeout = 900_000)]
     [MemberData(nameof(Variants))]
     public async Task Instantiate_ThenBuild_ThenRunCoreTests(Variant variant)
@@ -92,6 +111,18 @@ public sealed class TemplateSmokeTests : IDisposable
 
         // What the template must not leak, whatever the options.
         Directory.Exists(Path.Combine(output, ".template.config")).ShouldBeFalse();
+        // GitHub refuses a workflow whose mapping repeats a key, and it does so before any job
+        // runs, so a duplicate `services:` or env key is invisible until the first push. Only
+        // WithDuplicateKeyChecking makes the deserialiser throw; the default accepts the file.
+        foreach (var workflow in Directory.EnumerateFiles(Path.Combine(output, ".github", "workflows"), "*.yml"))
+        {
+            var yaml = await File.ReadAllTextAsync(workflow, TestContext.Current.CancellationToken);
+            Should.NotThrow(
+                () => WorkflowYaml.Deserialize<Dictionary<object, object>>(yaml),
+                $"{workflow} is not valid workflow YAML"
+            );
+        }
+
         // Design entries are template history; the section index and the docs tooling ship.
         File.Exists(Path.Combine(output, "docs", "design", "2026-09-12-production-consolidation.md")).ShouldBeFalse();
         File.Exists(Path.Combine(output, "docs", "design", "index.md")).ShouldBeTrue();

@@ -19,10 +19,14 @@ jobs:
     name: Build and test (.NET)
     runs-on: ubuntu-latest
 
-#if (UsePostgres)
+# One services: key. A YAML mapping cannot repeat a key, so the providers are children of it and
+# the key itself only exists when a provider needs a server. The integration suite reads
+# CRISP_TEST_<PROVIDER>_CONNECTION_STRING and skips Testcontainers when it is set; the fixture
+# refuses any database not named crisp_tests.
+#if (UsePostgres || UseMySql || UseSqlServer)
     services:
-      # The integration suite reads CRISP_TEST_POSTGRES_CONNECTION_STRING and skips Testcontainers
-      # when it is set. The fixture refuses any database not named crisp_tests.
+#endif
+#if (UsePostgres)
       postgres:
         image: postgres:16
         env:
@@ -38,9 +42,6 @@ jobs:
           --health-retries 20
 #endif
 #if (UseMySql)
-    services:
-      # The integration suite reads CRISP_TEST_MYSQL_CONNECTION_STRING and skips Testcontainers
-      # when it is set. The fixture refuses any database not named crisp_tests.
       mysql:
         image: mysql:8.4
         env:
@@ -55,9 +56,6 @@ jobs:
           --health-retries 20
 #endif
 #if (UseSqlServer)
-    services:
-      # The integration suite reads CRISP_TEST_SQLSERVER_CONNECTION_STRING and skips Testcontainers
-      # when it is set. The fixture refuses any database not named crisp_tests.
       sqlserver:
         image: mcr.microsoft.com/mssql/server:2022-latest
         env:
@@ -118,28 +116,34 @@ jobs:
 
       # The Migrator must at least start and apply the schema to an empty database: a migration
       # that does not apply is exactly what this repo exists to catch before a deploy does.
+      # Provider values arrive through GITHUB_ENV from guarded steps: a step list may repeat,
+      # an env: mapping may not.
+#if (UsePostgres)
+      - run: |
+          echo "DATABASE_PORT=5432" >> "$GITHUB_ENV"
+          echo "DATABASE_USER=postgres" >> "$GITHUB_ENV"
+          echo "DATABASE_PASSWORD=postgres" >> "$GITHUB_ENV"
+#endif
+#if (UseMySql)
+      - run: |
+          echo "DATABASE_PORT=3306" >> "$GITHUB_ENV"
+          echo "DATABASE_USER=root" >> "$GITHUB_ENV"
+          echo "DATABASE_PASSWORD=root" >> "$GITHUB_ENV"
+#endif
+#if (UseSqlServer)
+      - run: |
+          echo "DATABASE_PORT=1433" >> "$GITHUB_ENV"
+          echo "DATABASE_USER=sa" >> "$GITHUB_ENV"
+          echo "DATABASE_PASSWORD=Password1!" >> "$GITHUB_ENV"
+#endif
+#if (UseSqlite)
+      - run: |
+          echo "DATABASE_PORT=0" >> "$GITHUB_ENV"
+          echo "DATABASE_USER=none" >> "$GITHUB_ENV"
+          echo "DATABASE_PASSWORD=none" >> "$GITHUB_ENV"
+#endif
       - name: Migrator applies the schema
         env:
           DATABASE_HOST: 127.0.0.1
-#if (UsePostgres)
-          DATABASE_PORT: "5432"
-          DATABASE_USER: postgres
-          DATABASE_PASSWORD: postgres
-#endif
-#if (UseMySql)
-          DATABASE_PORT: "3306"
-          DATABASE_USER: root
-          DATABASE_PASSWORD: root
-#endif
-#if (UseSqlServer)
-          DATABASE_PORT: "1433"
-          DATABASE_USER: sa
-          DATABASE_PASSWORD: Password1!
-#endif
-#if (UseSqlite)
-          DATABASE_PORT: "0"
-          DATABASE_USER: none
-          DATABASE_PASSWORD: none
-#endif
           DATABASE_NAME: crisp_tests
         run: dotnet run --project src/CRISP.Migrator --no-build --configuration Release
