@@ -35,7 +35,7 @@
 
   <ItemGroup>
     <Content Include="**\*"
-             Exclude="$(MSBuildProjectFile);tests\CRISP.Template.Tests\**;.github\workflows\ci-template.yml;.git\**;.memory_bank\**;docs\reviews\**;TestResults\**;**\bin\**;**\obj\**;**\node_modules\**;**\dist\**;**\.vs\**;**\*.user;**\.env;**\.env.local;src\CRISP.Client\src\api\**;**\appsettings.Development.json;*.nupkg" />
+             Exclude="$(MSBuildProjectFile);tests\CRISP.Template.Tests\**;.github\workflows\ci-template.yml;.github\workflows\docs.yml;.git\**;docs\design\2026-*.md;site\**;.nav-generated.json;NuGet.Config;nuget.config;TestResults\**;**\bin\**;**\obj\**;**\node_modules\**;**\dist\**;**\.vs\**;**\*.user;**\.env;**\.env.local;src\CRISP.Client\src\api\**;*.nupkg" />
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 

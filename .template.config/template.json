@@ -332,9 +332,13 @@
             "CRISP.Templates.csproj",
             "tests/CRISP.Template.Tests/**",
             ".github/workflows/ci-template.yml",
+            ".github/workflows/docs.yml",
             ".git/**",
-            ".memory_bank/**",
-            "docs/reviews/**",
+            "docs/design/2026-*.md",
+            "site/**",
+            ".nav-generated.json",
+            "NuGet.Config",
+            "nuget.config",
             "TestResults/**",
             "**/*.user",
             "**/.vs/**",
@@ -390,6 +394,29 @@
             ],
             "endif": [
               "<!--#endif"
+            ],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    },
+    "**/Dockerfile": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "#if"
+            ],
+            "else": [
+              "#else"
+            ],
+            "elseif": [
+              "#elseif"
+            ],
+            "endif": [
+              "#endif"
             ],
             "trim": true,
             "wholeLine": true

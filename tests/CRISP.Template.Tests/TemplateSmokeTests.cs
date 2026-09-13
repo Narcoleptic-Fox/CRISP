@@ -92,32 +92,40 @@ public sealed class TemplateSmokeTests : IDisposable
 
         // What the template must not leak, whatever the options.
         Directory.Exists(Path.Combine(output, ".template.config")).ShouldBeFalse();
-        Directory.Exists(Path.Combine(output, ".memory_bank")).ShouldBeFalse();
-        Directory.Exists(Path.Combine(output, "docs", "reviews")).ShouldBeFalse();
+        // Design entries are template history; the section index and the docs tooling ship.
+        File.Exists(Path.Combine(output, "docs", "design", "2026-09-12-production-consolidation.md")).ShouldBeFalse();
+        File.Exists(Path.Combine(output, "docs", "design", "index.md")).ShouldBeTrue();
+        File.Exists(Path.Combine(output, "tools", "docs", "nav-gen.mjs")).ShouldBeTrue();
+        Directory.Exists(Path.Combine(output, "site")).ShouldBeFalse();
+        File.Exists(Path.Combine(output, ".github", "workflows", "docs.yml")).ShouldBeFalse();
         File.Exists(Path.Combine(output, "CRISP.Templates.csproj")).ShouldBeFalse();
         Directory
             .EnumerateFiles(output, "*.cs", SearchOption.AllDirectories)
             .Any(file => Path.GetFileName(file).Contains("CRISP", StringComparison.Ordinal))
             .ShouldBeFalse("sourceName rename missed a file name");
+        // Every file type the template engine processes has its own marker syntax; a marker that
+        // survives generation is one the engine did not recognise. Prose that *mentions* a marker
+        // (the docs explain them) is not a leftover, so only markers at the start of a line count.
         foreach (
-            var file in Directory
-                .EnumerateFiles(output, "*.*", SearchOption.AllDirectories)
-                .Where(f =>
-                    Path.GetExtension(f)
-                        is ".cs"
-                            or ".csproj"
-                            or ".slnx"
-                            or ".yml"
-                            or ".ts"
-                            or ".tsx"
-                            or ".md"
-                            or ".props"
-                )
+            var file in Directory.EnumerateFiles(output, "*.*", SearchOption.AllDirectories)
         )
         {
-            var text = await File.ReadAllTextAsync(file);
-            text.ShouldNotContain("#if", customMessage: $"conditional marker left in {file}");
-            text.ShouldNotContain("#endif", customMessage: $"conditional marker left in {file}");
+            var marker = Path.GetExtension(file) switch
+            {
+                ".cs" or ".ts" or ".tsx" => "//#",
+                ".csproj" or ".slnx" or ".props" or ".md" => "<!--#",
+                ".yml" => "#if",
+                _ when Path.GetFileName(file) == "Dockerfile" => "#if",
+                _ => null,
+            };
+            if (marker is null)
+                continue;
+
+            var lines = await File.ReadAllLinesAsync(file);
+            lines
+                .Where(line => line.TrimStart().StartsWith(marker, StringComparison.Ordinal))
+                .Where(line => line.Contains("#if") || line.Contains("#endif") || line.Contains("#else"))
+                .ShouldBeEmpty($"conditional marker left in {file}");
         }
 
         var server = Path.Combine(output, "src", $"{name}.Server");
