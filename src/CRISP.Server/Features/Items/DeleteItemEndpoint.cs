@@ -4,6 +4,9 @@ using CRISP.Server.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRISP.Server.Common;
+//#if (IncludeAuth)
+using CRISP.Server.Authorization;
+//#endif
 
 namespace CRISP.Server.Features.Items;
 
@@ -21,6 +24,9 @@ public static class DeleteItemEndpoint
     {
         group.MapDelete("/{id:guid}", HandleAsync)
         .WithName("DeleteItem")
+//#if (IncludeAuth)
+        .RequireAuthorization(Policies.WriteAccess)
+//#endif
         .Produces(StatusCodes.Status204NoContent)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status400BadRequest)

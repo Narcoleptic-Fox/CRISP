@@ -6,6 +6,9 @@ using CRISP.Server.Data.Entities;
 using CRISP.Server.Events;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+//#if (IncludeAuth)
+using CRISP.Server.Authorization;
+//#endif
 
 namespace CRISP.Server.Features.Items;
 
@@ -23,6 +26,9 @@ public static class UpdateItemEndpoint
     {
         group.MapPut("/{id:guid}", HandleAsync)
         .WithName(nameof(UpdateItem))
+//#if (IncludeAuth)
+        .RequireAuthorization(Policies.WriteAccess)
+//#endif
         .Produces(StatusCodes.Status204NoContent)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status400BadRequest)

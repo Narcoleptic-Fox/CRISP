@@ -6,6 +6,9 @@ using Humanizer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRISP.Server.Common;
+//#if (IncludeAuth)
+using CRISP.Server.Authorization;
+//#endif
 
 namespace CRISP.Server.Features.Items;
 
@@ -23,6 +26,9 @@ public static class CreateItemEndpoint
     {
         group.MapPost("/", HandleAsync)
         .WithName(nameof(CreateItem))
+//#if (IncludeAuth)
+        .RequireAuthorization(Policies.WriteAccess)
+//#endif
         .Produces<Guid>(StatusCodes.Status201Created)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status400BadRequest);

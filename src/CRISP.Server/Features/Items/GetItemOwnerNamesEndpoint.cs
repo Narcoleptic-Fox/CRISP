@@ -4,6 +4,9 @@ using CRISP.Server.Data;
 using CRISP.Server.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+//#if (IncludeAuth)
+using CRISP.Server.Authorization;
+//#endif
 
 namespace CRISP.Server.Features.Items;
 
@@ -21,6 +24,9 @@ public static class GetItemOwnerNamesEndpoint
     {
         group.MapGet("/owners", HandleAsync)
         .WithName(nameof(GetItemOwnerNames))
+//#if (IncludeAuth)
+        .RequireAuthorization(Policies.ReadAccess)
+//#endif
         .Produces<IEnumerable<AutoComplete>>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status400BadRequest);

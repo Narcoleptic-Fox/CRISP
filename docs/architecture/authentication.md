@@ -54,10 +54,11 @@ exercises stored role to claim to policy to endpoint, which a faked principal wo
 | `Api.Write` | `Policies.WriteAccess` | Editor, Admin |
 | `Api.Admin` | `Policies.AdminAccess` | Admin |
 
-Feature groups call `RequireAuthorization()` (any authenticated principal) by default; endpoints
-that need a tier name the policy. The Identity feature maps user management under `AdminAccess`,
-the name autocomplete under `ReadAccess`, and `/Users/me` under plain authentication so an
-unprovisioned caller can still learn that they have no account (`403` with `code: "unprovisioned"`).
+Every endpoint names its tier: reads `ReadAccess`, writes `WriteAccess`, user management
+`AdminAccess`. The feature group's `RequireAuthorization()` is the floor (any authenticated
+principal), which only `/Users/me` relies on, so an unprovisioned caller can still learn that they
+have no account (`403` with `code: "unprovisioned"`). A new endpoint without a policy is a bug the
+Viewer test in its feature's suite should catch.
 
 Production applications extend this at two seams: more policies in `Policies`, and extra claims
 added in the enricher (review lanes, per-application access, fine-grained permissions have all

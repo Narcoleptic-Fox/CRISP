@@ -5,6 +5,9 @@ using CRISP.Server.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRISP.Server.Common;
+//#if (IncludeAuth)
+using CRISP.Server.Authorization;
+//#endif
 
 namespace CRISP.Server.Features.Items;
 
@@ -22,6 +25,9 @@ public static class GetItemEndpoint
     {
         group.MapGet("/{id:guid}", HandleAsync)
         .WithName(nameof(GetItem))
+//#if (IncludeAuth)
+        .RequireAuthorization(Policies.ReadAccess)
+//#endif
         .Produces<Item>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status400BadRequest)

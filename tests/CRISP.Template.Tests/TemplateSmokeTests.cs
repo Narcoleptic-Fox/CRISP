@@ -121,7 +121,7 @@ public sealed class TemplateSmokeTests : IDisposable
             if (marker is null)
                 continue;
 
-            var lines = await File.ReadAllLinesAsync(file);
+            var lines = await File.ReadAllLinesAsync(file, TestContext.Current.CancellationToken);
             lines
                 .Where(line => line.TrimStart().StartsWith(marker, StringComparison.Ordinal))
                 .Where(line => line.Contains("#if") || line.Contains("#endif") || line.Contains("#else"))
@@ -145,7 +145,7 @@ public sealed class TemplateSmokeTests : IDisposable
                     Path.Combine("src", $"{name}.Core", $"{name}.Core.csproj"),
                 }
             )
-                (await File.ReadAllTextAsync(Path.Combine(output, file))).ShouldNotContain(
+                (await File.ReadAllTextAsync(Path.Combine(output, file), TestContext.Current.CancellationToken)).ShouldNotContain(
                     ".esproj",
                     customMessage: $"client reference left in {file}"
                 );
@@ -173,7 +173,7 @@ public sealed class TemplateSmokeTests : IDisposable
             Directory
                 .Exists(Path.Combine(client, "src", "features", "items"))
                 .ShouldBe(variant.IncludeSample);
-            (await File.ReadAllTextAsync(Path.Combine(client, "src", "routes", "index.tsx")))
+            (await File.ReadAllTextAsync(Path.Combine(client, "src", "routes", "index.tsx"), TestContext.Current.CancellationToken))
                 .Contains("ItemsPage")
                 .ShouldBe(variant.IncludeSample);
         }
@@ -215,19 +215,19 @@ public sealed class TemplateSmokeTests : IDisposable
         var auth = variant.Auth == "entra";
         Directory.Exists(Path.Combine(server, "Authentication")).ShouldBe(auth);
         Directory.Exists(Path.Combine(output, "src", $"{name}.Core", "Identity")).ShouldBe(auth);
-        (await File.ReadAllTextAsync(Path.Combine(server, "Program.cs"))).Contains("UseAuthentication").ShouldBe(auth);
-        (await File.ReadAllTextAsync(Path.Combine(server, "appsettings.json"))).Contains("AzureAd").ShouldBe(auth);
+        (await File.ReadAllTextAsync(Path.Combine(server, "Program.cs"), TestContext.Current.CancellationToken)).Contains("UseAuthentication").ShouldBe(auth);
+        (await File.ReadAllTextAsync(Path.Combine(server, "appsettings.json"), TestContext.Current.CancellationToken)).Contains("AzureAd").ShouldBe(auth);
         if (variant.React)
         {
             File.Exists(Path.Combine(client, "src", "auth", "msalConfig.ts")).ShouldBe(auth);
             Directory.EnumerateFiles(Path.Combine(client, "src"), "*.noauth.*", SearchOption.AllDirectories).ShouldBeEmpty("a .noauth file leaked");
-            (await File.ReadAllTextAsync(Path.Combine(client, "src", "main.tsx"))).Contains("MsalProvider").ShouldBe(auth);
+            (await File.ReadAllTextAsync(Path.Combine(client, "src", "main.tsx"), TestContext.Current.CancellationToken)).Contains("MsalProvider").ShouldBe(auth);
         }
 
         // --aspire
         Directory.Exists(Path.Combine(output, "src", $"{name}.AppHost")).ShouldBe(variant.Aspire);
         Directory.Exists(Path.Combine(output, "src", $"{name}.ServiceDefaults")).ShouldBe(variant.Aspire);
-        (await File.ReadAllTextAsync(Path.Combine(server, "Program.cs"))).Contains("AddServiceDefaults").ShouldBe(variant.Aspire);
+        (await File.ReadAllTextAsync(Path.Combine(server, "Program.cs"), TestContext.Current.CancellationToken)).Contains("AddServiceDefaults").ShouldBe(variant.Aspire);
 
         await Run("dotnet", $"build {name}.slnx --nologo -v q", output);
         await Run("dotnet", $"test --project tests/{name}.Core.Tests/{name}.Core.Tests.csproj --no-build", output);

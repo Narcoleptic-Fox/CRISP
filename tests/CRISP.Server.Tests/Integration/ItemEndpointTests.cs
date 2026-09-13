@@ -58,6 +58,42 @@ public sealed class ItemEndpointTests(IntegrationTestFixture fixture)
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
+
+    // The client hides the write controls from a Viewer; the server is what actually refuses.
+    [Fact(Timeout = 120_000)]
+    public async Task Viewer_CanRead_ButCannotWrite()
+    {
+        var editor = await EditorAsync();
+        var id = await CreateAsync(editor, "Wrench");
+        var viewer = fixture.CreateClient(await fixture.SeedUserAsync(Roles.Viewer, "viewer@crisp.test"));
+
+        (await viewer.GetAsync("/api/v1/Items", Ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await viewer.GetAsync($"/api/v1/Items/{id}", Ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await viewer.GetAsync($"/api/v1/Items/{id}/activity", Ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var create = await viewer.PostAsJsonAsync("/api/v1/Items", new CreateItem { Name = "Hammer" }, Ct);
+        create.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        var update = await viewer.PutAsJsonAsync(
+            $"/api/v1/Items/{id}",
+            new UpdateItem { Id = id, Name = "Spanner" },
+            Ct
+        );
+        update.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        (await viewer.DeleteAsync($"/api/v1/Items/{id}", Ct)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+
+        // Nothing the Viewer sent changed anything.
+        (await editor.GetFromJsonAsync<Item>($"/api/v1/Items/{id}", Json, Ct))!.Name.ShouldBe("Wrench");
+    }
+
+    // A valid token with no Users row carries no role claim, so even reads are refused.
+    [Fact(Timeout = 120_000)]
+    public async Task Unprovisioned_IsRefusedEvenForReads()
+    {
+        await fixture.ResetDatabaseAsync();
+        var stranger = fixture.CreateClient("stranger@crisp.test");
+
+        (await stranger.GetAsync("/api/v1/Items", Ct)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
 //#endif
 
     [Fact(Timeout = 120_000)]

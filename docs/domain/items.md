@@ -28,21 +28,18 @@ hand; the audit interceptor writes them.
 
 | Operation | Route | Who |
 | --- | --- | --- |
-| List, filtered by name, owner or active state, paged and sorted | `GET /api/v1/Items` | Any signed-in user |
-| Read one | `GET /api/v1/Items/{id}` | Any signed-in user |
-| Suggest owner names matching a search term | `GET /api/v1/Items/owners` | Any signed-in user |
-| Create | `POST /api/v1/Items` | Any signed-in user |
-| Update, including activate or deactivate | `PUT /api/v1/Items/{id}` | Any signed-in user |
-| Delete | `DELETE /api/v1/Items/{id}` | Any signed-in user |
-| See the change history | `GET /api/v1/Items/{id}/activity` | Any signed-in user |
+| List, filtered by name, owner or active state, paged and sorted | `GET /api/v1/Items` | Viewer, Editor, Admin |
+| Read one | `GET /api/v1/Items/{id}` | Viewer, Editor, Admin |
+| Suggest owner names matching a search term | `GET /api/v1/Items/owners` | Viewer, Editor, Admin |
+| See the change history | `GET /api/v1/Items/{id}/activity` | Viewer, Editor, Admin |
+| Create | `POST /api/v1/Items` | Editor, Admin |
+| Update, including activate or deactivate | `PUT /api/v1/Items/{id}` | Editor, Admin |
+| Delete | `DELETE /api/v1/Items/{id}` | Editor, Admin |
 
-::: callout warning "The sample does not apply role tiers on the server"
-The Item group requires an authenticated caller and nothing more. The client hides create, edit
-and delete from Viewers (`useCanWrite()`), but the server accepts them from any signed-in account,
-including one with no role. The Identity area shows the intended pattern: name `Policies.WriteAccess`
-on the write endpoints and `Policies.ReadAccess` on the reads. Do that in your first real area and
-add the Viewer-is-refused test beside it.
-:::
+Reads carry `Policies.ReadAccess` and writes `Policies.WriteAccess`, named on each endpoint. The
+client hides the write controls from a Viewer (`useCanWrite()`), and the server is what refuses:
+`403 Forbidden`. A signed-in caller with no `Users` row holds no role and is refused even the
+reads. `ItemEndpointTests.Viewer_CanRead_ButCannotWrite` pins this; copy it for every new area.
 
 With `--auth none` every row above reads "anyone".
 
