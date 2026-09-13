@@ -5,11 +5,22 @@ start. Dated entries; delete what stops being true.
 
 ## Current state (2026-09-12)
 
-- **Active branch: `modernize`** (from `origin/modernization_update`). Steps 1-5 done 2026-09-12:
-  boots, Migrator applies InitialCreate, 25 Core + 118 Server tests green (21 of them integration
-  on Testcontainers MySQL), every fix sabotage-verified. Next: step 6 (`templates/` +
-  `template.json` options), step 7 (carry docs/.editorconfig/Directory.Build.props from master),
-  step 8 (skill into repo), step 9 (remaining version bumps incl. Microsoft.OpenApi NU1903).
+- **Active branch: `modernize`** (from `origin/modernization_update`), 26 commits, **not pushed**.
+  Plan steps 1-9 done 2026-09-12; step 10 (merge to `master`, tag, publish the nupkg) is Brock's
+  call. Final state: 0 warnings, 25 Core + 118 Server tests green, 2 template smoke variants
+  green, every fix sabotage-verified. `feat/authz-eventing-tests` is obsolete (its tests were
+  superseded, not ported); delete after merge.
+- **The repo root IS the template** (`.template.config/template.json`, `CRISP.Templates.csproj`).
+  No `templates/` mirror. Options: `--frontend react|none`, `--skip-restore`. Anything
+  template-repo-only (`tests/CRISP.Template.Tests`, `ci-template.yml`, README sections) is
+  excluded or guarded with `IsTemplateRepository` (a computed symbol that is always false).
+  `tests/CRISP.Template.Tests` (~2 min) instantiates both variants and builds them; run it before
+  packing. Deferred options and why: review section 9.
+- `.claude/skills/crisp-architecture/SKILL.md` is **force-added**: the user-level gitignore excludes
+  `.claude/skills/`. Edit it like any tracked file; `git add -f` only matters for new files there.
+- `SecurityHeaders:ConnectSources` and `SecurityHeaders:AllowCamera` are the new config knobs
+  (replacing WAR's `Csp:ConnectSources` and the hardcoded `camera=(self)`). `PUT /Items/{id}`
+  is the sample's update shape; `RouteIdBinder` fills `Id` before validation.
 - Integration tests need Docker (Testcontainers `mysql:8.4`) or `CRISP_TEST_MYSQL_CONNECTION_STRING`
   pointing at a database literally named `crisp_tests` (the fixture refuses anything else; Respawn
   truncates every table). Auth in tests: `X-Test-User: <email>` header → real enricher.

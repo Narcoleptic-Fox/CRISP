@@ -190,22 +190,22 @@ today's `tests/CRISP.Server.Tests` are what gets carried forward.
    Port the 55 in-memory tests from `feat/authz-eventing-tests` where they still apply
    (Identity and Todo→Item endpoint tests; drop the `PermissionAuthorizationHandler` and
    `LocalEventDispatcher` tests with the code they tested).
-6. **Bring `templates/CRISP/` back** from `master`, regenerated from the new `src/` shape.
+6. **Bring `templates/CRISP/` back** ✅ `ceecb32`, but not as a mirror: the repository root is the template content. Options shipped: `--frontend react|none`, `--skip-restore`. `--include-sample`, `--database`, `--auth`, `--aspire` deliberately not offered (see section 9). Originally: regenerated from the new `src/` shape.
    `template.json` options: `--database postgres|mysql|sqlserver|sqlite`,
    `--auth entra|identity|none`, `--aspire` (default off, adds AppHost + ServiceDefaults back),
    `--include-sample`. Drop `--frontend blazor`, `--redis`. `TemplateSmokeTests` must instantiate
    every option combination and build it.
-7. **Carry forward from `master`**: `docs/`, `.editorconfig`, `Directory.Build.props`,
+7. **Carry forward from `master`** ✅ `64f6d6f` `3af116b` (docs were rewritten rather than carried, see step 8; CI replaced): `docs/`, `.editorconfig`, `Directory.Build.props`,
    `CRISP.Templates.csproj`, the `.github/workflows/ci-cd.yml` .NET 10 bump. Carry forward from
    the branch: `.gitattributes`, `.dockerignore`.
-8. **Bring `_claude-crisp/skills/crisp-architecture` into the repo** (`.claude/skills/`) and
+8. **Bring `_claude-crisp/skills/crisp-architecture` into the repo** ✅ `9a8ae01` (`.claude/skills/`; its `templates/` copy dropped, it points at `docs/` and `src/`) and
    point its `templates/` at the real files so the skill cannot drift from the code. Same for
    `best_practices/crisp.md` → `docs/`.
-9. **Version bumps** from the matrix (EF Core 10.0.11 + Microting done in `9efed51`): `Asp.Versioning.Http` 10.2.2, `Microsoft.Identity.Web`
+9. **Version bumps** ✅ `7cb7e81` (EF Core 10.0.11 + Microting in `9efed51`): `Asp.Versioning.Http` 10.2.2, `Microsoft.Identity.Web`
    4.14.2, `AWSSDK.*` 4.0.102.x, `Testcontainers.MySql` 4.14.0, `xunit.v3.mtp-v2` 4.0.0,
    `Humanizer.Core` 3.0.10, `Microting.EntityFrameworkCore.MySql` 10.0.10 (replacing Pomelo
    9.0.0), OpenTelemetry 1.17.0.
-10. **Merge to `master`** and tag. The `feat/authz-eventing-tests` branch is then obsolete
+10. **Merge to `master`** and tag — pending, Brock's call. Branch `modernize` is 26 commits over `origin/modernization_update`, not pushed. The `feat/authz-eventing-tests` branch is then obsolete
     except as the source of the ported tests; delete it after step 5.
 
 ## 8. What was *not* reviewed
@@ -215,3 +215,15 @@ today's `tests/CRISP.Server.Tests` are what gets carried forward.
 - Migrations.
 - Modern_Scorpion entirely.
 - Whether WAR's `RouteIdBinder` has a test that fails when removed. Check before adopting.
+
+## 9. Deferred on purpose (2026-09-12)
+
+| Item | Why not now | What it would take |
+| --- | --- | --- |
+| `--include-sample false` | The client's router, nav, dashboard and upload hook are all Item-coupled; the real workflow is copy-the-slice-then-delete, which the skill describes | `//#if (IncludeSample)` in `routes/index.tsx`, `top-nav.tsx`, a neutral `dashboard.tsx`, exclude `features/items`, `features/storage/useUploadFile.ts`, `routes/item*`, the Item server files, the migration; a third template smoke variant |
+| `--database postgres\|sqlserver\|sqlite` | 5/5 production apps are MySQL; nothing else is verified here | Provider-conditional `DataCollectionExtensions`, per-provider migrations, Testcontainers variants, `SqliteForeignKeyInterceptor` (#17) |
+| `--auth identity\|none` | 5/5 are Entra + API key | Master's Identity code is the old shape (Blazor account pages); would need rewriting as a feature |
+| `--aspire` | 0/5 use it | AppHost + ServiceDefaults as opt-in projects |
+| #16 `BaseStateMachine` over Stateless | Two of five use it; belongs with a sample that has a lifecycle | Port Nucleus's base + `StateTransitionException` → `RejectedException.Conflict`, give the sample a status |
+| Client tests | `vitest run --passWithNoTests` passes with zero tests: a check that cannot fail | Component tests for the Item routes |
+| `Microsoft.VisualStudio.Azure.Containers.Tools.Targets`, `AutoFixture.Xunit3`, `coverlet.collector` | Pinned but unused | Remove or use |
