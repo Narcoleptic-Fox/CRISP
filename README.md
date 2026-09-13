@@ -41,7 +41,7 @@ CRISP/
 | Concern | How |
 |---|---|
 | Database | EF Core 10 on PostgreSQL by default (MySQL, SQL Server and SQLite selectable); one `DatabaseProvider` class per provider holds every difference; the server never migrates at startup |
-| Authentication | Entra ID JWT bearer **and** API key, selected per request; roles Viewer / Editor / Admin enriched from the Users table |
+| Authentication | Entra ID JWT bearer **and** API key, selected per request; roles Viewer / Editor / Admin enriched from the Users table. `--auth none` removes all of it for internal tools |
 | Errors | Handlers throw `RejectedException.NotFound(...)` etc.; `GlobalExceptionHandler` maps it to RFC 7807 with the message intact. Framework exceptions map to a status but their message stays development-only |
 | Validation | FluentValidation, run by a group-level endpoint filter; route ids are copied onto the command before validation (`RouteIdBinder`) |
 | Events | In-process bounded channel + background worker, fresh DI scope per event, retry with backoff |

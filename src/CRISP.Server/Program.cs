@@ -2,8 +2,10 @@ using Asp.Versioning;
 using FluentValidation;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using CRISP.Core.Common;
+//#if (IncludeAuth)
 using CRISP.Server.Authentication;
 using CRISP.Server.Authorization;
+//#endif
 using CRISP.Server.Data;
 using CRISP.Server.Features;
 using CRISP.Server.Infrastructure;
@@ -35,10 +37,14 @@ public class Program
         builder.Services.AddDatabaseInfrastructure(builder.Configuration);
 
         // 2. AUTHENTICATION (dual-scheme: JWT Bearer + API Key)
+//#if (IncludeAuth)
         builder.Services.AddApiAuthentication(builder.Configuration);
+//#endif
 
         // 3. AUTHORIZATION (policy-based)
+//#if (IncludeAuth)
         builder.Services.AddApiAuthorization();
+//#endif
 
         // 4. RATE LIMITING (chained: per-IP + per-user)
         builder.Services.AddApiRateLimiting(builder.Configuration);
@@ -106,7 +112,9 @@ public class Program
         // 11. OPENAPI (with security scheme definitions)
         builder.Services.AddOpenApi(options =>
         {
+//#if (IncludeAuth)
             options.AddDocumentTransformer<SecuritySchemeTransformer>();
+//#endif
         });
 
         // 12. KESTREL: request size limits + TLS on the load-balancer leg
@@ -179,7 +187,9 @@ public class Program
         app.UseCors(CorsPolicyName);
 
         // 7. Authentication (establishes identity)
+//#if (IncludeAuth)
         app.UseAuthentication();
+//#endif
 
         // 8. Request logging (after auth so user identity is available)
         app.UseRequestLogging();
@@ -188,7 +198,9 @@ public class Program
         app.UseRateLimiter();
 
         // 10. Authorization (enforces policies)
+//#if (IncludeAuth)
         app.UseAuthorization();
+//#endif
 
         // 11. Output caching (after auth so we can cache)
         app.UseOutputCache();

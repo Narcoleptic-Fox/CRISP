@@ -18,7 +18,8 @@ async function fetchCurrentUser(): Promise<CurrentUserResult> {
       user,
     }
   } catch (error) {
-    if (error instanceof ApiError && error.status === 404) {
+    // GetCurrentEndpoint answers 403 with code "unprovisioned" for an identity with no account.
+    if (error instanceof ApiError && (error.status === 403 || error.status === 404)) {
       return { status: 'unprovisioned', user: null }
     }
     throw error

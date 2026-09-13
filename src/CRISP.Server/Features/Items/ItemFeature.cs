@@ -46,7 +46,10 @@ public sealed class ItemFeature : IFeature
             .WithTags(nameof(Item));
 
         var v1 = group.HasApiVersion(new ApiVersion(1, 0));
-        var v1Authorized = v1.RequireAuthorization();
+        var v1Authorized = v1;
+//#if (IncludeAuth)
+        v1Authorized = v1Authorized.RequireAuthorization();
+//#endif
         CreateItemEndpoint.Map(v1Authorized);
         UpdateItemEndpoint.Map(v1Authorized);
         DeleteItemEndpoint.Map(v1Authorized);

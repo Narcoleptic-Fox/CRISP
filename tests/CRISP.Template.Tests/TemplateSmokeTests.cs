@@ -41,6 +41,10 @@ public sealed class TemplateSmokeTests : IDisposable
             new Variant("Bare", Frontend: "none", IncludeSample: false, Database: "postgres", Auth: "entra", Aspire: false),
             // Each other provider, with its own integration suite run against a real instance: the
             // provider class, the scaffolded migration and the test database are only proven there.
+            // No authentication, with and without a client; the server variant runs its suite so the
+            // anonymous pipeline (no UseAuthentication, open groups) is exercised against a database.
+            new Variant("Open", Frontend: "react", IncludeSample: true, Database: "postgres", Auth: "none", Aspire: false),
+            new Variant("OpenApi", Frontend: "none", IncludeSample: true, Database: "postgres", Auth: "none", Aspire: false, RunServerTests: true),
             // Aspire adds two projects and a wiring line in Program; a build is the check.
             new Variant("WithAspire", Frontend: "react", IncludeSample: true, Database: "postgres", Auth: "entra", Aspire: true),
             new Variant("OnMySql", Frontend: "none", IncludeSample: true, Database: "mysql", Auth: "entra", Aspire: false, RunServerTests: true),
@@ -173,7 +177,7 @@ public sealed class TemplateSmokeTests : IDisposable
             await Run("npm", "ci --no-audit --no-fund", client);
         }
 
-        if (!variant.IncludeSample || variant.Database != "postgres")
+        if (!variant.IncludeSample || variant.Database != "postgres" || variant.Auth != "entra")
         {
             // No migration ships for this combination. The generated solution must be able to make
             // its own from the design-time factory, with no database running.
@@ -197,6 +201,19 @@ public sealed class TemplateSmokeTests : IDisposable
             var expected = string.Equals(provider, variant.Database, StringComparison.OrdinalIgnoreCase);
             Directory.Exists(Path.Combine(server, "Data", "Providers", provider)).ShouldBe(expected, $"server provider folder {provider}");
             Directory.Exists(Path.Combine(output, "tests", $"{name}.Server.Tests", "TestSupport", "Providers", provider)).ShouldBe(expected, $"test provider folder {provider}");
+        }
+
+        // --auth
+        var auth = variant.Auth == "entra";
+        Directory.Exists(Path.Combine(server, "Authentication")).ShouldBe(auth);
+        Directory.Exists(Path.Combine(output, "src", $"{name}.Core", "Identity")).ShouldBe(auth);
+        (await File.ReadAllTextAsync(Path.Combine(server, "Program.cs"))).Contains("UseAuthentication").ShouldBe(auth);
+        (await File.ReadAllTextAsync(Path.Combine(server, "appsettings.json"))).Contains("AzureAd").ShouldBe(auth);
+        if (variant.React)
+        {
+            File.Exists(Path.Combine(client, "src", "auth", "msalConfig.ts")).ShouldBe(auth);
+            Directory.EnumerateFiles(Path.Combine(client, "src"), "*.noauth.*", SearchOption.AllDirectories).ShouldBeEmpty("a .noauth file leaked");
+            (await File.ReadAllTextAsync(Path.Combine(client, "src", "main.tsx"))).Contains("MsalProvider").ShouldBe(auth);
         }
 
         // --aspire

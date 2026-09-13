@@ -1,8 +1,12 @@
+//#if (IncludeAuth)
 using CRISP.Server.Authentication;
+//#endif
 using CRISP.Server.Data;
 using CRISP.Server.Data.Interceptors;
+//#if (IncludeAuth)
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+//#endif
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -58,7 +62,9 @@ public sealed class CrispServerApplicationFactory(string connectionString)
 
         builder.ConfigureTestServices(services =>
         {
+//#if (IncludeAuth)
             AddTestUserAuthentication(services);
+//#endif
 
             // Program registered the context against the same test connection string (host
             // configuration above), but through the provider's one-time configurator; re-register so
@@ -80,6 +86,7 @@ public sealed class CrispServerApplicationFactory(string connectionString)
         });
     }
 
+//#if (IncludeAuth)
     /// <summary>
     /// Adds the seeded-user scheme and teaches the composite scheme to select it.
     /// </summary>
@@ -108,4 +115,5 @@ public sealed class CrispServerApplicationFactory(string connectionString)
                     : JwtBearerDefaults.AuthenticationScheme
         );
     }
+//#endif
 }

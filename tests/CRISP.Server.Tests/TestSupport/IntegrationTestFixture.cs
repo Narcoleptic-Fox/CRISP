@@ -1,6 +1,10 @@
+//#if (IncludeAuth)
 using CRISP.Core.Identity;
+//#endif
 using CRISP.Server.Data;
+//#if (IncludeAuth)
 using CRISP.Server.Data.Entities;
+//#endif
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -54,6 +58,7 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
         await _database.ResetAsync(db);
     }
 
+//#if (IncludeAuth)
     /// <summary>Seeds an active application user and returns the email the test header should carry.</summary>
     public async Task<string> SeedUserAsync(Roles role, string? email = null)
     {
@@ -71,13 +76,16 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
         await db.SaveChangesAsync();
         return email;
     }
+//#endif
 
     /// <summary>A client whose requests authenticate as the given seeded user, or anonymously when null.</summary>
     public HttpClient CreateClient(string? asUser)
     {
         var client = Factory.CreateClient();
+//#if (IncludeAuth)
         if (asUser is not null)
             client.DefaultRequestHeaders.Add(TestUserAuthHandler.UserHeader, asUser);
+//#endif
         return client;
     }
 

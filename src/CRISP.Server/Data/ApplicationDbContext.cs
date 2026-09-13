@@ -12,7 +12,9 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     /// <summary>
     /// Gets the API keys persisted for service-to-service authentication.
     /// </summary>
+//#if (IncludeAuth)
     public DbSet<ApiKeyEntity> ApiKeys => Set<ApiKeyEntity>();
+//#endif
 
     /// <summary>
     /// Applies entity configuration classes from the server assembly.

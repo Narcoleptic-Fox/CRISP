@@ -1,12 +1,16 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { DashboardPage } from './dashboard'
+//#if (IncludeAuth)
 import { NoAccessPage } from './no-access'
 import { SettingsPage } from './settings'
+//#endif
 //#if (IncludeSample)
 import { ItemsPage } from './items'
 import { ItemDetailPage } from './item-detail'
 //#endif
+//#if (IncludeAuth)
 import { UsersPage } from './users'
+//#endif
 import { ProtectedRoute } from './protected-route'
 
 export const router = createBrowserRouter([
@@ -36,6 +40,7 @@ export const router = createBrowserRouter([
     ),
   },
   //#endif
+  //#if (IncludeAuth)
   {
     path: '/users',
     element: (
@@ -60,4 +65,5 @@ export const router = createBrowserRouter([
     path: '/no-access',
     element: <NoAccessPage />,
   },
+  //#endif
 ])

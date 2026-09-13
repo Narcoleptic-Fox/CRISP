@@ -136,6 +136,56 @@
           ]
         },
         {
+          "condition": "(!IncludeAuth)",
+          "exclude": [
+            "src/CRISP.Core/Identity/**",
+            "src/CRISP.Server/Authentication/**",
+            "src/CRISP.Server/Authorization/**",
+            "src/CRISP.Server/Features/Identity/**",
+            "src/CRISP.Server/Events/UserEvents.cs",
+            "src/CRISP.Server/Common/ICurrentUser.cs",
+            "src/CRISP.Server/Data/Entities/UserEntity.cs",
+            "src/CRISP.Server/Data/Entities/ApiKeyEntity.cs",
+            "src/CRISP.Server/Data/Configurations/UserConfiguration.cs",
+            "src/CRISP.Server/Data/Configurations/ApiKeyConfiguration.cs",
+            "src/CRISP.Server/Middleware/OpenApiSecurityTransformer.cs",
+            "tests/CRISP.Core.Tests/IdentityValidatorTests.cs",
+            "tests/CRISP.Server.Tests/TestSupport/TestUserAuthHandler.cs",
+            "tests/CRISP.Server.Tests/Integration/IdentityEndpointTests.cs",
+            "src/CRISP.Client/src/auth/AuthGate.tsx",
+            "src/CRISP.Client/src/auth/msalConfig.ts",
+            "src/CRISP.Client/src/components/user-menu.tsx",
+            "src/CRISP.Client/src/features/users/**",
+            "src/CRISP.Client/src/features/settings/**",
+            "src/CRISP.Client/src/features/autocomplete/useNames.ts",
+            "src/CRISP.Client/src/routes/users.tsx",
+            "src/CRISP.Client/src/routes/settings.tsx",
+            "src/CRISP.Client/src/routes/no-access.tsx",
+            "src/CRISP.Client/src/main.tsx",
+            "src/CRISP.Client/src/lib/api.ts",
+            "src/CRISP.Client/src/routes/protected-route.tsx",
+            "src/CRISP.Client/src/auth/useCurrentUser.ts",
+            "src/CRISP.Client/src/components/top-nav.tsx"
+          ],
+          "rename": {
+            "src/CRISP.Client/src/main.noauth.tsx": "src/CRISP.Client/src/main.tsx",
+            "src/CRISP.Client/src/lib/api.noauth.ts": "src/CRISP.Client/src/lib/api.ts",
+            "src/CRISP.Client/src/routes/protected-route.noauth.tsx": "src/CRISP.Client/src/routes/protected-route.tsx",
+            "src/CRISP.Client/src/auth/useCurrentUser.noauth.ts": "src/CRISP.Client/src/auth/useCurrentUser.ts",
+            "src/CRISP.Client/src/components/top-nav.noauth.tsx": "src/CRISP.Client/src/components/top-nav.tsx"
+          }
+        },
+        {
+          "condition": "(IncludeAuth)",
+          "exclude": [
+            "src/CRISP.Client/src/main.noauth.tsx",
+            "src/CRISP.Client/src/lib/api.noauth.ts",
+            "src/CRISP.Client/src/routes/protected-route.noauth.tsx",
+            "src/CRISP.Client/src/auth/useCurrentUser.noauth.ts",
+            "src/CRISP.Client/src/components/top-nav.noauth.tsx"
+          ]
+        },
+        {
           "condition": "(!UseAspire)",
           "exclude": [
             "src/CRISP.AppHost/**",
@@ -243,7 +293,7 @@
           ]
         },
         {
-          "condition": "(!IncludeSample || !UsePostgres)",
+          "condition": "(!IncludeSample || !UsePostgres || !IncludeAuth)",
           "exclude": [
             "src/CRISP.Server/Data/Migrations/**"
           ]
@@ -432,6 +482,29 @@
             ],
             "endif": [
               "<!--#endif"
+            ],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    },
+    "**/appsettings.json": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "//#if"
+            ],
+            "else": [
+              "//#else"
+            ],
+            "elseif": [
+              "//#elseif"
+            ],
+            "endif": [
+              "//#endif"
             ],
             "trim": true,
             "wholeLine": true

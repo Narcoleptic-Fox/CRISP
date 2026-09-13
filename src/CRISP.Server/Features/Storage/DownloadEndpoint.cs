@@ -2,7 +2,9 @@
 using CRISP.Server.Data;
 using CRISP.Server.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
+//#if (IncludeAuth)
 using CRISP.Server.Authorization;
+//#endif
 using CRISP.Server.Common;
 using System.Security.Claims;
 
@@ -17,7 +19,9 @@ public static class DownloadEndpoint
     {
         group.MapPut("/download", HandleAsync)
         .WithName("Download")
+//#if (IncludeAuth)
         .RequireAuthorization(Policies.ReadAccess)
+//#endif
         .Produces<PresignedUrl>(StatusCodes.Status200OK)
         .ProducesValidationProblem()
         .ProducesProblem(StatusCodes.Status400BadRequest);

@@ -2,7 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using CRISP.Core.Common;
+//#if (IncludeAuth)
 using CRISP.Core.Identity;
+//#endif
 using CRISP.Core.Items;
 using CRISP.Server.Tests.TestSupport;
 
@@ -23,7 +25,11 @@ public sealed class ItemEndpointTests(IntegrationTestFixture fixture)
     private async Task<HttpClient> EditorAsync()
     {
         await fixture.ResetDatabaseAsync();
-        return fixture.CreateClient(await fixture.SeedUserAsync(Roles.Editor));
+        string? editor = null;
+//#if (IncludeAuth)
+        editor = await fixture.SeedUserAsync(Roles.Editor);
+//#endif
+        return fixture.CreateClient(editor);
     }
 
     private static async Task<Guid> CreateAsync(
@@ -41,6 +47,7 @@ public sealed class ItemEndpointTests(IntegrationTestFixture fixture)
         return await response.Content.ReadFromJsonAsync<Guid>(Json, Ct);
     }
 
+//#if (IncludeAuth)
     [Fact(Timeout = 120_000)]
     public async Task Anonymous_IsRefused()
     {
@@ -51,6 +58,7 @@ public sealed class ItemEndpointTests(IntegrationTestFixture fixture)
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
+//#endif
 
     [Fact(Timeout = 120_000)]
     public async Task Create_ReturnsTheIdAndALocation_AndTheItemCanBeRead()
@@ -90,7 +98,11 @@ public sealed class ItemEndpointTests(IntegrationTestFixture fixture)
         var item = await client.GetFromJsonAsync<Item>($"/api/v1/Items/{id}", Json, Ct);
 
         item.ShouldNotBeNull();
-        item.CreatedBy.ShouldBe("editor@crisp.test");
+        var actor = "System";
+//#if (IncludeAuth)
+        actor = "editor@crisp.test";
+//#endif
+        item.CreatedBy.ShouldBe(actor);
         item.CreatedOn.ShouldBeGreaterThan(DateTime.UtcNow.AddMinutes(-5));
     }
 
@@ -243,7 +255,11 @@ public sealed class ItemEndpointTests(IntegrationTestFixture fixture)
                 )
             )
             .ToList();
-        contents.ShouldContain(c => c.Contains("editor@crisp.test Added Item"));
+        var actor = "System";
+//#if (IncludeAuth)
+        actor = "editor@crisp.test";
+//#endif
+        contents.ShouldContain(c => c.Contains($"{actor} Added Item"));
         contents.ShouldContain(c => c.Contains("Name: 'Wrench' → 'Torque wrench'"));
     }
 

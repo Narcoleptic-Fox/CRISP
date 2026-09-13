@@ -1,7 +1,9 @@
 using CRISP.Server.Data;
 using CRISP.Server.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
+//#if (IncludeAuth)
 using CRISP.Server.Authorization;
+//#endif
 using CRISP.Server.Common;
 
 namespace CRISP.Server.Features.Storage;
@@ -16,7 +18,9 @@ public static class DeleteEndpoint
     {
         group.MapDelete("/{fileId:guid}", HandleAsync)
         .WithName("DeleteFile")
+//#if (IncludeAuth)
         .RequireAuthorization(Policies.WriteAccess)
+//#endif
         .Produces(StatusCodes.Status204NoContent)
         .ProducesProblem(StatusCodes.Status400BadRequest);
 

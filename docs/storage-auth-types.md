@@ -40,6 +40,15 @@ flows to the client on the next build — **never hand-write a matching TS DTO**
 - The Entra app registration is IT-managed — treat its config as fixed and keep secrets out of
   committed `appsettings` (use placeholders like `00000000-...` / `YOUR_DB_HOST`).
 
+## `--auth none`
+
+A solution generated without authentication has no `Authentication/`, `Authorization/`, Identity
+feature, `Users` or `ApiKeys` tables, and no MSAL in the client: every endpoint is anonymous, the
+audit interceptor and stored files record `System`, and `useCanWrite()` always answers yes. The
+client swaps in `.noauth` versions of `main.tsx`, `lib/api.ts`, `protected-route.tsx`,
+`useCurrentUser.ts` and `top-nav.tsx` by rename at generation time. For internal tools and
+prototypes; anything reachable from outside wants `entra`.
+
 ## Security headers and the SPA Content-Security-Policy
 
 `SecurityHeadersMiddleware` sets the OWASP headers on every response. API paths get
