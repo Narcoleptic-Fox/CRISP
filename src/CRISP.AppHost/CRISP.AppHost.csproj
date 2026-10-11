@@ -1,23 +1,45 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Sdk Name="Aspire.AppHost.Sdk" Version="13.1.0" />
+	<Sdk Name="Aspire.AppHost.Sdk" Version="13.5.3" />
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <IsAspireHost>true</IsAspireHost>
-    <UserSecretsId>f8208344-7eec-44cc-b538-debe8bd164ff</UserSecretsId>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsAspireHost>true</IsAspireHost>
+		<!-- Run with `aspire run` (the Aspire CLI); the bundle carries the dashboard and DCP. -->
+		<AspireUseCliBundle>true</AspireUseCliBundle>
+		<UserSecretsId>5b3c9d2e-7f41-4a6b-9c8d-2e1f0a3b4c5d</UserSecretsId>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" />
-    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
-    <PackageReference Include="Aspire.Hosting.Redis" />
-    <PackageReference Include="Aspire.Hosting.JavaScript" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Aspire.Hosting.AppHost" />
+<!--#if (UsePostgres)-->
+		<PackageReference Include="Aspire.Hosting.PostgreSQL" />
+<!--#endif-->
+<!--#if (UseMySql)-->
+		<PackageReference Include="Aspire.Hosting.MySql" />
+<!--#endif-->
+<!--#if (UseSqlServer)-->
+		<PackageReference Include="Aspire.Hosting.SqlServer" />
+<!--#endif-->
+<!--#if (IncludeReact)-->
+		<PackageReference Include="Aspire.Hosting.JavaScript" />
+<!--#endif-->
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\CRISP.Server\CRISP.Server.csproj" />
-    <ProjectReference Include="..\CRISP.Web\CRISP.Web.esproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\CRISP.Server\CRISP.Server.csproj" />
+		<ProjectReference Include="..\CRISP.Migrator\CRISP.Migrator.csproj" />
+	</ItemGroup>
+
+<!--#if (IsTemplateRepository)-->
+	<!-- One Program per database provider. The template repository compiles the PostgreSQL one; a
+	     generated solution receives its provider's file renamed to Program.cs and none of the others. -->
+	<ItemGroup>
+		<Compile Remove="Program.mysql.cs;Program.sqlserver.cs;Program.sqlite.cs" />
+	</ItemGroup>
+<!--#endif-->
 
 </Project>

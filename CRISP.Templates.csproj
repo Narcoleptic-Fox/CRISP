@@ -1,37 +1,42 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!--
+    Packs this repository as the `dotnet new crisp` template. The repository root IS the template
+    content: there is no mirrored copy under templates/ to drift from the code that is built and
+    tested here. .template.config/template.json decides what is excluded and what is conditional.
+  -->
   <PropertyGroup>
     <PackageType>Template</PackageType>
     <PackageId>CRISP</PackageId>
-    <Title>CRISP - CQRS Pattern Template</Title>
-    <Version>1.0.0</Version>
+    <Title>CRISP - vertical-slice CQRS web application template</Title>
+    <Version>2.0.0</Version>
     <Authors>Narcoleptic Fox LLC</Authors>
     <Company>Narcoleptic Fox LLC</Company>
-    <Description>A .NET solution template implementing the CRISP CQRS architectural pattern with Aspire, feature folders, Entity Framework Core, and optional React frontend.</Description>
-    <PackageTags>dotnet-new;templates;cqrs;clean-architecture;aspire;web;api</PackageTags>
+    <Description>ASP.NET Core minimal-API server with explicit command/query contracts and direct service injection, EF Core on MySQL with an out-of-band Migrator, Entra JWT + API-key authentication, an in-process event bus, presigned-URL object storage, and a React + Vite client typed from Core. Ships a worked Item slice to copy.</Description>
+    <PackageTags>dotnet-new;templates;cqrs;vertical-slice;minimal-api;react;mysql</PackageTags>
     <PackageProjectUrl>https://github.com/Narcoleptic-Fox/CRISP</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <!-- <PackageIcon>icon.png</PackageIcon> -->
     <RepositoryUrl>https://github.com/Narcoleptic-Fox/CRISP</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    
+
     <TargetFramework>net10.0</TargetFramework>
     <IncludeContentInPack>true</IncludeContentInPack>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <ContentTargetFolders>content</ContentTargetFolders>
     <NoWarn>$(NoWarn);NU5128</NoWarn>
     <NoDefaultExcludes>true</NoDefaultExcludes>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <!-- This project is packaging, not code: keep the shared build properties from treating it as a library. -->
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="templates\**\*" Exclude="templates\**\bin\**;templates\**\obj\**;templates\**\node_modules\**;templates\**\dist\**;templates\**\.vs\**" />
+    <Content Include="**\*"
+             Exclude="$(MSBuildProjectFile);tests\CRISP.Template.Tests\**;.github\workflows\ci-template.yml;.github\workflows\docs.yml;.git\**;docs\design\2026-*.md;site\**;.nav-generated.json;NuGet.Config;nuget.config;TestResults\**;**\bin\**;**\obj\**;**\node_modules\**;**\dist\**;**\.vs\**;**\*.user;**\.env;**\.env.local;src\CRISP.Client\src\api\**;*.nupkg" />
     <None Include="README.md" Pack="true" PackagePath="\" />
-    <None Include="icon.png" Pack="true" PackagePath="\" Condition="Exists('icon.png')" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="**\*" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>CRISP.Server.Tests</RootNamespace>
+    <TargetFramework>net10.0</TargetFramework>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Respawn" />
+    <PackageReference Include="Shouldly" />
+<!--#if (UseMySql)-->
+    <PackageReference Include="Testcontainers.MySql" />
+<!--#endif-->
+<!--#if (UsePostgres)-->
+    <PackageReference Include="Testcontainers.PostgreSql" />
+<!--#endif-->
+<!--#if (UseSqlServer)-->
+    <PackageReference Include="Testcontainers.MsSql" />
+<!--#endif-->
+    <PackageReference Include="xunit.v3.mtp-v2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CRISP.Server\CRISP.Server.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Shouldly" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+<!--#if (IsTemplateRepository)-->
+  <!-- One TestDatabase is compiled per solution; see CRISP.Server.csproj for the same rule. -->
+  <ItemGroup>
+    <Compile Remove="TestSupport\Providers\MySql\**;TestSupport\Providers\SqlServer\**;TestSupport\Providers\Sqlite\**" />
+  </ItemGroup>
+<!--#endif-->
+
+</Project>

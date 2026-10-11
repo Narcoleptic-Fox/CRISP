@@ -1,14 +1,81 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<PropertyGroup Label="Package">
+		<PackageId>CRISP.Core</PackageId>
+		<VersionPrefix>0.1.0</VersionPrefix>
+		<Authors>Brock Claussen</Authors>
+		<Description>Shared contracts, message types for the CRISP project.</Description>
+		<PackageTags>contracts;messages;dotnet</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryType>git</RepositoryType>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="FluentValidation" />
-		<PackageReference Include="Humanizer" />
-		<PackageReference Include="TypeGen" />
+		<PackageReference Include="TypeGen" GeneratePathProperty="true" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Using Include="FluentValidation" />
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Using Include="CRISP.Core.Common" />
 		<Using Include="CRISP.Core.Constants" />
+		<Using Include="FluentValidation" />
+		<Using Include="TypeGen.Core.TypeAnnotations" />
 	</ItemGroup>
+
+<!--#if (IncludeReact)-->
+	<!-- TypeScript contracts are generated into the client on every Core build. -->
+	<Target Name="GenerateTypeScriptClientTypes" AfterTargets="Build">
+		<Exec
+			Command="dotnet &quot;$(PkgTypeGen)/tools/TypeGen.Cli.dll&quot; generate -p &quot;$(MSBuildProjectDirectory)&quot;" />
+	</Target>
+
+	<Target Name="PatchTypeGenMarkerTypes" AfterTargets="GenerateTypeScriptClientTypes">
+		<ItemGroup>
+			<_TypeGenICommandLine
+				Include="// This file is TypeGen-generated and normalized after generation by CRISP.Core.csproj." />
+			<_TypeGenICommandLine Include="export interface ICommand&lt;TResponse = void&gt; {" />
+			<_TypeGenICommandLine Include="  readonly __response%3F: TResponse" />
+			<_TypeGenICommandLine Include="}" />
+
+			<_TypeGenIQueryLine
+				Include="// This file is TypeGen-generated and normalized after generation by CRISP.Core.csproj." />
+			<_TypeGenIQueryLine Include="export interface IQuery&lt;TResponse&gt; {" />
+			<_TypeGenIQueryLine Include="  readonly __response%3F: TResponse" />
+			<_TypeGenIQueryLine Include="}" />
+
+			<_TypeGenCreateCommandLine
+				Include="// This file is TypeGen-generated and normalized after generation by CRISP.Core.csproj." />
+			<_TypeGenCreateCommandLine Include="import type { ICommand } from './i-command'" />
+			<_TypeGenCreateCommandLine Include="export type CreateCommand = ICommand&lt;string&gt;" />
+		</ItemGroup>
+
+		<WriteLinesToFile File="$(MSBuildProjectDirectory)\..\CRISP.Client\src\api\i-command.ts"
+			Lines="@(_TypeGenICommandLine)" Overwrite="true" Encoding="UTF-8" />
+		<WriteLinesToFile File="$(MSBuildProjectDirectory)\..\CRISP.Client\src\api\i-query.ts"
+			Lines="@(_TypeGenIQueryLine)" Overwrite="true" Encoding="UTF-8" />
+		<WriteLinesToFile File="$(MSBuildProjectDirectory)\..\CRISP.Client\src\api\create-command.ts"
+			Lines="@(_TypeGenCreateCommandLine)" Overwrite="true" Encoding="UTF-8" />
+	</Target>
+
+	<Target Name="FormatGeneratedTypeScript" AfterTargets="PatchTypeGenMarkerTypes"
+		Condition="'$(SkipTypeGenFormat)' != 'true'">
+		<!-- Generated types land in CRISP.Client/src/api (see tgconfig.json and the WriteLinesToFile
+		     paths above); the glob below has to match that folder or prettier silently formats nothing. -->
+		<Exec Command="npx --no-install prettier --write &quot;src/api/**/*.ts&quot;"
+			WorkingDirectory="$(MSBuildProjectDirectory)\..\CRISP.Client"
+			ContinueOnError="true"
+			IgnoreExitCode="true" />
+	</Target>
+<!--#endif-->
+
 </Project>

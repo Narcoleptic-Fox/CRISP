@@ -1,60 +1,75 @@
-﻿using CRISP.Core.Identity;
-using CRISP.Server.Features.Identity.Endpoints;
-using CRISP.ServiceDefaults.Features;
+using CRISP.Core.Common;
+using CRISP.Core.Identity;
+using Asp.Versioning;
+using Humanizer;
+using CRISP.Server.Authorization;
+using CRISP.Server.Common;
+using CRISP.Server.Features;
 
 namespace CRISP.Server.Features.Identity;
 
+/// <summary>
+/// Registers identity services and maps user endpoints.
+/// </summary>
 public class IdentityFeature : IFeature
 {
+    /// <summary>
+    /// Registers user and user settings command/query handlers.
+    /// </summary>
+    /// <param name="services">The service collection to configure.</param>
+    /// <returns>The configured service collection.</returns>
     public IServiceCollection AddFeature(IServiceCollection services)
     {
-        // Register User Services
-        services.AddScoped<IQueryService<GetUserByEmail, User>, GetUserByEmailService>();
-        services.AddScoped<IQueryService<SingularQuery<User>, User>, GetUserService>();
-        services.AddScoped<IQueryService<GetUsers, PagedResponse<Users>>, GetUsersService>();
+        // User
+        services.AddScoped<ICreateService<CreateUser>, CreateUserService>();
         services.AddScoped<IModifyService<UpdateUser>, UpdateUserService>();
-        services.AddKeyedScoped<IModifyService<DeleteCommand>, DeleteUserService>(nameof(Users));
+        services.AddScoped<IQueryService<GetUser, User>, GetUserService>();
+        services.AddScoped<IQueryService<GetUsers, PagedResponse<User>>, GetUsersService>();
+        services.AddKeyedScoped<IModifyService<DeleteCommand>, DeleteUserService>(nameof(Identity));
+        services.AddScoped<IQueryService<GetUserNames, IEnumerable<AutoComplete>>, GetUserNamesService>();
+        services.AddScoped<ICurrentUser, CurrentUserService>();
 
-        // Register Role Services
-        services.AddScoped<ICreateService<CreateRole>, CreateRoleService>();
-        services.AddScoped<IQueryService<SingularQuery<Role>, Role>, GetRoleByIdService>();
-        services.AddScoped<IQueryService<GetRoleByName, Role>, GetRoleByNameService>();
-        services.AddScoped<IQueryService<GetRoles, PagedResponse<Roles>>, GetRolesService>();
-        services.AddScoped<IModifyService<UpdateRole>, UpdateRoleService>();
-        services.AddKeyedScoped<IModifyService<DeleteCommand>, DeleteRoleService>(nameof(Roles));
+        // User Settings
+        services.AddScoped<IModifyService<UpdateUserSettings>, UpdateUserSettingsService>();
 
         return services;
     }
 
+    /// <summary>
+    /// Maps versioned user and user settings endpoints.
+    /// </summary>
+    /// <param name="app">The endpoint route builder to configure.</param>
+    /// <returns>The endpoint route builder.</returns>
     public IEndpointRouteBuilder MapFeature(IEndpointRouteBuilder app)
     {
-        RouteGroupBuilder identityGroup = app.MapGroup("/identity")
-                                             .WithTags(nameof(Identity));
+        // Users
+        var group = app.MapGroup(nameof(User).Pluralize())
+            .WithTags(nameof(Identity));
+        // v1
+        var v1 = group.HasApiVersion(new ApiVersion(1, 0));
 
-        // Register User Endpoints
-        RouteGroupBuilder group = identityGroup.MapGroup("/users")
-                                               .WithTags(nameof(Users))
-                                               .ProducesProblem(StatusCodes.Status401Unauthorized)
-                                               .RequireAuthorization();
+        // User management (CRUD) is admin-only. The name autocomplete is needed by the asset
+        // owner picker, so it's a plain read. /me and /current must stay authenticated-only so an
+        // unprovisioned (roleless) user can still discover they have no account (403 unprovisioned).
+        var authenticated = v1.MapGroup("").RequireAuthorization();
+        var read = v1.MapGroup("").RequireAuthorization(Policies.ReadAccess);
+        var admin = v1.MapGroup("").RequireAuthorization(Policies.AdminAccess);
+        CreateUserEndpoint.Map(admin);
+        UpdateUserEndpoint.Map(admin);
+        GetUserEndpoint.Map(admin);
+        GetUsersEndpoint.Map(admin);
+        GetCurrentEndpoint.Map(authenticated);
+        DeleteUserEndpoint.Map(admin);
+        GetUserNamesEndpoint.Map(read);
 
-        GetUserByEmailEndpoint.MapEndpoint(group);
-        GetUserByIdEndpoint.MapEndpoint(group);
-        GetUsersEndpoint.MapEndpoint(group);
-        UpdateUserEndpoint.MapEndpoint(group);
-        DeleteUserEndpoint.MapEndpoint(group);
-
-        // Register Role Endpoints
-        group = identityGroup.MapGroup("/roles")
-                             .WithTags(nameof(Roles))
-                             .ProducesProblem(StatusCodes.Status401Unauthorized)
-                             .RequireAuthorization();
-
-        CreateRoleEndpoint.MapEndpoint(group);
-        GetRoleByIdEndpoint.MapEndpoint(group);
-        GetRoleByNameEndpoint.MapEndpoint(group);
-        GetRolesEndpoint.MapEndpoint(group);
-        UpdateRoleEndpoint.MapEndpoint(group);
-        DeleteRoleEndpoint.MapEndpoint(group);
+        // User Settings — any authenticated user manages their OWN settings (target resolved from
+        // the token, not the request body; see UpdateUserSettingsService).
+        group = app.MapGroup(nameof(UserSettings))
+            .WithTags(nameof(Identity));
+        // v1
+        v1 = group
+            .HasApiVersion(new ApiVersion(1, 0));
+        UpdateUserSettingsEndpoint.Map(v1.RequireAuthorization());
 
         return app;
     }

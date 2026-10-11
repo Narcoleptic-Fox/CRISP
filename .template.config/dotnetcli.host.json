@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json.schemastore.org/dotnetcli.host",
+  "symbolInfo": {
+    "Frontend": { "longName": "frontend", "shortName": "f" },
+    "IncludeSample": { "longName": "include-sample", "shortName": "" },
+    "Database": { "longName": "database", "shortName": "" },
+    "Auth": { "longName": "auth", "shortName": "" },
+    "UseAspire": { "longName": "aspire", "shortName": "" },
+    "skipRestore": { "longName": "skip-restore", "shortName": "" }
+  }
+}

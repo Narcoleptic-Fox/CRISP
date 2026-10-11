@@ -405,10 +405,13 @@ artifacts/
 
 # Environment specific files
 appsettings.Development.json
+# The template ships the server's with local development defaults only; no secrets live there.
+!src/CRISP.Server/appsettings.Development*.json
 appsettings.Production.json
 appsettings.Staging.json
 *.env
 .env.*
+!.env.example
 
 # Azure Functions
 local.settings.json
@@ -435,11 +438,14 @@ TestResults/
 # JetBrains dotPeek
 .dotPeek/
 
-# Docker
-.dockerignore
-Dockerfile*
+# Docker: the Dockerfile and .dockerignore are source, not local state.
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+# docmd site output and generated nav
+site/
+/node_modules/
+.nav-generated.json

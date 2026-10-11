@@ -1,0 +1,35 @@
+name: CI (template)
+
+# Template-repository only: instantiates every option combination of `dotnet new crisp` from this
+# checkout and builds what comes out. Excluded from generated applications by template.json.
+
+on:
+  push:
+    branches: [master, modernize]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+
+jobs:
+  template:
+    name: Instantiate and build every variant
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/CRISP.Client/.nvmrc
+      - run: dotnet test --project tests/CRISP.Template.Tests/CRISP.Template.Tests.csproj
+      - name: Pack
+        run: dotnet pack CRISP.Templates.csproj --configuration Release --output artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CRISP.nupkg
+          path: artifacts/*.nupkg

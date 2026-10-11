@@ -21,7 +21,7 @@ namespace CRISP.Core.Common
     /// This record provides a standard way to query for individual entities using their unique identifier.
     /// It can be instantiated with or without an ID, allowing for flexible usage patterns.
     /// </remarks>
-    public sealed record SingularQuery<TResponse> : IQuery<TResponse>
+    public abstract record SingularQuery<TResponse> : IQuery<TResponse>
         where TResponse : BaseModel
     {
         /// <summary>
@@ -39,9 +39,9 @@ namespace CRISP.Core.Common
         /// Gets or sets the unique identifier of the entity to retrieve.
         /// </summary>
         /// <value>
-        /// An integer representing the unique identifier of the entity.
+        /// A <see cref="Guid"/> representing the unique identifier of the entity.
         /// </value>
-        public Guid Id { get; set; }
+        public Guid Id { get; init; }
     }
 
     /// <summary>
@@ -92,33 +92,41 @@ namespace CRISP.Core.Common
         /// Gets or sets a collection of specific entity identifiers to include in the results.
         /// </summary>
         /// <value>
-        /// A nullable enumerable of integers representing specific entity IDs to filter by. If null, no ID filtering is applied.
+        /// A nullable enumerable of entity identifiers to filter by. If <c>null</c>, no ID filtering is applied.
         /// </value>
         public IEnumerable<Guid>? Ids { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether to include archived entities in the results.
+        /// Gets the effective page number, falling back to the system default when no page was supplied.
         /// </summary>
-        /// <value>
-        /// A nullable boolean indicating archival filter. If null, the default behavior excludes archived entities.
-        /// </value>
-        public bool? IncludeArchived { get; set; }
-
+        /// <returns>The requested page number, or <see cref="Query.Page"/> when <see cref="Page"/> is <c>null</c>.</returns>
         public int GetPageOrDefault() => Page ?? Query.Page;
+
+        /// <summary>
+        /// Gets the effective page size, falling back to the system default when no page size was supplied.
+        /// </summary>
+        /// <returns>The requested page size, or <see cref="Query.PageSize"/> when <see cref="PageSize"/> is <c>null</c>.</returns>
         public int GetPageSizeOrDefault() => PageSize ?? Query.PageSize;
-        public string GetSortByOrDefault() => SortBy ?? Query.SortBy;
-        public bool GetSortDescendingOrDefault() => SortDescending ?? Query.SortDescending;
+
+        /// <summary>
+        /// Converts the paging, sorting, and identifier filters into a URL query string.
+        /// </summary>
+        /// <returns>A query string beginning with <c>?</c> that represents the populated query parameters.</returns>
         public virtual string ToQueryString()
         {
             var builder = new StringBuilder();
-            builder.Append($"?page={GetPageOrDefault()}&pageSize={GetPageSizeOrDefault()}&sortBy={GetSortByOrDefault()}&sortDescending={GetSortDescendingOrDefault()}");
+            builder.Append($"?page={Page ?? Query.Page}&pageSize={PageSize ?? Query.PageSize}");
+            if (!string.IsNullOrEmpty(SortBy))
+            {
+                builder.Append($"&sortBy={SortBy}");
+            }
+            if (SortDescending is not null)
+            {
+                builder.Append($"&sortDescending={SortDescending}");
+            }
             if (Ids is not null && Ids.Any())
             {
                 builder.Append($"&ids={string.Join(',', Ids)}");
-            }
-            if (IncludeArchived.HasValue)
-            {
-                builder.Append($"&includeArchived={IncludeArchived.Value}");
             }
             return builder.ToString();
         }

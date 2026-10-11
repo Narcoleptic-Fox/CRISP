@@ -1,0 +1,561 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Narcoleptic Fox LLC",
+  "classifications": [
+    "Web",
+    "API",
+    "CQRS",
+    "Vertical Slice",
+    "React",
+    "Aspire"
+  ],
+  "identity": "NarcolepticFox.CRISP",
+  "groupIdentity": "NarcolepticFox.CRISP",
+  "name": "CRISP - vertical-slice CQRS web application",
+  "description": "ASP.NET Core minimal-API server with explicit command/query contracts and direct service injection (no mediator), EF Core on MySQL with an out-of-band Migrator, Entra JWT + API-key authentication, an in-process event bus, presigned-URL object storage, and a React + Vite client consuming TypeGen-generated contracts. Ships a worked Item slice to copy.",
+  "shortName": "crisp",
+  "tags": {
+    "language": "C#",
+    "type": "solution"
+  },
+  "sourceName": "CRISP",
+  "preferNameDirectory": true,
+  "symbols": {
+    "Frontend": {
+      "type": "parameter",
+      "description": "The client to include.",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "react",
+          "description": "React 19 + Vite + Tailwind 4 + shadcn, typed from Core via TypeGen"
+        },
+        {
+          "choice": "none",
+          "description": "No client (API only)"
+        }
+      ],
+      "defaultValue": "react"
+    },
+    "IncludeReact": {
+      "type": "computed",
+      "value": "(Frontend == \"react\")"
+    },
+    "IncludeSample": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "true",
+      "description": "Include the worked Item slice (contracts, entity, endpoints, client pages, tests). Without it the solution has no domain feature and no migration yet: run `dotnet ef migrations add InitialCreate --project src/CRISP.Server` after adding your first entity."
+    },
+    "Database": {
+      "type": "parameter",
+      "description": "The relational database provider.",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "mysql",
+          "description": "MySQL 8.4 (Microting.EntityFrameworkCore.MySql). Migration generated on first use."
+        },
+        {
+          "choice": "postgres",
+          "description": "PostgreSQL 16 (Npgsql). Ships with the InitialCreate migration."
+        },
+        {
+          "choice": "sqlserver",
+          "description": "SQL Server 2022. Migration generated on first use."
+        },
+        {
+          "choice": "sqlite",
+          "description": "SQLite file database. No container; integration tests recreate the file."
+        }
+      ],
+      "defaultValue": "postgres"
+    },
+    "UseMySql": {
+      "type": "computed",
+      "value": "(Database == \"mysql\")"
+    },
+    "UsePostgres": {
+      "type": "computed",
+      "value": "(Database == \"postgres\")"
+    },
+    "UseSqlServer": {
+      "type": "computed",
+      "value": "(Database == \"sqlserver\")"
+    },
+    "UseSqlite": {
+      "type": "computed",
+      "value": "(Database == \"sqlite\")"
+    },
+    "Auth": {
+      "type": "parameter",
+      "description": "Authentication and authorization.",
+      "datatype": "choice",
+      "choices": [
+        {
+          "choice": "entra",
+          "description": "Entra ID JWT bearer + API key, Viewer/Editor/Admin roles from the Users table, MSAL in the client"
+        },
+        {
+          "choice": "none",
+          "description": "No authentication: every endpoint is anonymous, no Users or ApiKeys, no sign-in in the client. For internal tools and prototypes."
+        }
+      ],
+      "defaultValue": "entra"
+    },
+    "IncludeAuth": {
+      "type": "computed",
+      "value": "(Auth == \"entra\")"
+    },
+    "UseAspire": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add a .NET Aspire AppHost that runs the database container, the server and the client together, plus ServiceDefaults for telemetry and health."
+    },
+    "IsTemplateRepository": {
+      "type": "computed",
+      "value": "false",
+      "description": "Always false in generated output: guards the parts of the solution that only make sense in the template repository itself."
+    },
+    "skipRestore": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Skip the automatic restore of the project on create."
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "condition": "(!IncludeReact)",
+          "exclude": [
+            "src/CRISP.Client/**",
+            ".github/workflows/ci-client.yml"
+          ]
+        },
+        {
+          "condition": "(!IncludeAuth)",
+          "exclude": [
+            "src/CRISP.Core/Identity/**",
+            "src/CRISP.Server/Authentication/**",
+            "src/CRISP.Server/Authorization/**",
+            "src/CRISP.Server/Features/Identity/**",
+            "src/CRISP.Server/Events/UserEvents.cs",
+            "src/CRISP.Server/Common/ICurrentUser.cs",
+            "src/CRISP.Server/Data/Entities/UserEntity.cs",
+            "src/CRISP.Server/Data/Entities/ApiKeyEntity.cs",
+            "src/CRISP.Server/Data/Configurations/UserConfiguration.cs",
+            "src/CRISP.Server/Data/Configurations/ApiKeyConfiguration.cs",
+            "src/CRISP.Server/Middleware/OpenApiSecurityTransformer.cs",
+            "tests/CRISP.Core.Tests/IdentityValidatorTests.cs",
+            "tests/CRISP.Server.Tests/TestSupport/TestUserAuthHandler.cs",
+            "tests/CRISP.Server.Tests/Integration/IdentityEndpointTests.cs",
+            "src/CRISP.Client/src/auth/AuthGate.tsx",
+            "src/CRISP.Client/src/auth/msalConfig.ts",
+            "src/CRISP.Client/src/components/user-menu.tsx",
+            "src/CRISP.Client/src/features/users/**",
+            "src/CRISP.Client/src/features/settings/**",
+            "src/CRISP.Client/src/features/autocomplete/useNames.ts",
+            "src/CRISP.Client/src/routes/users.tsx",
+            "src/CRISP.Client/src/routes/settings.tsx",
+            "src/CRISP.Client/src/routes/no-access.tsx",
+            "src/CRISP.Client/src/main.tsx",
+            "src/CRISP.Client/src/lib/api.ts",
+            "src/CRISP.Client/src/routes/protected-route.tsx",
+            "src/CRISP.Client/src/auth/useCurrentUser.ts",
+            "src/CRISP.Client/src/components/top-nav.tsx"
+          ],
+          "rename": {
+            "src/CRISP.Client/src/main.noauth.tsx": "src/CRISP.Client/src/main.tsx",
+            "src/CRISP.Client/src/lib/api.noauth.ts": "src/CRISP.Client/src/lib/api.ts",
+            "src/CRISP.Client/src/routes/protected-route.noauth.tsx": "src/CRISP.Client/src/routes/protected-route.tsx",
+            "src/CRISP.Client/src/auth/useCurrentUser.noauth.ts": "src/CRISP.Client/src/auth/useCurrentUser.ts",
+            "src/CRISP.Client/src/components/top-nav.noauth.tsx": "src/CRISP.Client/src/components/top-nav.tsx"
+          }
+        },
+        {
+          "condition": "(IncludeAuth)",
+          "exclude": [
+            "src/CRISP.Client/src/main.noauth.tsx",
+            "src/CRISP.Client/src/lib/api.noauth.ts",
+            "src/CRISP.Client/src/routes/protected-route.noauth.tsx",
+            "src/CRISP.Client/src/auth/useCurrentUser.noauth.ts",
+            "src/CRISP.Client/src/components/top-nav.noauth.tsx"
+          ]
+        },
+        {
+          "condition": "(!UseAspire)",
+          "exclude": [
+            "src/CRISP.AppHost/**",
+            "src/CRISP.ServiceDefaults/**"
+          ]
+        },
+        {
+          "condition": "(!UsePostgres)",
+          "exclude": [
+            "src/CRISP.AppHost/Program.cs"
+          ]
+        },
+        {
+          "condition": "(UseSqlite)",
+          "rename": {
+            "src/CRISP.AppHost/Program.sqlite.cs": "src/CRISP.AppHost/Program.cs"
+          }
+        },
+        {
+          "condition": "(!UseSqlite)",
+          "exclude": [
+            "src/CRISP.AppHost/Program.sqlite.cs"
+          ]
+        },
+        {
+          "condition": "(UseSqlServer)",
+          "rename": {
+            "src/CRISP.AppHost/Program.sqlserver.cs": "src/CRISP.AppHost/Program.cs"
+          }
+        },
+        {
+          "condition": "(!UseSqlServer)",
+          "exclude": [
+            "src/CRISP.AppHost/Program.sqlserver.cs"
+          ]
+        },
+        {
+          "condition": "(UseMySql)",
+          "rename": {
+            "src/CRISP.AppHost/Program.mysql.cs": "src/CRISP.AppHost/Program.cs"
+          }
+        },
+        {
+          "condition": "(!UseMySql)",
+          "exclude": [
+            "src/CRISP.AppHost/Program.mysql.cs"
+          ]
+        },
+        {
+          "condition": "(!IncludeSample)",
+          "exclude": [
+            "src/CRISP.Core/Items/**",
+            "src/CRISP.Server/Features/Items/**",
+            "src/CRISP.Server/Data/Entities/ItemEntity.cs",
+            "src/CRISP.Server/Data/Configurations/ItemConfiguration.cs",
+            "src/CRISP.Server/Events/ItemEvents.cs",
+            "src/CRISP.Client/src/features/items/**",
+            "src/CRISP.Client/src/features/storage/useUploadFile.ts",
+            "src/CRISP.Client/src/routes/items.tsx",
+            "src/CRISP.Client/src/routes/item-detail.tsx",
+            "tests/CRISP.Core.Tests/ItemValidatorTests.cs",
+            "tests/CRISP.Server.Tests/Integration/ItemEndpointTests.cs"
+          ]
+        },
+        {
+          "condition": "(!UsePostgres)",
+          "exclude": [
+            "src/CRISP.Server/appsettings.Development.json"
+          ]
+        },
+        {
+          "condition": "(UseSqlite)",
+          "rename": {
+            "src/CRISP.Server/appsettings.Development.sqlite.json": "src/CRISP.Server/appsettings.Development.json"
+          }
+        },
+        {
+          "condition": "(!UseSqlite)",
+          "exclude": [
+            "src/CRISP.Server/appsettings.Development.sqlite.json"
+          ]
+        },
+        {
+          "condition": "(UseSqlServer)",
+          "rename": {
+            "src/CRISP.Server/appsettings.Development.sqlserver.json": "src/CRISP.Server/appsettings.Development.json"
+          }
+        },
+        {
+          "condition": "(!UseSqlServer)",
+          "exclude": [
+            "src/CRISP.Server/appsettings.Development.sqlserver.json"
+          ]
+        },
+        {
+          "condition": "(UseMySql)",
+          "rename": {
+            "src/CRISP.Server/appsettings.Development.mysql.json": "src/CRISP.Server/appsettings.Development.json"
+          }
+        },
+        {
+          "condition": "(!UseMySql)",
+          "exclude": [
+            "src/CRISP.Server/appsettings.Development.mysql.json"
+          ]
+        },
+        {
+          "condition": "(!IncludeSample || !UsePostgres || !IncludeAuth)",
+          "exclude": [
+            "src/CRISP.Server/Data/Migrations/**"
+          ]
+        },
+        {
+          "condition": "(!UseMySql)",
+          "exclude": [
+            "src/CRISP.Server/Data/Providers/MySql/**",
+            "tests/CRISP.Server.Tests/TestSupport/Providers/MySql/**"
+          ]
+        },
+        {
+          "condition": "(!UsePostgres)",
+          "exclude": [
+            "src/CRISP.Server/Data/Providers/Postgres/**",
+            "tests/CRISP.Server.Tests/TestSupport/Providers/Postgres/**"
+          ]
+        },
+        {
+          "condition": "(!UseSqlServer)",
+          "exclude": [
+            "src/CRISP.Server/Data/Providers/SqlServer/**",
+            "tests/CRISP.Server.Tests/TestSupport/Providers/SqlServer/**"
+          ]
+        },
+        {
+          "condition": "(!UseSqlite)",
+          "exclude": [
+            "src/CRISP.Server/Data/Providers/Sqlite/**",
+            "tests/CRISP.Server.Tests/TestSupport/Providers/Sqlite/**"
+          ]
+        },
+        {
+          "exclude": [
+            ".template.config/**",
+            "CRISP.Templates.csproj",
+            "tests/CRISP.Template.Tests/**",
+            ".github/workflows/ci-template.yml",
+            ".github/workflows/docs.yml",
+            ".git/**",
+            "docs/design/2026-*.md",
+            "site/**",
+            ".nav-generated.json",
+            "NuGet.Config",
+            "nuget.config",
+            "TestResults/**",
+            "**/*.user",
+            "**/.vs/**",
+            "**/bin/**",
+            "**/obj/**",
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/.env",
+            "**/.env.local",
+            "src/CRISP.Client/src/api/**"
+          ]
+        }
+      ]
+    }
+  ],
+  "SpecialCustomOperations": {
+    "**/*.md": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "<!--#if"
+            ],
+            "else": [
+              "<!--#else"
+            ],
+            "elseif": [
+              "<!--#elseif"
+            ],
+            "endif": [
+              "<!--#endif"
+            ],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    },
+    "**/*.slnx": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "<!--#if"
+            ],
+            "else": [
+              "<!--#else"
+            ],
+            "elseif": [
+              "<!--#elseif"
+            ],
+            "endif": [
+              "<!--#endif"
+            ],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    },
+    "**/Dockerfile": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "#if"
+            ],
+            "else": [
+              "#else"
+            ],
+            "elseif": [
+              "#elseif"
+            ],
+            "endif": [
+              "#endif"
+            ],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    },
+    "**/*.yml": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "#if"
+            ],
+            "else": [
+              "#else"
+            ],
+            "elseif": [
+              "#elseif"
+            ],
+            "endif": [
+              "#endif"
+            ],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    },
+    "**/*.ts": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "//#if"
+            ],
+            "else": [
+              "//#else"
+            ],
+            "elseif": [
+              "//#elseif"
+            ],
+            "endif": [
+              "//#endif"
+            ],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    },
+    "**/*.tsx": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "//#if"
+            ],
+            "else": [
+              "//#else"
+            ],
+            "elseif": [
+              "//#elseif"
+            ],
+            "endif": [
+              "//#endif"
+            ],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    },
+    "**/*.props": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "<!--#if"
+            ],
+            "else": [
+              "<!--#else"
+            ],
+            "elseif": [
+              "<!--#elseif"
+            ],
+            "endif": [
+              "<!--#endif"
+            ],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    },
+    "**/appsettings.json": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "//#if"
+            ],
+            "else": [
+              "//#else"
+            ],
+            "elseif": [
+              "//#elseif"
+            ],
+            "endif": [
+              "//#endif"
+            ],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    }
+  },
+  "primaryOutputs": [
+    {
+      "path": "CRISP.slnx"
+    }
+  ],
+  "postActions": [
+    {
+      "condition": "(!skipRestore)",
+      "description": "Restore NuGet packages",
+      "manualInstructions": [
+        {
+          "text": "Run 'dotnet restore'"
+        }
+      ],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-﻿namespace CRISP.Core.Common
+namespace CRISP.Core.Common
 {
     /// <summary>
     /// Represents a paginated response containing a collection of items and metadata about the total count.

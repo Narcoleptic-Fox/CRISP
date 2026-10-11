@@ -1,0 +1,150 @@
+name: CI
+
+on:
+  push:
+    branches: [master, modernize]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_NOLOGO: true
+  NUGET_XMLDOC_MODE: skip
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
+jobs:
+  server:
+    name: Build and test (.NET)
+    runs-on: ubuntu-latest
+
+# One services: key. A YAML mapping cannot repeat a key, so the providers are children of it and
+# the key itself only exists when a provider needs a server. The integration suite reads
+# CRISP_TEST_<PROVIDER>_CONNECTION_STRING and skips Testcontainers when it is set; the fixture
+# refuses any database not named crisp_tests.
+#if (UsePostgres || UseMySql || UseSqlServer)
+    services:
+#endif
+#if (UsePostgres)
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: crisp_tests
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+#endif
+#if (UseMySql)
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: crisp_tests
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -uroot -proot --silent"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+#endif
+#if (UseSqlServer)
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: Password1!
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'Password1!' -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+#endif
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+#if (IncludeReact)
+      # The Server references the Client esproj, and the JavaScript SDK needs node_modules to
+      # exist before it will evaluate the project.
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/CRISP.Client/.nvmrc
+          cache: npm
+          cache-dependency-path: src/CRISP.Client/package-lock.json
+      - run: npm ci --no-audit --no-fund
+        working-directory: src/CRISP.Client
+#endif
+
+      - run: dotnet restore CRISP.slnx
+      - run: dotnet build CRISP.slnx --no-restore --configuration Release
+
+      - name: Core tests
+        run: dotnet test --project tests/CRISP.Core.Tests/CRISP.Core.Tests.csproj --no-build --configuration Release
+
+      - name: Server tests (unit + integration)
+        env:
+#if (UsePostgres)
+          CRISP_TEST_POSTGRES_CONNECTION_STRING: Host=127.0.0.1;Port=5432;Database=crisp_tests;Username=postgres;Password=postgres;
+#endif
+#if (UseMySql)
+          CRISP_TEST_MYSQL_CONNECTION_STRING: server=127.0.0.1;port=3306;database=crisp_tests;uid=root;pwd=root;
+#endif
+#if (UseSqlServer)
+          CRISP_TEST_SQLSERVER_CONNECTION_STRING: Server=127.0.0.1,1433;Database=crisp_tests;User Id=sa;Password=Password1!;TrustServerCertificate=true;
+#endif
+        run: dotnet test --project tests/CRISP.Server.Tests/CRISP.Server.Tests.csproj --no-build --configuration Release
+
+      # The Migrator must at least start and apply the schema to an empty database: a migration
+      # that does not apply is exactly what this repo exists to catch before a deploy does.
+      # Provider values arrive through GITHUB_ENV from guarded steps: a step list may repeat,
+      # an env: mapping may not. A generated solution keeps one step; this repository runs all
+      # four and the last assignment wins, so PostgreSQL, the provider it compiles, is last.
+#if (UseSqlite)
+      - run: |
+          echo "DATABASE_PORT=0" >> "$GITHUB_ENV"
+          echo "DATABASE_USER=none" >> "$GITHUB_ENV"
+          echo "DATABASE_PASSWORD=none" >> "$GITHUB_ENV"
+#endif
+#if (UseSqlServer)
+      - run: |
+          echo "DATABASE_PORT=1433" >> "$GITHUB_ENV"
+          echo "DATABASE_USER=sa" >> "$GITHUB_ENV"
+          echo "DATABASE_PASSWORD=Password1!" >> "$GITHUB_ENV"
+#endif
+#if (UseMySql)
+      - run: |
+          echo "DATABASE_PORT=3306" >> "$GITHUB_ENV"
+          echo "DATABASE_USER=root" >> "$GITHUB_ENV"
+          echo "DATABASE_PASSWORD=root" >> "$GITHUB_ENV"
+#endif
+#if (UsePostgres)
+      - run: |
+          echo "DATABASE_PORT=5432" >> "$GITHUB_ENV"
+          echo "DATABASE_USER=postgres" >> "$GITHUB_ENV"
+          echo "DATABASE_PASSWORD=postgres" >> "$GITHUB_ENV"
+#endif
+      - name: Migrator applies the schema
+        env:
+          DATABASE_HOST: 127.0.0.1
+          DATABASE_NAME: crisp_tests
+        run: dotnet run --project src/CRISP.Migrator --no-build --configuration Release

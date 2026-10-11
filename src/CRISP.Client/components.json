@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "radix-nova",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "../CRISP.Client/styles/index.css",
+    "baseColor": "zinc",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "iconLibrary": "lucide",
+  "rtl": false,
+  "//": "The shadcn/ui kit is shared — components resolve into and are added to the @CRISP/client package, not this app. Prefer running `shadcn add` in src/CRISP.Client.",
+  "aliases": {
+    "components": "@CRISP/components",
+    "utils": "@CRISP/lib/utils",
+    "ui": "@CRISP/components/ui",
+    "lib": "@CRISP/lib",
+    "hooks": "@CRISP/hooks"
+  },
+  "menuColor": "default",
+  "menuAccent": "subtle",
+  "registries": {}
+}

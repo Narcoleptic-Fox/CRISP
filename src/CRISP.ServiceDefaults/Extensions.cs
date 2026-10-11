@@ -92,9 +92,10 @@ public static class Extensions
 
     public static TBuilder AddDefaultHealthChecks<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
-        builder.Services.AddHealthChecks()
-            // Add a default liveness check to ensure app is responsive
-            .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
+        // The application registers its own checks (Program.cs adds "self", tagged "live", which
+        // /alive below reads). Only make sure the service exists; a second "self" here is a
+        // duplicate-registration error at startup.
+        builder.Services.AddHealthChecks();
 
         return builder;
     }
@@ -106,7 +107,8 @@ public static class Extensions
         if (app.Environment.IsDevelopment())
         {
             // All health checks must pass for app to be considered ready to accept traffic after starting
-            app.MapHealthChecks("/health");
+            // The application maps /health and /healthz itself (Program.cs); only the liveness probe
+            // Aspire's dashboard expects is added here.
 
             // Only health checks tagged with the "live" tag must pass for app to be considered alive
             app.MapHealthChecks("/alive", new HealthCheckOptions

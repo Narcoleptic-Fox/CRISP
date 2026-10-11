@@ -1,7 +1,0 @@
-@import "tailwindcss";
-@import "../../../styles/variables.css";
-
-/* Base styles */
-body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-}

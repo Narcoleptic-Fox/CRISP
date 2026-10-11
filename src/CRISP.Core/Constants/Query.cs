@@ -1,4 +1,4 @@
-﻿namespace CRISP.Core.Constants
+namespace CRISP.Core.Constants
 {
     /// <summary>
     /// Provides default constants for query operations and pagination.
@@ -39,7 +39,7 @@
         /// <remarks>
         /// This constant specifies the default sort field when no explicit sorting
         /// is requested. Sorting by "Id" provides a consistent and predictable
-        /// ordering that works across all entities that inherit from <see cref="Common.BaseModel"/>.
+        /// ordering that works across all entities that inherit from <see cref="BaseModel"/>.
         /// </remarks>
         public const string SortBy = "Id";
 

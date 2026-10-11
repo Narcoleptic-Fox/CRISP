@@ -10,14 +10,12 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-		<!-- TODO: Fix BL0008 - Blazor form parameter initializers in Account pages -->
-		<WarningsNotAsErrors>NU1605;CS1591;NU1902;NU1903;NU1904;BL0008</WarningsNotAsErrors>
+		<!-- NU19xx are package advisories: surfaced in the log, fixed by bumping, not by failing every build in between. -->
+		<WarningsNotAsErrors>NU1605;CS1591;NU1902;NU1903;NU1904</WarningsNotAsErrors>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
 		<AnalysisLevel>latest</AnalysisLevel>
 		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
-		<!-- Performance -->
-		<PublishAot Condition="'$(MSBuildProjectExtension)' != '.BlazorWebAssembly'">false</PublishAot>
 		<InvariantGlobalization>false</InvariantGlobalization>
 
 		<!-- Assembly Information -->
@@ -46,12 +44,6 @@
 	</PropertyGroup>
 
 
-	<!-- Blazor WebAssembly Specific -->
-	<PropertyGroup Condition="'$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true'">
-		<BlazorWebAssemblyPreserveCollationData>false</BlazorWebAssemblyPreserveCollationData>
-		<BlazorWebAssemblyLoadBootResource>true</BlazorWebAssemblyLoadBootResource>
-		<RunAOTCompilation Condition="'$(Configuration)' == 'Release'">true</RunAOTCompilation>
-	</PropertyGroup>
 
 
 	<!-- Library Project Specific -->

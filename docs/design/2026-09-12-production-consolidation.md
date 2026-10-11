@@ -1,0 +1,271 @@
+---
+title: Production consolidation review
+nav_title: Production consolidation
+description: What five production applications built on CRISP had learned by 2026-08-28, and what of it was brought back into the template.
+date: 2026-09-12
+status: accepted
+---
+
+# Production consolidation review
+
+**Date:** 2026-09-12
+
+**Updated 2026-10-10:** the branch was rewritten after this was written, so every commit hash
+cited here was remapped by commit subject to its counterpart on `modernize`.
+
+**Inputs:** Knowledge gained from five production applications built on CRISP
+
+## 1. The projects
+
+The production applications are referred to by code name throughout. The key is kept outside this
+repository; each name is one application, used consistently here and in every later note.
+
+| Code name | Shape                                              | .cs files | Tests | Notes                                                                |
+| --------- | -------------------------------------------------- | --------- | ----- | -------------------------------------------------------------------- |
+| Alpha     | Core / Server / Client / Migrator                  | 131       | 23    | Canonical. Has an `Item` slice as the copy-and-rename example        |
+| Bravo     | Core / Server / Client / Migrator (under `tools/`) | 299       | 34    | Permits workflow. Most mature hardening                              |
+| Charlie   | Core / Server / **3** Clients / Migrator           | 303       | 58    | Two SPAs in one image, host-routed. Behind an ALB                    |
+| Delta     | Core / Server / Client                             | 308       | **0** | CPM disabled. Fine-grained permission model                          |
+| Echo      | Core / **Desktop** / ServiceDefaults / Client      | 269       | 44    | Photino desktop app, SQLite. Server code lives in `Echo.Desktop`     |
+| Foxtrot   | 9 projects, net461 + netstandard2.0 + net10.0      | 200       | 0     | Legacy migration in flight. Not CRISP-shaped; excluded from the diff |
+
+All five CRISP projects: .NET 10 (`global.json` 10.0.300), Vite + React 19 + Tailwind 4 + shadcn
+client, TypeGen 7, FluentValidation 12.1.1, xUnit v3 on MTP (`xunit.v3.mtp-v2`), Shouldly,
+Testcontainers.MySql + Respawn (where tests exist), MySQL via `Microting.EntityFrameworkCore.MySql`
+(Alpha still on Pomelo 9.0.0).
+
+## 2. Template vs production: the shape has moved
+
+```mermaid
+flowchart LR
+    subgraph T["This repo (template, f76b5b3)"]
+        direction TB
+        TA[AppHost · Aspire 13] --> TS[Server · Blazor SSR + API]
+        TS --> TSD[ServiceDefaults · IEndpoint, auth ext]
+        TS --> TC[Core]
+        TW[Web · React] -.-> TC
+        TS --- TI[ASP.NET Core Identity<br/>Permissions enum, char-packed]
+        TS --- TE[IEventDispatcher · sync, in-request]
+        TS --- TT[xunit 2.9 · EF InMemory · Moq]
+    end
+    subgraph P["Production (5 of 5 agree)"]
+        direction TB
+        PS[Server · API only] --> PC[Core]
+        PCl[Client · React] -.->|TypeGen| PC
+        PM[Migrator] --> PS
+        PS --- PA[Entra JWT + API key<br/>Viewer/Editor/Admin policies]
+        PS --- PE[Channel EventPublisher + EventWorker<br/>fresh scope per event, retry]
+        PS --- PI[AuditLog + SoftDelete interceptors]
+        PS --- PV[ValidationEndpointFilter at group level<br/>GlobalExceptionHandler → ProblemDetails]
+        PS --- PT[xUnit v3/MTP · Testcontainers MySQL · Respawn · Shouldly]
+    end
+    T -. "diverged since ~2026-05" .-> P
+    style T fill:#7a4a00,color:#fff
+    style P fill:#1f6f3f,color:#fff
+```
+
+Things production has that the template does not, and that **every** production project carries
+identically (zero or cosmetic drift across five copies):
+
+| Area              | Files                                                                                                                                                                                 | Drift across 5 projects                      |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| CQRS primitives   | `Core/Common/{Commands,Queries,BaseModel,PagedResponse,BaseValidator,AutoComplete}.cs`, `Core/Constants/{Query,ClaimNames}.cs`                                                        | none (Echo: using-order only)                |
+| Feature discovery | `Server/Features/{IFeature,FeatureExtensions}.cs`                                                                                                                                     | none (Echo: desktop host variant, +15 lines) |
+| Event bus         | `Server/Infrastructure/Events/{EventPublisher,EventWorker,EventWorkerOptions,EventServiceCollectionExtensions}.cs`, `Server/Common/Events.cs`                                         | none (Echo renamed two private statics)      |
+| Interceptors      | `Server/Data/Interceptors/{AuditLogInterceptor,SoftDeleteInterceptor}.cs`                                                                                                             | AuditLog: two real fixes (section 3)         |
+| Pipeline          | `Server/Middleware/{CorrelationId,RequestLogging,GlobalExceptionHandler,ValidationEndpointFilter,RateLimiting,OpenApiSecurityTransformer}.cs`                                         | real fixes in Bravo/Charlie (section 3)      |
+| Auth              | `Server/Authentication/{ApiKeyAuthHandler,ApiKeyAuthOptions,AuthenticationExtensions,BearerTokenRoleClaimsEnricher}.cs`, `Server/Authorization/{Policies,AuthorizationExtensions}.cs` | enricher extended 3 ways (section 4)         |
+| Storage / email   | `Server/Common/{Storage,ObjectStorageKey,Emails}.cs`, `Server/Infrastructure/{Storage,Email}/*`                                                                                       | Bravo extended `IObjectStorage` (section 3)  |
+
+The framework layer is stable. That is the good news: it is a library waiting to be extracted,
+and the template should ship it rather than the current `ServiceDefaults`.
+
+## 3. Fixes made in production that never reached the canonical
+
+Ordered by how many projects independently carry the change. Two or more means it was propagated
+by hand, which is exactly the signal that it belongs in the template.
+
+| #   | Finding                                                                                                                                                                                                                                                                | Where                                                                                                                    | Why it matters                                                                                                                                                                                                                                         |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | **`AuditLogInterceptor` skips the empty "Modified X with" row** when only a concurrency token changed                                                                                                                                                                  | Bravo, Charlie (identical)                                                                                               | Noise rows in the activity log after every stock op                                                                                                                                                                                                    |
+| 2   | **`SystemMessageEntity.CreatedOn` → `Timestamp`, `Content` split on newline** into `string[]` for the client                                                                                                                                                           | Bravo, Charlie (identical)                                                                                               | Client renders multi-line audit messages; interceptor sets `Timestamp`                                                                                                                                                                                 |
+| 3   | **Self-signed in-memory TLS cert on the ALB leg** (`SelfSignedCertificate.CreateForTls()` in Kestrel config, non-dev only)                                                                                                                                             | Bravo, Charlie, Delta (identical)                                                                                        | AWS Security Hub target-group encryption controls; keeps root FS read-only                                                                                                                                                                             |
+| 4   | **`app.MapStaticAssets()` removed** — throws "static resources manifest file was not found" at startup when the SPA is copied into `wwwroot` by the Dockerfile                                                                                                         | Bravo, Charlie                                                                                                           | The canonical still calls it. Latent startup crash in any Docker deployment                                                                                                                                                                            |
+| 5   | **`AddOutputCache()` / `UseOutputCache()`** after auth                                                                                                                                                                                                                 | Bravo, Charlie                                                                                                           | Template already uses output caching; production confirms placement                                                                                                                                                                                    |
+| 6   | **`IQueryableExtensions` moved to `X.Core.Extensions` namespace**                                                                                                                                                                                                      | Bravo, Delta                                                                                                             | Was in `X.Core` root                                                                                                                                                                                                                                   |
+| 7   | **`GlobalExceptionHandler` returns `Detail` for expected exceptions in production** (`IsExpected` flag on the 4 mapped types; stack trace stays dev-only)                                                                                                              | Bravo                                                                                                                    | Users got a bare "Conflict" with no actionable text outside dev                                                                                                                                                                                        |
+| 8   | **`RouteIdBinder`** — copies `Guid` route values onto the bound command *before* validation; `ValidationEndpointFilter` calls it                                                                                                                                       | Bravo                                                                                                                    | Clients had to repeat the id in the body or get a confusing 400. **Same problem this repo just solved differently** with `[FromRoute] Guid id` + constructing the command in the handler (an early commit on this branch, dropped when the branch was rebuilt and never published). Two implementations of one idea; pick one |
+| 9   | **`AuditLogInterceptor.Describe()`** renders collections and byte arrays instead of `System.Collections.Generic.List\`1[...]`                                                                                                                                          | Charlie                                                                                                                  | Any JSON-converted `List<string>` property logged its type name                                                                                                                                                                                        |
+| 10  | **`SecurityHeadersMiddleware` rebuilt**: CSP derived from `ObjectStorageOptions` (storage origin for `connect-src` + `img-src`), `worker-src 'self' blob:`, `'wasm-unsafe-eval'`, `data:` and `blob:` in `img-src`, configurable `Csp:ConnectSources`, `camera=(self)` | Bravo (fullest), Charlie (`IOptions<T>` variant, hardcodes a Delta origin), Echo (Bravo copy with storage commented out) | Three rewrites of the same file. Consolidate on Bravo's derivation + Charlie's `IOptions<ObjectStorageOptions>` binding, make `Permissions-Policy` grants configurable                                                                                 |
+| 11  | **Per-IP rate limiter exempts authenticated traffic** (`ResolvePerIpPartitionKey`, pure and testable)                                                                                                                                                                  | Charlie                                                                                                                  | Everyone behind one NAT or ALB shared a single bucket; second user's print run hit 429                                                                                                                                                                 |
+| 12  | **`TrustedProxyExtensions.AddForwardedHeaders`** — honour `X-Forwarded-For` only from configured CIDRs; `ForwardedHeaders.None` when nothing is configured                                                                                                             | Charlie                                                                                                                  | With both lists empty the framework middleware trusts *any* caller. Default-off is the only safe default                                                                                                                                               |
+| 13  | **`IObjectStorage.CopyAsync` / `GetObjectMetadataAsync` / `DownloadAsync`**, `StoredObject` record, **`ScratchKeys`** (user-namespaced scratch prefix, server re-derives and normalises before trusting a client-supplied key)                                         | Bravo                                                                                                                    | Attachment records cannot describe bytes that don't exist; stolen keys can't be attached                                                                                                                                                               |
+| 14  | **`Describe`-style options validation with `ValidateOnStart()`** for every options class                                                                                                                                                                               | Charlie                                                                                                                  | Fail at boot, not on first request                                                                                                                                                                                                                     |
+| 15  | **Permission claim format**: comma-separated enum names, `AccessAll` satisfies all checks                                                                                                                                                                              | Delta (`PermissionClaims`)                                                                                               | Delta explicitly calls this repo's `(char)permission` packing "the legacy UTF-16 char-packing" it replaced. `CRISP.Core/Identity/PermissionsExtensions.cs` still does it                                                                               |
+| 16  | **`BaseStateMachine<TEntity,TState,TTrigger>`** over the `Stateless` package + `StateTransitionException` → 400                                                                                                                                                        | Delta (base class), Bravo (`PermitStateMachine`, raw Stateless)                                                          | Both use Stateless; Delta factored the base. Candidate for the framework layer                                                                                                                                                                         |
+| 17  | **`SqliteForeignKeyInterceptor`**                                                                                                                                                                                                                                      | Echo                                                                                                                     | Only needed for SQLite; ship behind the `--database sqlite` option                                                                                                                                                                                     |
+
+## 4. Project-specific extensions (leave out, but keep the hook)
+
+These all hang off the same two seams, which proves the seams are right:
+
+- `BearerTokenRoleClaimsEnricher` extended three ways: Bravo adds review-lane role claims
+  (`ReviewerDuties` flags), Charlie adds one `app` claim per `ClientApp`, Delta adds the packed
+  permissions claim. The hook (query the local user, add claims) is stable; the template should
+  expose it as a single overridable step rather than a file to edit.
+- `Policies` / `AuthorizationExtensions`: every project keeps `Api.Read` / `Api.Write` /
+  `Api.Admin` on `Viewer` / `Editor` / `Admin` and appends project policies after.
+- `UserEntity`: all five differ, all five add columns after the same base.
+- Charlie: `ClientApps` host-routed multi-SPA hosting, `SiteClock`, QR/code generation,
+  `StorageCapitalFlagInterceptor`. Bravo: `QrPayload`. Delta: `SMS` (SNS sender), `Tag`,
+  `ITenantEntity`. Echo: `Themes`, Photino host, Serilog.
+
+## 5. Decisions the consolidation needs (not findings, choices)
+
+| Decision          | Template today                                                                               | Production (5/5)                                                                                                                                                  | Recommendation                                                                                                                                                                                                                                               |
+| ----------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Endpoint contract | `IEndpoint` with C# 11 static abstract `MapEndpoint` + `ICommandEndpoint<T>.Handle(...)`     | `static class XEndpoint { Map(this RouteGroupBuilder); HandleAsync(...) }` with the `internal sealed` service co-located in the same file                         | Adopt production. The static-abstract contract was already being loosened here (`CompleteTodoEndpoint : IEndpoint` in that same unpublished commit), and production never adopted it. One file per operation, endpoint + service together, is what five teams converged on      |
+| Route ids         | `[FromRoute] Guid id` + construct command in handler (this repo, unpublished)                  | `RouteIdBinder` in the validation filter (Bravo)                                                                                                                  | `RouteIdBinder`: it runs before validation so the validated value is the used value, and handlers stay one line                                                                                                                                              |
+| Orchestration     | Aspire 13 AppHost + ServiceDefaults                                                          | none; Docker image behind an ALB; `Migrator` console applies EF migrations                                                                                        | Keep `--aspire` as an option but default **off**. Fold the surviving ServiceDefaults content (OpenTelemetry, health checks, service discovery) into `Server/Infrastructure/` so the project count is 4, matching production                                  |
+| Auth              | ASP.NET Core Identity (cookie + Blazor account pages)                                        | Entra JWT (`Microsoft.Identity.Web`) + API key, `BearerTokenRoleClaimsEnricher`                                                                                   | Production stack as default. Keep Identity behind `--auth identity` only if a public-facing product needs it; otherwise drop the Blazor account UI entirely                                                                                                  |
+| UI                | Blazor SSR *and* React                                                                       | React SPA only (`MapFallbackToFile`)                                                                                                                              | Drop Blazor from the template. None of six projects use it                                                                                                                                                                                                   |
+| Database          | Postgres default, SQL Server option                                                          | MySQL (Microting provider 10.0.10) on 4/5, SQLite on Echo                                                                                                         | Add `mysql` as an option, keep `postgres` default unless NF standardises on MySQL. Note Alpha is still on Pomelo 9.0.0; everyone else moved                                                                                                                  |
+| Tests             | xunit 2.9.2 + EF InMemory + Moq + FluentAssertions                                           | xUnit v3 `mtp-v2` 4.0.0 + Testcontainers.MySql + Respawn + Shouldly + AutoFixture.Xunit3; `IntegrationTestFixture` + `*ServerApplicationFactory` + `FakeServices` | Production stack. The skill's rule "never EF in-memory" exists because of bugs the in-memory provider hid. The 55 tests committed today are all in-memory                                                                                                    |
+| Permissions       | `Permissions` enum, `(char)` packed claim, `PermissionAuthorizationHandler` with DB fallback | Coarse `Viewer/Editor/Admin` roles everywhere; Delta adds `Permission` + `PermissionRole` + `RolePermissions.Resolve` with comma-packed claim                     | Two tiers: coarse roles as the default (what 5/5 use), Delta's fine-grained model as an opt-in layer. Replace char packing either way                                                                                                                        |
+| Error signalling  | Throw framework exceptions; handler maps type → status                                       | Same, plus Bravo's `IsExpected` echoing framework messages                                                                                                        | **Decided (B):** one `RejectedException` with `BadRequest/Forbidden/NotFound/Conflict` factories is the only type whose message reaches the client. No hierarchy. The skill rule "no custom exception types" becomes "one `RejectedException`, no hierarchy" |
+| Events            | `IEventDispatcher` + `LocalEventDispatcher` (synchronous, in the request)                    | `IEventPublisher` → bounded `Channel` → `EventWorker` `BackgroundService`, fresh scope per event, retry with backoff                                              | Production. Synchronous dispatch inside the request is the thing the bus was built to avoid                                                                                                                                                                  |
+
+## 6. `origin/modernization_update` is the baseline
+
+Brock pointed out (2026-09-12) that the July branch already did most of section 2. Verified: its
+94 `Core`/`Server` files diff against `Alpha` by **+~250 / −~130 lines**, and the
+difference is mostly section 3 findings already applied plus the `Item` sample and `Audit` feature
+removed. It is the production shape in CRISP namespaces. Steps 1, 3, 4, 5 and 7 of the original
+plan are therefore already done on that branch. What it still lacks:
+
+| #   | Finding                                        | On branch?                                                                                                                                                                                                                            | Note                                                                                                                            |
+| --- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | AuditLog skips empty rows                      | yes                                                                                                                                                                                                                                   | Bravo variant                                                                                                                   |
+| 2   | `SystemMessage.Timestamp` + split content      | yes                                                                                                                                                                                                                                   |                                                                                                                                 |
+| 3   | Self-signed TLS on ALB leg                     | yes                                                                                                                                                                                                                                   |                                                                                                                                 |
+| 4   | `MapStaticAssets()` removed                    | yes                                                                                                                                                                                                                                   | Comment was copied from Charlie and still talks about "both SPAs" and `UseClientApps`; rewrite it                               |
+| 5   | Output caching                                 | **done** 6020b3b                                                                                                                                                                                                                      | `app.UseOutputCache()` present, `builder.Services.AddOutputCache()` **missing**. Throws at startup. The branch was never booted |
+| 6   | `IQueryableExtensions` namespace               | yes                                                                                                                                                                                                                                   |                                                                                                                                 |
+| 7   | `GlobalExceptionHandler.IsExpected`            | **done** 66dcae2, then **revised**: only `RejectedException` messages are returned; framework types keep their status but `Detail` is dev-only (EF/LINQ throw the same types with entity and key names). Decision B, Brock 2026-09-12 |                                                                                                                                 |
+| 8   | `RouteIdBinder`                                | **done** e88cbc6                                                                                                                                                                                                                      |                                                                                                                                 |
+| 9   | `AuditLogInterceptor.Describe()`               | **done** b6544fa                                                                                                                                                                                                                      |                                                                                                                                 |
+| 10  | `SecurityHeadersMiddleware` rebuild            | **done** 609382b                                                                                                                                                                                                                      | has `camera=(self)` + `'wasm-unsafe-eval'` only; no storage-origin derivation, no `worker-src`, no `Csp:ConnectSources`         |
+| 11  | Rate limiter exempts authenticated             | **done** f006dee                                                                                                                                                                                                                      |                                                                                                                                 |
+| 12  | `AddForwardedHeaders`                          | **done** 4496c38                                                                                                                                                                                                                      |                                                                                                                                 |
+| 13  | `IObjectStorage` Copy/Metadata + `ScratchKeys` | **done** 68451ef                                                                                                                                                                                                                      | `DownloadAsync` only                                                                                                            |
+| 14  | `ValidateOnStart()` on options                 | yes                                                                                                                                                                                                                                   | Email, Events, Storage                                                                                                          |
+| 15  | Permission claim format                        | n/a                                                                                                                                                                                                                                   | Branch has coarse `Role` only, no `Permissions` enum; the char-packing is gone with it                                          |
+| 16  | `BaseStateMachine`                             | no                                                                                                                                                                                                                                    |                                                                                                                                 |
+| 17  | `SqliteForeignKeyInterceptor`                  | no                                                                                                                                                                                                                                    |                                                                                                                                 |
+
+Also missing from the branch, relative to what the template needs:
+
+- **The sample slice.** `Item` (Core + Server + `ItemConfiguration` + `ItemEvents` +
+  `ItemRenamedLogger`) was dropped and nothing replaced it. The template must ship one worked
+  slice; the skill is built around copying it.
+- **`Features/Audit`** (`AuditFeature`, `GetMessagesEndpoint`) — dropped; only a root-level
+  `GetActivityEndpoint` remains. Pick one.
+- **`ApplicationDbContextFactory`** (design-time factory) and the **`Migrator`** project.
+- **`Server.Tests`** entirely. `Core.Tests` exists (4 files, xUnit v3 + Shouldly, correct
+  stack). No `IntegrationTestFixture`, no `ServerApplicationFactory`, no `FakeServices`.
+- **`templates/CRISP/`**, `CRISP.Templates.csproj`, `template.json`, `Directory.Build.props`,
+  `.editorconfig`, `docs/`. The `dotnet new` packaging is gone; the README still describes the
+  old options.
+- **Package versions** are Alpha's (Pomelo 9.0.0, `xunit.v3.mtp-v2` 3.2.2,
+  `Identity.Web` 4.9.0, `Asp.Versioning` 10.0.0); the four newer projects all moved on.
+
+## 7. Consolidation plan (steps, not dates)
+
+Branch off `origin/modernization_update`, not `master`. `master`'s `src/` is the pre-production
+shape and is superseded; its `templates/`, `docs/`, `.editorconfig`, `Directory.Build.props` and
+today's `tests/CRISP.Server.Tests` are what gets carried forward.
+
+1. **Boot it.** ✅ 2026-09-12 (`8629610`..`2cf6167`). `dotnet build` + `dotnet run` the branch as-is. Fix `AddOutputCache()` (#5) and
+   anything else that only shows up when it runs. A branch that has never started is a comment.
+2. **Restore the sample slice** ✅ `b2355e5` as `Item` from Alpha (it is the one the skill documents)
+   and re-add `Features/Audit`. Decide `GetActivityEndpoint` vs `GetMessagesEndpoint`; keep one.
+3. **Apply the remaining section 3 findings** ✅ 2026-09-12 (#16 and #17 still pending behind options), one commit each, each with a test that fails
+   when the fix is reverted: #7, #8, #9, #10 (full), #11, #12, #13. #16 and #17 go behind
+   options.
+4. **Add `Migrator`** ✅ `304432b` and `ApplicationDbContextFactory` from Alpha. Regenerate
+   migrations for the chosen default provider.
+5. **Add `Server.Tests`** ✅ `21c45b4` (21 integration + 97 unit; the 55 in-memory tests were not
+   ported file-by-file: their Todo/Identity behaviour is covered by the new Item/Identity suites
+   against MySQL, and the authz/eventing tests went with the code they tested) on the production stack (`IntegrationTestFixture` +
+   `ServerApplicationFactory` + `FakeServices` from Alpha/Charlie, Testcontainers + Respawn).
+   Port the 55 in-memory tests from `feat/authz-eventing-tests` where they still apply
+   (Identity and Todo→Item endpoint tests; drop the `PermissionAuthorizationHandler` and
+   `LocalEventDispatcher` tests with the code they tested).
+6. **Bring `templates/CRISP/` back** ✅ `7e861f4`, but not as a mirror: the repository root is the template content. Options shipped: `--frontend react|none`, `--skip-restore`. `--include-sample`, `--database`, `--auth`, `--aspire` deliberately not offered (see section 9). Originally: regenerated from the new `src/` shape.
+   `template.json` options: `--database postgres|mysql|sqlserver|sqlite`,
+   `--auth entra|identity|none`, `--aspire` (default off, adds AppHost + ServiceDefaults back),
+   `--include-sample`. Drop `--frontend blazor`, `--redis`. `TemplateSmokeTests` must instantiate
+   every option combination and build it.
+7. **Carry forward from `master`** ✅ `eb704c4` `f889779` (docs were rewritten rather than carried, see step 8; CI replaced): `docs/`, `.editorconfig`, `Directory.Build.props`,
+   `CRISP.Templates.csproj`, the `.github/workflows/ci-cd.yml` .NET 10 bump. Carry forward from
+   the branch: `.gitattributes`, `.dockerignore`.
+8. **Bring the private `crisp-architecture` skill into the repo** ✅ `1d6ea69` (`.claude/skills/`; its `templates/` copy dropped, it points at `docs/` and `src/`) and
+   point its `templates/` at the real files so the skill cannot drift from the code. Same for
+   the private best-practices page → `docs/`.
+9. **Version bumps** ✅ `12c2fca` (EF Core 10.0.11 + Microting in `7899e16`): `Asp.Versioning.Http` 10.2.2, `Microsoft.Identity.Web`
+   4.14.2, `AWSSDK.*` 4.0.102.x, `Testcontainers.MySql` 4.14.0, `xunit.v3.mtp-v2` 4.0.0,
+   `Humanizer.Core` 3.0.10, `Microting.EntityFrameworkCore.MySql` 10.0.10 (replacing Pomelo
+   9.0.0), OpenTelemetry 1.17.0.
+10. **Merge to `master`** and tag — pending, Brock's call. Branch `modernize` is 26 commits over `origin/modernization_update`, not pushed. The `feat/authz-eventing-tests` branch is then obsolete
+    except as the source of the ported tests; delete it after step 5.
+
+## 8. What was *not* reviewed
+
+- Feature code (`Features/<Domain>/*`) beyond the `Item` slice: 1,100+ files, project-specific.
+- Client code beyond `package.json`.
+- Migrations.
+- Foxtrot entirely.
+- Whether Bravo's `RouteIdBinder` has a test that fails when removed. Check before adopting.
+
+## 9. Deferred on 2026-09-12, delivered on 2026-09-13
+
+Brock asked for the four options the same evening. All four shipped (`4d1d077` `629c2d1` `7f04855`
+`6e0ba4c`), each verified by the template smoke matrix, which grew from 4 to 10 variants and runs
+the three non-default providers' and the no-auth variant's full Server suites against real engines.
+
+| Option             | Values                                  | Default                            | How the live repo stays single-source                                                                                                                                                                                                          |
+| ------------------ | --------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--include-sample` | bool                                    | `true`                             | Whole-file exclusions plus no-else `//#if` in the router, nav and dashboard; the dashboard body moved to `items-overview.tsx`                                                                                                                  |
+| `--database`       | `postgres` `mysql` `sqlserver` `sqlite` | **`postgres`** (Brock, 2026-09-12) | One `DatabaseProvider` / `TestDatabase` class per provider in its own folder; template-only `Compile Remove` keeps the live repo on Postgres; `appsettings.Development.<provider>.json` and `AppHost/Program.<provider>.cs` renamed into place |
+| `--auth`           | `entra` `none`                          | `entra`                            | Whole-file exclusions; `*.noauth.*` client files renamed into place; `uploadedBy = "System"` without a principal                                                                                                                               |
+| `--aspire`         | bool                                    | `false`                            | AppHost + ServiceDefaults excluded unless chosen; `AddServiceDefaults()` / `MapDefaultEndpoints()` guarded                                                                                                                                     |
+
+Three rules for a single-source template, learned by breaking each one:
+
+1. **No `//#else`, no `//#if (!X)` with a live alternative.** Both branches compile in the repo.
+   Declare unconditionally, assign conditionally.
+2. **Alternatives that cannot share a file** (a second `Program`, a second `main.tsx`, a second
+   `appsettings.Development.json`) **live beside the original under another name and are renamed
+   in by the engine.** The live repo compiles or type-checks them but never runs them.
+3. **A marker inside JSX or JSON is content, not a comment.** Conditionals go outside.
+
+Bugs fixed along the way that production still carries:
+
+| Where                                   | What                                                                                                                                                                                                                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Test factory (all five production apps) | `ConfigureAppConfiguration` in `ConfigureWebHost` runs after `Program` has registered services; the connection string only worked because a gitignored `appsettings.Development.json` supplied one. `ConfigureHostConfiguration` in `CreateHost` is the early hook |
+| Test factory                            | Production rate limits trip once the suite runs inside a minute. Lifted for tests                                                                                                                                                                                  |
+| Client `useCurrentUser`                 | Treated "unprovisioned" as 404; the server sends 403 with `code: unprovisioned`                                                                                                                                                                                    |
+| SQLite                                  | `ORDER BY DateTimeOffset` refused (fleet lesson); stored as UTC ticks via a provider convention                                                                                                                                                                    |
+
+Still deferred: #16 `BaseStateMachine` (belongs with a sample that has a lifecycle) and client tests
+(`vitest --passWithNoTests` is a check that cannot fail).
+
+## 10. Retracted
+
+- 2026-09-12, this document's first version, said `StorageFeature` left upload, download and delete
+  anonymous. Each endpoint carries its own policy (`Policies.WriteAccess` / `ReadAccess`). Wrong
+  reading; no change was shipped.
+- A commit message on `modernize` briefly claimed `UseSetting` suppresses `ConfigureTestServices`.
+  It does not; a regex of mine had deleted the block. The surviving code comment says only what was
+  verified.
