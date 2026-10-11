@@ -9,6 +9,6 @@
     "docs:check-nav": "node tools/docs/check-nav.mjs"
   },
   "dependencies": {
-    "@docmd/core": "^0.8.13"
+    "@docmd/core": "^0.9.7"
   }
 }

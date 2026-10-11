@@ -19,17 +19,17 @@ jobs:
     name: Instantiate and build every variant
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: src/CRISP.Client/.nvmrc
       - run: dotnet test --project tests/CRISP.Template.Tests/CRISP.Template.Tests.csproj
       - name: Pack
         run: dotnet pack CRISP.Templates.csproj --configuration Release --output artifacts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: CRISP.nupkg
           path: artifacts/*.nupkg

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -16,6 +17,11 @@ namespace CRISP.Server.Tests.Integration;
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
 [Trait("Category", "Integration")]
+[SuppressMessage(
+    "xUnit",
+    "xUnit1069",
+    Justification = "Every test passes Ct, which is TestContext.Current.CancellationToken; the analyzer only sees a direct reference."
+)]
 public sealed class ItemEndpointTests(IntegrationTestFixture fixture)
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -26,9 +32,9 @@ public sealed class ItemEndpointTests(IntegrationTestFixture fixture)
     {
         await fixture.ResetDatabaseAsync();
         string? editor = null;
-//#if (IncludeAuth)
+        //#if (IncludeAuth)
         editor = await fixture.SeedUserAsync(Roles.Editor);
-//#endif
+        //#endif
         return fixture.CreateClient(editor);
     }
 
@@ -47,7 +53,7 @@ public sealed class ItemEndpointTests(IntegrationTestFixture fixture)
         return await response.Content.ReadFromJsonAsync<Guid>(Json, Ct);
     }
 
-//#if (IncludeAuth)
+    //#if (IncludeAuth)
     [Fact(Timeout = 120_000)]
     public async Task Anonymous_IsRefused()
     {
@@ -65,13 +71,21 @@ public sealed class ItemEndpointTests(IntegrationTestFixture fixture)
     {
         var editor = await EditorAsync();
         var id = await CreateAsync(editor, "Wrench");
-        var viewer = fixture.CreateClient(await fixture.SeedUserAsync(Roles.Viewer, "viewer@crisp.test"));
+        var viewer = fixture.CreateClient(
+            await fixture.SeedUserAsync(Roles.Viewer, "viewer@crisp.test")
+        );
 
         (await viewer.GetAsync("/api/v1/Items", Ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await viewer.GetAsync($"/api/v1/Items/{id}", Ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
-        (await viewer.GetAsync($"/api/v1/Items/{id}/activity", Ct)).StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await viewer.GetAsync($"/api/v1/Items/{id}/activity", Ct)).StatusCode.ShouldBe(
+            HttpStatusCode.OK
+        );
 
-        var create = await viewer.PostAsJsonAsync("/api/v1/Items", new CreateItem { Name = "Hammer" }, Ct);
+        var create = await viewer.PostAsJsonAsync(
+            "/api/v1/Items",
+            new CreateItem { Name = "Hammer" },
+            Ct
+        );
         create.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         var update = await viewer.PutAsJsonAsync(
             $"/api/v1/Items/{id}",
@@ -79,10 +93,14 @@ public sealed class ItemEndpointTests(IntegrationTestFixture fixture)
             Ct
         );
         update.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-        (await viewer.DeleteAsync($"/api/v1/Items/{id}", Ct)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        (await viewer.DeleteAsync($"/api/v1/Items/{id}", Ct)).StatusCode.ShouldBe(
+            HttpStatusCode.Forbidden
+        );
 
         // Nothing the Viewer sent changed anything.
-        (await editor.GetFromJsonAsync<Item>($"/api/v1/Items/{id}", Json, Ct))!.Name.ShouldBe("Wrench");
+        (await editor.GetFromJsonAsync<Item>($"/api/v1/Items/{id}", Json, Ct))!.Name.ShouldBe(
+            "Wrench"
+        );
     }
 
     // A valid token with no Users row carries no role claim, so even reads are refused.
@@ -92,9 +110,12 @@ public sealed class ItemEndpointTests(IntegrationTestFixture fixture)
         await fixture.ResetDatabaseAsync();
         var stranger = fixture.CreateClient("stranger@crisp.test");
 
-        (await stranger.GetAsync("/api/v1/Items", Ct)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        (await stranger.GetAsync("/api/v1/Items", Ct)).StatusCode.ShouldBe(
+            HttpStatusCode.Forbidden
+        );
     }
-//#endif
+
+    //#endif
 
     [Fact(Timeout = 120_000)]
     public async Task Create_ReturnsTheIdAndALocation_AndTheItemCanBeRead()
@@ -135,9 +156,9 @@ public sealed class ItemEndpointTests(IntegrationTestFixture fixture)
 
         item.ShouldNotBeNull();
         var actor = "System";
-//#if (IncludeAuth)
+        //#if (IncludeAuth)
         actor = "editor@crisp.test";
-//#endif
+        //#endif
         item.CreatedBy.ShouldBe(actor);
         item.CreatedOn.ShouldBeGreaterThan(DateTime.UtcNow.AddMinutes(-5));
     }
@@ -292,9 +313,9 @@ public sealed class ItemEndpointTests(IntegrationTestFixture fixture)
             )
             .ToList();
         var actor = "System";
-//#if (IncludeAuth)
+        //#if (IncludeAuth)
         actor = "editor@crisp.test";
-//#endif
+        //#endif
         contents.ShouldContain(c => c.Contains($"{actor} Added Item"));
         contents.ShouldContain(c => c.Contains("Name: 'Wrench' → 'Torque wrench'"));
     }
