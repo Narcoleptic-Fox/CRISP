@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -14,6 +15,11 @@ namespace CRISP.Server.Tests.Integration;
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
 [Trait("Category", "Integration")]
+[SuppressMessage(
+    "xUnit",
+    "xUnit1069",
+    Justification = "Every test passes Ct, which is TestContext.Current.CancellationToken; the analyzer only sees a direct reference."
+)]
 public sealed class IdentityEndpointTests(IntegrationTestFixture fixture)
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
