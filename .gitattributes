@@ -61,3 +61,9 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+
+###############################################################################
+# The client is formatted by Prettier with endOfLine: lf, so check it out with
+# LF everywhere, whatever core.autocrlf says. text=auto keeps images binary.
+###############################################################################
+src/CRISP.Client/** text=auto eol=lf
