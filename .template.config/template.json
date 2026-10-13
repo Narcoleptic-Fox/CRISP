@@ -342,6 +342,7 @@
             "NuGet.Config",
             "nuget.config",
             "TestResults/**",
+            "artifacts/**",
             "**/*.user",
             "**/.vs/**",
             "**/bin/**",
