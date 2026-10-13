@@ -33,3 +33,24 @@ jobs:
         with:
           name: CRISP.nupkg
           path: artifacts/*.nupkg
+      # The tests above install the template from this folder; users install the package, whose
+      # contents come from a second exclusion list in CRISP.Templates.csproj. A file the package
+      # drops shows up only here, as a difference between the two generated apps.
+      - name: Package generates the same app as the folder
+        run: |
+          dotnet new install "$PWD" --debug:custom-hive "$RUNNER_TEMP/hive-folder"
+          dotnet new install artifacts/*.nupkg --debug:custom-hive "$RUNNER_TEMP/hive-package"
+          dotnet new crisp -n Shop -o "$RUNNER_TEMP/from-folder" --skip-restore --debug:custom-hive "$RUNNER_TEMP/hive-folder"
+          dotnet new crisp -n Shop -o "$RUNNER_TEMP/from-package" --skip-restore --debug:custom-hive "$RUNNER_TEMP/hive-package"
+          test -f "$RUNNER_TEMP/from-package/Shop.slnx"
+          diff -r "$RUNNER_TEMP/from-folder" "$RUNNER_TEMP/from-package"
+      # Deployment is this Dockerfile; nothing else builds it. The migrator run is the shape check:
+      # with no database configured it must start and exit 2, not crash on a missing assembly.
+      - name: Generated app's images build and start
+        working-directory: ${{ runner.temp }}/from-package
+        run: |
+          docker build -f src/Shop.Server/Dockerfile -t shop-server .
+          docker build -f src/Shop.Server/Dockerfile --target migrator -t shop-migrator .
+          docker run --rm --entrypoint test shop-server -f wwwroot/index.html
+          status=0; docker run --rm shop-migrator || status=$?
+          test "$status" -eq 2

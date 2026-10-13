@@ -48,11 +48,13 @@ public sealed class TemplateSmokeTests : IDisposable
             // anonymous pipeline (no UseAuthentication, open groups) is exercised against a database.
             new Variant("Open", Frontend: "react", IncludeSample: true, Database: "postgres", Auth: "none", Aspire: false),
             new Variant("OpenApi", Frontend: "none", IncludeSample: true, Database: "postgres", Auth: "none", Aspire: false, RunServerTests: true),
-            // Aspire adds two projects and a wiring line in Program; a build is the check.
+            // Aspire adds two projects and a wiring line in Program; a build is the check. The other
+            // providers turn it on too: each has its own AppHost Program, which the template repository
+            // removes from its build, so these variants are the only place those files compile.
             new Variant("WithAspire", Frontend: "react", IncludeSample: true, Database: "postgres", Auth: "entra", Aspire: true),
-            new Variant("OnMySql", Frontend: "none", IncludeSample: true, Database: "mysql", Auth: "entra", Aspire: false, RunServerTests: true),
-            new Variant("OnSqlServer", Frontend: "none", IncludeSample: true, Database: "sqlserver", Auth: "entra", Aspire: false, RunServerTests: true),
-            new Variant("OnSqlite", Frontend: "none", IncludeSample: true, Database: "sqlite", Auth: "entra", Aspire: false, RunServerTests: true),
+            new Variant("OnMySql", Frontend: "none", IncludeSample: true, Database: "mysql", Auth: "entra", Aspire: true, RunServerTests: true),
+            new Variant("OnSqlServer", Frontend: "none", IncludeSample: true, Database: "sqlserver", Auth: "entra", Aspire: true, RunServerTests: true),
+            new Variant("OnSqlite", Frontend: "none", IncludeSample: true, Database: "sqlite", Auth: "entra", Aspire: true, RunServerTests: true),
         ];
 
     public sealed record Variant(
