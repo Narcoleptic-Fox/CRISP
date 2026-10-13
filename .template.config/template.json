@@ -12,7 +12,7 @@
   "identity": "NarcolepticFox.CRISP",
   "groupIdentity": "NarcolepticFox.CRISP",
   "name": "CRISP - vertical-slice CQRS web application",
-  "description": "ASP.NET Core minimal-API server with explicit command/query contracts and direct service injection (no mediator), EF Core on MySQL with an out-of-band Migrator, Entra JWT + API-key authentication, an in-process event bus, presigned-URL object storage, and a React + Vite client consuming TypeGen-generated contracts. Ships a worked Item slice to copy.",
+  "description": "ASP.NET Core minimal-API server with explicit command/query contracts and direct service injection (no mediator), EF Core on PostgreSQL, MySQL, SQL Server or SQLite with an out-of-band Migrator, optional Entra JWT + API-key authentication, an optional Aspire AppHost, an in-process event bus, presigned-URL object storage, and a React + Vite client consuming TypeGen-generated contracts. Ships a worked Item slice to copy.",
   "shortName": "crisp",
   "tags": {
     "language": "C#",
@@ -334,6 +334,8 @@
             ".github/workflows/ci-template.yml",
             ".github/workflows/docs.yml",
             ".git/**",
+            ".local/**",
+            ".claude/settings.local.json",
             "docs/design/2026-*.md",
             "site/**",
             ".nav-generated.json",
