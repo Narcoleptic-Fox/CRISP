@@ -38,21 +38,95 @@ public sealed class TemplateSmokeTests : IDisposable
     public static TheoryData<Variant> Variants() =>
         [
             // Defaults, and each frontend/sample state against them.
-            new Variant("SampleApp", Frontend: "react", IncludeSample: true, Database: "postgres", Auth: "entra", Aspire: false),
-            new Variant("ApiOnly", Frontend: "none", IncludeSample: true, Database: "postgres", Auth: "entra", Aspire: false),
-            new Variant("Blank", Frontend: "react", IncludeSample: false, Database: "postgres", Auth: "entra", Aspire: false),
-            new Variant("Bare", Frontend: "none", IncludeSample: false, Database: "postgres", Auth: "entra", Aspire: false),
+            new Variant(
+                "SampleApp",
+                Frontend: "react",
+                IncludeSample: true,
+                Database: "postgres",
+                Auth: "entra",
+                Aspire: false
+            ),
+            new Variant(
+                "ApiOnly",
+                Frontend: "none",
+                IncludeSample: true,
+                Database: "postgres",
+                Auth: "entra",
+                Aspire: false
+            ),
+            new Variant(
+                "Blank",
+                Frontend: "react",
+                IncludeSample: false,
+                Database: "postgres",
+                Auth: "entra",
+                Aspire: false
+            ),
+            new Variant(
+                "Bare",
+                Frontend: "none",
+                IncludeSample: false,
+                Database: "postgres",
+                Auth: "entra",
+                Aspire: false
+            ),
             // Each other provider, with its own integration suite run against a real instance: the
             // provider class, the scaffolded migration and the test database are only proven there.
             // No authentication, with and without a client; the server variant runs its suite so the
             // anonymous pipeline (no UseAuthentication, open groups) is exercised against a database.
-            new Variant("Open", Frontend: "react", IncludeSample: true, Database: "postgres", Auth: "none", Aspire: false),
-            new Variant("OpenApi", Frontend: "none", IncludeSample: true, Database: "postgres", Auth: "none", Aspire: false, RunServerTests: true),
+            new Variant(
+                "Open",
+                Frontend: "react",
+                IncludeSample: true,
+                Database: "postgres",
+                Auth: "none",
+                Aspire: false
+            ),
+            new Variant(
+                "OpenApi",
+                Frontend: "none",
+                IncludeSample: true,
+                Database: "postgres",
+                Auth: "none",
+                Aspire: false,
+                RunServerTests: true
+            ),
             // Aspire adds two projects and a wiring line in Program; a build is the check.
-            new Variant("WithAspire", Frontend: "react", IncludeSample: true, Database: "postgres", Auth: "entra", Aspire: true),
-            new Variant("OnMySql", Frontend: "none", IncludeSample: true, Database: "mysql", Auth: "entra", Aspire: false, RunServerTests: true),
-            new Variant("OnSqlServer", Frontend: "none", IncludeSample: true, Database: "sqlserver", Auth: "entra", Aspire: false, RunServerTests: true),
-            new Variant("OnSqlite", Frontend: "none", IncludeSample: true, Database: "sqlite", Auth: "entra", Aspire: false, RunServerTests: true),
+            new Variant(
+                "WithAspire",
+                Frontend: "react",
+                IncludeSample: true,
+                Database: "postgres",
+                Auth: "entra",
+                Aspire: true
+            ),
+            new Variant(
+                "OnMySql",
+                Frontend: "none",
+                IncludeSample: true,
+                Database: "mysql",
+                Auth: "entra",
+                Aspire: false,
+                RunServerTests: true
+            ),
+            new Variant(
+                "OnSqlServer",
+                Frontend: "none",
+                IncludeSample: true,
+                Database: "sqlserver",
+                Auth: "entra",
+                Aspire: false,
+                RunServerTests: true
+            ),
+            new Variant(
+                "OnSqlite",
+                Frontend: "none",
+                IncludeSample: true,
+                Database: "sqlite",
+                Auth: "entra",
+                Aspire: false,
+                RunServerTests: true
+            ),
         ];
 
     public sealed record Variant(
@@ -78,7 +152,9 @@ public sealed class TemplateSmokeTests : IDisposable
     [Fact]
     public async Task RepositoryWorkflows_AreValidYaml()
     {
-        var workflows = Directory.EnumerateFiles(Path.Combine(_repoRoot, ".github", "workflows"), "*.yml").ToList();
+        var workflows = Directory
+            .EnumerateFiles(Path.Combine(_repoRoot, ".github", "workflows"), "*.yml")
+            .ToList();
         workflows.ShouldNotBeEmpty();
         foreach (var workflow in workflows)
         {
@@ -114,7 +190,12 @@ public sealed class TemplateSmokeTests : IDisposable
         // GitHub refuses a workflow whose mapping repeats a key, and it does so before any job
         // runs, so a duplicate `services:` or env key is invisible until the first push. Only
         // WithDuplicateKeyChecking makes the deserialiser throw; the default accepts the file.
-        foreach (var workflow in Directory.EnumerateFiles(Path.Combine(output, ".github", "workflows"), "*.yml"))
+        foreach (
+            var workflow in Directory.EnumerateFiles(
+                Path.Combine(output, ".github", "workflows"),
+                "*.yml"
+            )
+        )
         {
             var yaml = await File.ReadAllTextAsync(workflow, TestContext.Current.CancellationToken);
             Should.NotThrow(
@@ -124,9 +205,26 @@ public sealed class TemplateSmokeTests : IDisposable
         }
 
         // Design entries are template history; the section index and the docs tooling ship.
-        File.Exists(Path.Combine(output, "docs", "design", "2026-09-12-production-consolidation.md")).ShouldBeFalse();
+        File.Exists(
+                Path.Combine(output, "docs", "design", "2026-09-12-production-consolidation.md")
+            )
+            .ShouldBeFalse();
         File.Exists(Path.Combine(output, "docs", "design", "index.md")).ShouldBeTrue();
-        File.Exists(Path.Combine(output, "tools", "docs", "nav-gen.mjs")).ShouldBeTrue();
+        // The docs tooling is the shared docmd-kit package, not scripts copied into the project.
+        // A generated project must therefore depend on it and name its plugin, or its docs site
+        // builds with no sidebar generator; and it must not carry the old local copies.
+        var docsPackage = await File.ReadAllTextAsync(
+            Path.Combine(output, "package.json"),
+            TestContext.Current.CancellationToken
+        );
+        docsPackage.ShouldContain("\"docmd-kit\": \"github:Dieshen/docmd-kit#v");
+        docsPackage.ShouldContain("docmd-kit check-nav");
+        var docsConfig = await File.ReadAllTextAsync(
+            Path.Combine(output, "docmd.config.json"),
+            TestContext.Current.CancellationToken
+        );
+        docsConfig.ShouldContain("\"docmd-kit/nav-gen\"");
+        Directory.Exists(Path.Combine(output, "tools", "docs")).ShouldBeFalse();
         Directory.Exists(Path.Combine(output, "site")).ShouldBeFalse();
         File.Exists(Path.Combine(output, ".github", "workflows", "docs.yml")).ShouldBeFalse();
         File.Exists(Path.Combine(output, "CRISP.Templates.csproj")).ShouldBeFalse();
@@ -137,9 +235,7 @@ public sealed class TemplateSmokeTests : IDisposable
         // Every file type the template engine processes has its own marker syntax; a marker that
         // survives generation is one the engine did not recognise. Prose that *mentions* a marker
         // (the docs explain them) is not a leftover, so only markers at the start of a line count.
-        foreach (
-            var file in Directory.EnumerateFiles(output, "*.*", SearchOption.AllDirectories)
-        )
+        foreach (var file in Directory.EnumerateFiles(output, "*.*", SearchOption.AllDirectories))
         {
             var marker = Path.GetExtension(file) switch
             {
@@ -155,7 +251,9 @@ public sealed class TemplateSmokeTests : IDisposable
             var lines = await File.ReadAllLinesAsync(file, TestContext.Current.CancellationToken);
             lines
                 .Where(line => line.TrimStart().StartsWith(marker, StringComparison.Ordinal))
-                .Where(line => line.Contains("#if") || line.Contains("#endif") || line.Contains("#else"))
+                .Where(line =>
+                    line.Contains("#if") || line.Contains("#endif") || line.Contains("#else")
+                )
                 .ShouldBeEmpty($"conditional marker left in {file}");
         }
 
@@ -176,10 +274,12 @@ public sealed class TemplateSmokeTests : IDisposable
                     Path.Combine("src", $"{name}.Core", $"{name}.Core.csproj"),
                 }
             )
-                (await File.ReadAllTextAsync(Path.Combine(output, file), TestContext.Current.CancellationToken)).ShouldNotContain(
-                    ".esproj",
-                    customMessage: $"client reference left in {file}"
-                );
+                (
+                    await File.ReadAllTextAsync(
+                        Path.Combine(output, file),
+                        TestContext.Current.CancellationToken
+                    )
+                ).ShouldNotContain(".esproj", customMessage: $"client reference left in {file}");
         }
 
         // --include-sample
@@ -204,7 +304,12 @@ public sealed class TemplateSmokeTests : IDisposable
             Directory
                 .Exists(Path.Combine(client, "src", "features", "items"))
                 .ShouldBe(variant.IncludeSample);
-            (await File.ReadAllTextAsync(Path.Combine(client, "src", "routes", "index.tsx"), TestContext.Current.CancellationToken))
+            (
+                await File.ReadAllTextAsync(
+                    Path.Combine(client, "src", "routes", "index.tsx"),
+                    TestContext.Current.CancellationToken
+                )
+            )
                 .Contains("ItemsPage")
                 .ShouldBe(variant.IncludeSample);
         }
@@ -237,37 +342,98 @@ public sealed class TemplateSmokeTests : IDisposable
         // --database: exactly one provider folder survives, on both sides.
         foreach (var provider in new[] { "MySql", "Postgres", "SqlServer", "Sqlite" })
         {
-            var expected = string.Equals(provider, variant.Database, StringComparison.OrdinalIgnoreCase);
-            Directory.Exists(Path.Combine(server, "Data", "Providers", provider)).ShouldBe(expected, $"server provider folder {provider}");
-            Directory.Exists(Path.Combine(output, "tests", $"{name}.Server.Tests", "TestSupport", "Providers", provider)).ShouldBe(expected, $"test provider folder {provider}");
+            var expected = string.Equals(
+                provider,
+                variant.Database,
+                StringComparison.OrdinalIgnoreCase
+            );
+            Directory
+                .Exists(Path.Combine(server, "Data", "Providers", provider))
+                .ShouldBe(expected, $"server provider folder {provider}");
+            Directory
+                .Exists(
+                    Path.Combine(
+                        output,
+                        "tests",
+                        $"{name}.Server.Tests",
+                        "TestSupport",
+                        "Providers",
+                        provider
+                    )
+                )
+                .ShouldBe(expected, $"test provider folder {provider}");
         }
 
         // --auth
         var auth = variant.Auth == "entra";
         Directory.Exists(Path.Combine(server, "Authentication")).ShouldBe(auth);
         Directory.Exists(Path.Combine(output, "src", $"{name}.Core", "Identity")).ShouldBe(auth);
-        (await File.ReadAllTextAsync(Path.Combine(server, "Program.cs"), TestContext.Current.CancellationToken)).Contains("UseAuthentication").ShouldBe(auth);
-        (await File.ReadAllTextAsync(Path.Combine(server, "appsettings.json"), TestContext.Current.CancellationToken)).Contains("AzureAd").ShouldBe(auth);
+        (
+            await File.ReadAllTextAsync(
+                Path.Combine(server, "Program.cs"),
+                TestContext.Current.CancellationToken
+            )
+        )
+            .Contains("UseAuthentication")
+            .ShouldBe(auth);
+        (
+            await File.ReadAllTextAsync(
+                Path.Combine(server, "appsettings.json"),
+                TestContext.Current.CancellationToken
+            )
+        )
+            .Contains("AzureAd")
+            .ShouldBe(auth);
         if (variant.React)
         {
             File.Exists(Path.Combine(client, "src", "auth", "msalConfig.ts")).ShouldBe(auth);
-            Directory.EnumerateFiles(Path.Combine(client, "src"), "*.noauth.*", SearchOption.AllDirectories).ShouldBeEmpty("a .noauth file leaked");
-            (await File.ReadAllTextAsync(Path.Combine(client, "src", "main.tsx"), TestContext.Current.CancellationToken)).Contains("MsalProvider").ShouldBe(auth);
+            Directory
+                .EnumerateFiles(
+                    Path.Combine(client, "src"),
+                    "*.noauth.*",
+                    SearchOption.AllDirectories
+                )
+                .ShouldBeEmpty("a .noauth file leaked");
+            (
+                await File.ReadAllTextAsync(
+                    Path.Combine(client, "src", "main.tsx"),
+                    TestContext.Current.CancellationToken
+                )
+            )
+                .Contains("MsalProvider")
+                .ShouldBe(auth);
         }
 
         // --aspire
         Directory.Exists(Path.Combine(output, "src", $"{name}.AppHost")).ShouldBe(variant.Aspire);
-        Directory.Exists(Path.Combine(output, "src", $"{name}.ServiceDefaults")).ShouldBe(variant.Aspire);
-        (await File.ReadAllTextAsync(Path.Combine(server, "Program.cs"), TestContext.Current.CancellationToken)).Contains("AddServiceDefaults").ShouldBe(variant.Aspire);
+        Directory
+            .Exists(Path.Combine(output, "src", $"{name}.ServiceDefaults"))
+            .ShouldBe(variant.Aspire);
+        (
+            await File.ReadAllTextAsync(
+                Path.Combine(server, "Program.cs"),
+                TestContext.Current.CancellationToken
+            )
+        )
+            .Contains("AddServiceDefaults")
+            .ShouldBe(variant.Aspire);
 
         await Run("dotnet", $"build {name}.slnx --nologo -v q", output);
-        await Run("dotnet", $"test --project tests/{name}.Core.Tests/{name}.Core.Tests.csproj --no-build", output);
+        await Run(
+            "dotnet",
+            $"test --project tests/{name}.Core.Tests/{name}.Core.Tests.csproj --no-build",
+            output
+        );
 
         if (variant.RunServerTests)
         {
             // Needs Docker (Testcontainers) for every provider but SQLite. This is the only place the
             // non-default providers' runtime behaviour is exercised.
-            await Run("dotnet", $"test --project tests/{name}.Server.Tests/{name}.Server.Tests.csproj --no-build", output);
+            await Run(
+                "dotnet",
+                $"test --project tests/{name}.Server.Tests/{name}.Server.Tests.csproj --no-build",
+                output
+            );
         }
 
         if (variant.React)

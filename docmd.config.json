@@ -44,6 +44,6 @@
     },
     "mermaid": { "theme": "default" },
     "search": {},
-    "./tools/docs/nav-gen.mjs": {}
+    "docmd-kit/nav-gen": {}
   }
 }
