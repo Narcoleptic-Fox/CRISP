@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "docs:dev": "docmd dev",
-    "docs:build": "docmd build && node tools/docs/check-nav.mjs",
-    "docs:check-nav": "node tools/docs/check-nav.mjs"
+    "docs:build": "docmd build && docmd-kit check-nav",
+    "docs:check-nav": "docmd-kit check-nav"
   },
   "dependencies": {
-    "@docmd/core": "^0.9.7"
+    "@docmd/core": "^0.9.7",
+    "docmd-kit": "github:Dieshen/docmd-kit#v0.1.3"
   }
 }
